@@ -1,0 +1,145 @@
+// FinFlow - Financial Technology Platform
+// Database contract v1
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum WalletStatus {
+  ACTIVE
+  FROZEN
+  CLOSED
+}
+
+enum Currency {
+  NGN
+  USD
+  EUR
+  GBP
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REVERSED
+}
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  REVENUE
+  EXPENSE
+  EQUITY
+}
+
+model User {
+  id           Int        @id @default(autoincrement())
+  email        String     @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  status       UserStatus @default(ACTIVE)
+
+  wallets      Wallet[]
+  auditLogs    AuditLog[]
+
+  createdAt    TimestamptzString @default(now())
+  updatedAt    temporal.updatedAtString()
+}
+
+model Wallet {
+  id                 Int           @id @default(autoincrement())
+  userId             Int
+  currency           Currency
+  balance            BigInt        @default(0)
+  status             WalletStatus  @default(ACTIVE)
+
+  user               User          @relation(fields: [userId], references: [id])
+  sourceTransactions Transaction[] @relation("SourceWallet")
+  destinationTransactions Transaction[] @relation("DestinationWallet")
+
+  createdAt           TimestamptzString @default(now())
+  updatedAt           temporal.updatedAtString()
+
+  @@unique([userId, currency])
+  @@index([userId])
+}
+
+model Transaction {
+  id                  Int               @id @default(autoincrement())
+  reference           String            @unique
+  type                TransactionType
+  amount              BigInt
+  currency            Currency
+  status              TransactionStatus @default(PENDING)
+
+  sourceWalletId      Int?
+  destinationWalletId Int?
+
+  sourceWallet        Wallet? @relation("SourceWallet", fields: [sourceWalletId], references: [id])
+  destinationWallet   Wallet? @relation("DestinationWallet", fields: [destinationWalletId], references: [id])
+
+  ledgerEntries       LedgerEntry[]
+
+  createdAt           TimestamptzString @default(now())
+  updatedAt           temporal.updatedAtString()
+
+  @@index([sourceWalletId])
+  @@index([destinationWalletId])
+}
+
+model LedgerAccount {
+  id          Int         @id @default(autoincrement())
+  code        String      @unique
+  name        String
+  type        AccountType
+  currency    Currency
+  active      Boolean     @default(true)
+
+  entries     LedgerEntry[]
+
+  createdAt   TimestamptzString @default(now())
+  updatedAt   temporal.updatedAtString()
+}
+
+model LedgerEntry {
+  id            Int           @id @default(autoincrement())
+  transactionId Int
+  accountId     Int
+  debit         BigInt        @default(0)
+  credit        BigInt        @default(0)
+
+  transaction   Transaction   @relation(fields: [transactionId], references: [id])
+  account       LedgerAccount @relation(fields: [accountId], references: [id])
+
+  createdAt     TimestamptzString @default(now())
+
+  @@index([transactionId])
+  @@index([accountId])
+}
+
+model AuditLog {
+  id          Int        @id @default(autoincrement())
+  userId      Int?
+  action      String
+  entity      String
+  entityId    String?
+  metadata    String?
+
+  user        User?      @relation(fields: [userId], references: [id])
+
+  createdAt   TimestamptzString @default(now())
+
+  @@index([userId])
+  @@index([entity, entityId])
+}
