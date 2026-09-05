@@ -7,6 +7,10 @@ import {
 
 import { PrismaService } from '../prisma/prisma.service.js';
 
+import { LedgerService } from '../ledger/ledger.service.js';
+
+import { AuditService } from '../audit/audit.service.js';
+
 type TransactionType =
   | 'DEPOSIT'
   | 'WITHDRAWAL'
@@ -41,12 +45,20 @@ interface TransactionFilters {
   startDate?: Date;
 
   endDate?: Date;
+
+  minAmount?: bigint;
+
+  maxAmount?: bigint;
 }
 
 @Injectable()
 export class TransactionsService {
   constructor(
     private readonly prisma: PrismaService,
+
+    private readonly ledgerService: LedgerService,
+
+    private readonly auditService: AuditService,
   ) {}
 
   /*
@@ -54,7 +66,7 @@ export class TransactionsService {
    * BIGINT SERIALIZER
    *
    * Converts BigInt values to strings before
-   * sending the response to Express.
+   * sending the response.
    * ==========================================
    */
   private serialize<T>(data: T): T {
@@ -72,8 +84,6 @@ export class TransactionsService {
   /*
    * ==========================================
    * GET USER WALLETS
-   *
-   * Retrieve all wallets and filter by user.
    * ==========================================
    */
   private async getUserWallets(
@@ -151,10 +161,6 @@ export class TransactionsService {
   /*
    * ==========================================
    * CHECK TRANSACTION ACCESS
-   *
-   * A user can access a transaction if they own
-   * either the source wallet or destination
-   * wallet.
    * ==========================================
    */
   private async checkTransactionAccess(
@@ -180,6 +186,39 @@ export class TransactionsService {
       !hasSourceAccess &&
       !hasDestinationAccess
     ) {
+      await this.auditService.create({
+        userId,
+
+        action:
+          'TRANSACTION_ACCESS_DENIED',
+
+        entity:
+          'Transaction',
+
+        entityId:
+          String(transaction.id),
+
+        metadata: JSON.stringify({
+          transactionId:
+            transaction.id,
+
+          reference:
+            transaction.reference,
+
+          type:
+            transaction.type,
+
+          currency:
+            transaction.currency,
+
+          sourceWalletId:
+            transaction.sourceWalletId,
+
+          destinationWalletId:
+            transaction.destinationWalletId,
+        }),
+      });
+
       throw new ForbiddenException(
         'You do not have access to this transaction',
       );
@@ -189,9 +228,6 @@ export class TransactionsService {
   /*
    * ==========================================
    * GET TRANSACTION SUMMARY
-   *
-   * Reversed transactions are excluded from
-   * financial volume calculations.
    *
    * GET /transactions/summary
    * ==========================================
@@ -220,11 +256,11 @@ export class TransactionsService {
       };
     }
 
-    let totalDeposits = BigInt(0);
+    let totalDeposits = 0n;
 
-    let totalWithdrawals = BigInt(0);
+    let totalWithdrawals = 0n;
 
-    let totalTransfers = BigInt(0);
+    let totalTransfers = 0n;
 
     let completedTransactions = 0;
 
@@ -237,9 +273,6 @@ export class TransactionsService {
     for (
       const transaction of userTransactions
     ) {
-      /*
-       * Count statuses independently.
-       */
       if (
         transaction.status === 'COMPLETED'
       ) {
@@ -264,12 +297,9 @@ export class TransactionsService {
         reversedTransactions++;
       }
 
-      /*
-       * Reversed transactions must not
-       * inflate financial totals.
-       */
       if (
-        transaction.status === 'REVERSED'
+        transaction.status === 'REVERSED' ||
+        transaction.status === 'FAILED'
       ) {
         continue;
       }
@@ -369,20 +399,6 @@ export class TransactionsService {
    * GET TRANSACTION ANALYTICS
    *
    * GET /transactions/analytics
-   *
-   * Includes:
-   *
-   * - Overview
-   * - Transaction type breakdown
-   * - Transaction status breakdown
-   * - Currency breakdown
-   * - Daily chart
-   * - Weekly chart
-   * - Monthly chart
-   *
-   * Reversed transactions remain visible in
-   * status counts but are excluded from
-   * financial volume totals.
    * ==========================================
    */
   async getAnalytics(
@@ -415,9 +431,6 @@ export class TransactionsService {
     const userTransactions =
       await this.getUserTransactions(userId);
 
-    /*
-     * Filter transactions by period.
-     */
     const transactions =
       userTransactions.filter(
         (transaction: any) => {
@@ -435,15 +448,15 @@ export class TransactionsService {
         },
       );
 
-    let totalAmount = BigInt(0);
+    let totalAmount = 0n;
 
-    let totalDeposits = BigInt(0);
+    let totalDeposits = 0n;
 
-    let totalWithdrawals = BigInt(0);
+    let totalWithdrawals = 0n;
 
-    let totalTransfers = BigInt(0);
+    let totalTransfers = 0n;
 
-    let completedAmount = BigInt(0);
+    let completedAmount = 0n;
 
     const typeMap = new Map<
       TransactionType,
@@ -493,9 +506,6 @@ export class TransactionsService {
       }
     >();
 
-    /*
-     * Initialize transaction types.
-     */
     const transactionTypes: TransactionType[] = [
       'DEPOSIT',
       'WITHDRAWAL',
@@ -507,13 +517,10 @@ export class TransactionsService {
     ) {
       typeMap.set(type, {
         count: 0,
-        amount: BigInt(0),
+        amount: 0n,
       });
     }
 
-    /*
-     * Initialize transaction statuses.
-     */
     const transactionStatuses: TransactionStatus[] =
       [
         'PENDING',
@@ -529,9 +536,6 @@ export class TransactionsService {
       statusMap.set(status, 0);
     }
 
-    /*
-     * Process transactions.
-     */
     for (
       const transaction of transactions
     ) {
@@ -548,26 +552,15 @@ export class TransactionsService {
       const currency =
         transaction.currency;
 
-      /*
-       * Status count.
-       */
       statusMap.set(
         status,
-        (statusMap.get(status) ?? 0) +
-          1,
+        (statusMap.get(status) ?? 0) + 1,
       );
 
-      /*
-       * Reversed transactions should not
-       * contribute to financial volume.
-       */
       const isFinanciallyValid =
         status !== 'REVERSED' &&
         status !== 'FAILED';
 
-      /*
-       * Type analytics.
-       */
       const typeData =
         typeMap.get(type);
 
@@ -579,13 +572,12 @@ export class TransactionsService {
         }
       }
 
-      /*
-       * Currency analytics.
-       */
-      if (!currencyMap.has(currency)) {
+      if (
+        !currencyMap.has(currency)
+      ) {
         currencyMap.set(currency, {
           count: 0,
-          amount: BigInt(0),
+          amount: 0n,
         });
       }
 
@@ -598,9 +590,6 @@ export class TransactionsService {
         currencyData.amount += amount;
       }
 
-      /*
-       * Financial totals.
-       */
       if (isFinanciallyValid) {
         totalAmount += amount;
 
@@ -629,9 +618,6 @@ export class TransactionsService {
         }
       }
 
-      /*
-       * Chart date.
-       */
       const transactionDate =
         new Date(
           String(
@@ -639,11 +625,6 @@ export class TransactionsService {
           ),
         );
 
-      /*
-       * ======================================
-       * DAILY CHART
-       * ======================================
-       */
       const dayKey =
         transactionDate
           .toISOString()
@@ -652,10 +633,10 @@ export class TransactionsService {
       if (!dailyMap.has(dayKey)) {
         dailyMap.set(dayKey, {
           count: 0,
-          amount: BigInt(0),
-          deposits: BigInt(0),
-          withdrawals: BigInt(0),
-          transfers: BigInt(0),
+          amount: 0n,
+          deposits: 0n,
+          withdrawals: 0n,
+          transfers: 0n,
         });
       }
 
@@ -686,11 +667,6 @@ export class TransactionsService {
         }
       }
 
-      /*
-       * ======================================
-       * WEEKLY CHART
-       * ======================================
-       */
       const weekKey =
         this.getWeekKey(
           transactionDate,
@@ -699,7 +675,7 @@ export class TransactionsService {
       if (!weeklyMap.has(weekKey)) {
         weeklyMap.set(weekKey, {
           count: 0,
-          amount: BigInt(0),
+          amount: 0n,
         });
       }
 
@@ -712,11 +688,6 @@ export class TransactionsService {
         weeklyData.amount += amount;
       }
 
-      /*
-       * ======================================
-       * MONTHLY CHART
-       * ======================================
-       */
       const monthKey =
         transactionDate
           .toISOString()
@@ -725,7 +696,7 @@ export class TransactionsService {
       if (!monthlyMap.has(monthKey)) {
         monthlyMap.set(monthKey, {
           count: 0,
-          amount: BigInt(0),
+          amount: 0n,
         });
       }
 
@@ -902,6 +873,597 @@ export class TransactionsService {
 
   /*
    * ==========================================
+   * TRANSACTION MONITORING SUMMARY
+   *
+   * GET /transactions/monitoring/summary
+   *
+   * Professional operational statistics for
+   * monitoring and compliance dashboards.
+   * ==========================================
+   */
+  async getMonitoringSummary(
+    userId: number,
+    filters: {
+      startDate?: Date;
+      endDate?: Date;
+      currency?: Currency;
+    } = {},
+  ) {
+    const {
+      startDate,
+      endDate,
+      currency,
+    } = filters;
+
+    let transactions =
+      await this.getUserTransactions(userId);
+
+    /*
+     * DATE FILTERS
+     */
+    if (startDate) {
+      transactions =
+        transactions.filter(
+          (transaction: any) => {
+            const transactionDate =
+              new Date(
+                String(
+                  transaction.createdAt,
+                ),
+              );
+
+            return (
+              transactionDate >= startDate
+            );
+          },
+        );
+    }
+
+    if (endDate) {
+      transactions =
+        transactions.filter(
+          (transaction: any) => {
+            const transactionDate =
+              new Date(
+                String(
+                  transaction.createdAt,
+                ),
+              );
+
+            return (
+              transactionDate <= endDate
+            );
+          },
+        );
+    }
+
+    /*
+     * CURRENCY FILTER
+     */
+    if (currency) {
+      transactions =
+        transactions.filter(
+          (transaction: any) =>
+            transaction.currency === currency,
+        );
+    }
+
+    let completedTransactions = 0;
+
+    let pendingTransactions = 0;
+
+    let processingTransactions = 0;
+
+    let failedTransactions = 0;
+
+    let reversedTransactions = 0;
+
+    let depositCount = 0;
+
+    let withdrawalCount = 0;
+
+    let transferCount = 0;
+
+    let totalDepositVolume = 0n;
+
+    let totalWithdrawalVolume = 0n;
+
+    let totalTransferVolume = 0n;
+
+    let totalTransactionVolume = 0n;
+
+    const currencyMap = new Map<
+      string,
+      {
+        transactionCount: number;
+        volume: bigint;
+        deposits: bigint;
+        withdrawals: bigint;
+        transfers: bigint;
+      }
+    >();
+
+    for (
+      const transaction of transactions
+    ) {
+      const amount = BigInt(
+        transaction.amount ?? 0,
+      );
+
+      /*
+       * STATUS COUNTS
+       */
+      if (
+        transaction.status === 'COMPLETED'
+      ) {
+        completedTransactions++;
+      }
+
+      if (
+        transaction.status === 'PENDING'
+      ) {
+        pendingTransactions++;
+      }
+
+      if (
+        transaction.status ===
+        'PROCESSING'
+      ) {
+        processingTransactions++;
+      }
+
+      if (
+        transaction.status === 'FAILED'
+      ) {
+        failedTransactions++;
+      }
+
+      if (
+        transaction.status ===
+        'REVERSED'
+      ) {
+        reversedTransactions++;
+      }
+
+      /*
+       * TRANSACTION TYPE COUNTS
+       */
+      if (
+        transaction.type === 'DEPOSIT'
+      ) {
+        depositCount++;
+      }
+
+      if (
+        transaction.type ===
+        'WITHDRAWAL'
+      ) {
+        withdrawalCount++;
+      }
+
+      if (
+        transaction.type === 'TRANSFER'
+      ) {
+        transferCount++;
+      }
+
+      /*
+       * INITIALIZE CURRENCY DATA
+       */
+      if (
+        !currencyMap.has(
+          transaction.currency,
+        )
+      ) {
+        currencyMap.set(
+          transaction.currency,
+          {
+            transactionCount: 0,
+            volume: 0n,
+            deposits: 0n,
+            withdrawals: 0n,
+            transfers: 0n,
+          },
+        );
+      }
+
+      const currencyData =
+        currencyMap.get(
+          transaction.currency,
+        )!;
+
+      currencyData.transactionCount++;
+
+      /*
+       * Failed and reversed transactions
+       * must not contribute to financial
+       * volume.
+       */
+      const isFinanciallyValid =
+        transaction.status !== 'FAILED' &&
+        transaction.status !== 'REVERSED';
+
+      if (!isFinanciallyValid) {
+        continue;
+      }
+
+      totalTransactionVolume += amount;
+
+      currencyData.volume += amount;
+
+      /*
+       * DEPOSIT
+       */
+      if (
+        transaction.type === 'DEPOSIT'
+      ) {
+        totalDepositVolume += amount;
+
+        currencyData.deposits += amount;
+      }
+
+      /*
+       * WITHDRAWAL
+       */
+      if (
+        transaction.type ===
+        'WITHDRAWAL'
+      ) {
+        totalWithdrawalVolume += amount;
+
+        currencyData.withdrawals += amount;
+      }
+
+      /*
+       * TRANSFER
+       */
+      if (
+        transaction.type === 'TRANSFER'
+      ) {
+        totalTransferVolume += amount;
+
+        currencyData.transfers += amount;
+      }
+    }
+
+    return {
+      overview: {
+        totalTransactions:
+          transactions.length,
+
+        completedTransactions,
+
+        pendingTransactions,
+
+        processingTransactions,
+
+        failedTransactions,
+
+        reversedTransactions,
+      },
+
+      transactionTypes: {
+        deposits: depositCount,
+
+        withdrawals:
+          withdrawalCount,
+
+        transfers: transferCount,
+      },
+
+      financialVolume: {
+        total:
+          totalTransactionVolume.toString(),
+
+        deposits:
+          totalDepositVolume.toString(),
+
+        withdrawals:
+          totalWithdrawalVolume.toString(),
+
+        transfers:
+          totalTransferVolume.toString(),
+      },
+
+      currencyBreakdown:
+        Array.from(
+          currencyMap.entries(),
+        )
+          .sort(
+            ([a], [b]) =>
+              a.localeCompare(b),
+          )
+          .map(
+            ([
+              currencyCode,
+              data,
+            ]) => ({
+              currency:
+                currencyCode,
+
+              transactionCount:
+                data.transactionCount,
+
+              volume:
+                data.volume.toString(),
+
+              deposits:
+                data.deposits.toString(),
+
+              withdrawals:
+                data.withdrawals.toString(),
+
+              transfers:
+                data.transfers.toString(),
+            }),
+          ),
+    };
+  }
+
+  /*
+   * ==========================================
+   * TRANSACTION MONITORING
+   *
+   * GET /transactions/monitoring
+   *
+   * Supports:
+   *
+   * - Pagination
+   * - Transaction type
+   * - Transaction status
+   * - Currency
+   * - Reference search
+   * - Transaction ID search
+   * - Date range
+   * - Minimum amount
+   * - Maximum amount
+   * ==========================================
+   */
+  async getMonitoringTransactions(
+    userId: number,
+    filters: TransactionFilters = {},
+  ) {
+    const {
+      page = 1,
+      limit = 20,
+      type,
+      status,
+      currency,
+      search,
+      startDate,
+      endDate,
+      minAmount,
+      maxAmount,
+    } = filters;
+
+    const safePage =
+      Number.isFinite(page) &&
+      page > 0
+        ? Math.floor(page)
+        : 1;
+
+    const safeLimit =
+      Number.isFinite(limit) &&
+      limit > 0
+        ? Math.min(
+            Math.floor(limit),
+            100,
+          )
+        : 20;
+
+    let transactions =
+      await this.getUserTransactions(
+        userId,
+      );
+
+    /*
+     * TYPE FILTER
+     */
+    if (type) {
+      transactions =
+        transactions.filter(
+          (transaction: any) =>
+            transaction.type === type,
+        );
+    }
+
+    /*
+     * STATUS FILTER
+     */
+    if (status) {
+      transactions =
+        transactions.filter(
+          (transaction: any) =>
+            transaction.status === status,
+        );
+    }
+
+    /*
+     * CURRENCY FILTER
+     */
+    if (currency) {
+      transactions =
+        transactions.filter(
+          (transaction: any) =>
+            transaction.currency ===
+            currency,
+        );
+    }
+
+    /*
+     * SEARCH
+     */
+    if (
+      search &&
+      search.trim().length > 0
+    ) {
+      const normalizedSearch =
+        search
+          .trim()
+          .toLowerCase();
+
+      transactions =
+        transactions.filter(
+          (transaction: any) => {
+            const transactionId =
+              String(
+                transaction.id,
+              ).toLowerCase();
+
+            const reference =
+              String(
+                transaction.reference ??
+                  '',
+              ).toLowerCase();
+
+            return (
+              transactionId.includes(
+                normalizedSearch,
+              ) ||
+              reference.includes(
+                normalizedSearch,
+              )
+            );
+          },
+        );
+    }
+
+    /*
+     * START DATE
+     */
+    if (startDate) {
+      transactions =
+        transactions.filter(
+          (transaction: any) => {
+            const transactionDate =
+              new Date(
+                String(
+                  transaction.createdAt,
+                ),
+              );
+
+            return (
+              transactionDate >= startDate
+            );
+          },
+        );
+    }
+
+    /*
+     * END DATE
+     */
+    if (endDate) {
+      transactions =
+        transactions.filter(
+          (transaction: any) => {
+            const transactionDate =
+              new Date(
+                String(
+                  transaction.createdAt,
+                ),
+              );
+
+            return (
+              transactionDate <= endDate
+            );
+          },
+        );
+    }
+
+    /*
+     * MINIMUM AMOUNT
+     */
+    if (
+      minAmount !== undefined
+    ) {
+      transactions =
+        transactions.filter(
+          (transaction: any) =>
+            BigInt(
+              transaction.amount ?? 0,
+            ) >= minAmount,
+        );
+    }
+
+    /*
+     * MAXIMUM AMOUNT
+     */
+    if (
+      maxAmount !== undefined
+    ) {
+      transactions =
+        transactions.filter(
+          (transaction: any) =>
+            BigInt(
+              transaction.amount ?? 0,
+            ) <= maxAmount,
+        );
+    }
+
+    /*
+     * MOST RECENT FIRST
+     */
+    transactions.sort(
+      (a: any, b: any) => {
+        const dateA =
+          new Date(
+            String(a.createdAt),
+          ).getTime();
+
+        const dateB =
+          new Date(
+            String(b.createdAt),
+          ).getTime();
+
+        return dateB - dateA;
+      },
+    );
+
+    const total =
+      transactions.length;
+
+    const totalPages =
+      Math.max(
+        1,
+        Math.ceil(
+          total / safeLimit,
+        ),
+      );
+
+    const startIndex =
+      (safePage - 1) *
+      safeLimit;
+
+    const data =
+      transactions.slice(
+        startIndex,
+        startIndex + safeLimit,
+      );
+
+    return {
+      data:
+        this.serialize(data),
+
+      meta: {
+        total,
+
+        page: safePage,
+
+        limit: safeLimit,
+
+        totalPages,
+
+        hasPreviousPage:
+          safePage > 1,
+
+        hasNextPage:
+          safePage < totalPages,
+      },
+    };
+  }
+
+  /*
+   * ==========================================
    * GET ISO WEEK KEY
    *
    * Example:
@@ -965,6 +1527,7 @@ export class TransactionsService {
    * - Currency filtering
    * - Search
    * - Date filtering
+   * - Amount filtering
    * ==========================================
    */
   async findAll(
@@ -980,6 +1543,8 @@ export class TransactionsService {
       search,
       startDate,
       endDate,
+      minAmount,
+      maxAmount,
     } = filters;
 
     const safePage =
@@ -1003,7 +1568,7 @@ export class TransactionsService {
       );
 
     /*
-     * FILTER BY TYPE
+     * TYPE FILTER
      */
     if (type) {
       filteredTransactions =
@@ -1014,7 +1579,7 @@ export class TransactionsService {
     }
 
     /*
-     * FILTER BY STATUS
+     * STATUS FILTER
      */
     if (status) {
       filteredTransactions =
@@ -1025,7 +1590,7 @@ export class TransactionsService {
     }
 
     /*
-     * FILTER BY CURRENCY
+     * CURRENCY FILTER
      */
     if (currency) {
       filteredTransactions =
@@ -1037,11 +1602,6 @@ export class TransactionsService {
 
     /*
      * SEARCH
-     *
-     * Search by:
-     *
-     * - Transaction ID
-     * - Transaction reference
      */
     if (
       search &&
@@ -1076,7 +1636,7 @@ export class TransactionsService {
     }
 
     /*
-     * FILTER BY START DATE
+     * START DATE
      */
     if (startDate) {
       filteredTransactions =
@@ -1097,7 +1657,7 @@ export class TransactionsService {
     }
 
     /*
-     * FILTER BY END DATE
+     * END DATE
      */
     if (endDate) {
       filteredTransactions =
@@ -1118,7 +1678,37 @@ export class TransactionsService {
     }
 
     /*
-     * SORT NEWEST FIRST
+     * MINIMUM AMOUNT
+     */
+    if (
+      minAmount !== undefined
+    ) {
+      filteredTransactions =
+        filteredTransactions.filter(
+          (transaction: any) =>
+            BigInt(
+              transaction.amount ?? 0,
+            ) >= minAmount,
+        );
+    }
+
+    /*
+     * MAXIMUM AMOUNT
+     */
+    if (
+      maxAmount !== undefined
+    ) {
+      filteredTransactions =
+        filteredTransactions.filter(
+          (transaction: any) =>
+            BigInt(
+              transaction.amount ?? 0,
+            ) <= maxAmount,
+        );
+    }
+
+    /*
+     * MOST RECENT FIRST
      */
     filteredTransactions.sort(
       (a: any, b: any) => {
@@ -1136,9 +1726,6 @@ export class TransactionsService {
       },
     );
 
-    /*
-     * PAGINATION
-     */
     const total =
       filteredTransactions.length;
 
@@ -1173,6 +1760,12 @@ export class TransactionsService {
         limit: safeLimit,
 
         totalPages,
+
+        hasPreviousPage:
+          safePage > 1,
+
+        hasNextPage:
+          safePage < totalPages,
       },
     };
   }
@@ -1201,6 +1794,42 @@ export class TransactionsService {
       userId,
       transaction,
     );
+
+    await this.auditService.create({
+      userId,
+
+      action:
+        'TRANSACTION_VIEWED',
+
+      entity:
+        'Transaction',
+
+      entityId:
+        String(transaction.id),
+
+      metadata: JSON.stringify({
+        transactionId:
+          transaction.id,
+
+        reference:
+          transaction.reference,
+
+        lookupMethod:
+          'ID',
+
+        type:
+          transaction.type,
+
+        amount:
+          BigInt(transaction.amount).toString(),
+
+        currency:
+          transaction.currency,
+
+        status:
+          transaction.status,
+      }),
+    });
 
     return this.serialize(
       transaction,
@@ -1232,9 +1861,56 @@ export class TransactionsService {
       transaction,
     );
 
+    await this.auditService.create({
+      userId,
+
+      action:
+        'TRANSACTION_VIEWED',
+
+      entity:
+        'Transaction',
+
+      entityId:
+        String(transaction.id),
+
+      metadata: JSON.stringify({
+        transactionId:
+          transaction.id,
+
+        reference:
+          transaction.reference,
+
+        lookupMethod:
+          'REFERENCE',
+
+        type:
+          transaction.type,
+
+        amount:
+          BigInt(transaction.amount).toString(),
+
+        currency:
+          transaction.currency,
+
+        status:
+          transaction.status,
+      }),
+    });
+
     return this.serialize(
       transaction,
     );
+  }
+
+  /*
+   * ==========================================
+   * GENERATE REVERSAL REFERENCE
+   * ==========================================
+   */
+  private generateReversalReference(
+    originalReference: string,
+  ): string {
+    return `REV-${Date.now()}-${originalReference}`;
   }
 
   /*
@@ -1246,254 +1922,397 @@ export class TransactionsService {
    * Rules:
    *
    * 1. Transaction must exist.
-   * 2. User must own the source wallet.
+   * 2. Only sender can reverse.
    * 3. Only TRANSFER transactions can reverse.
-   * 4. Only COMPLETED transfers can reverse.
-   * 5. Reversed transfers cannot reverse again.
-   * 6. Destination wallet must have sufficient
-   *    balance.
-   * 7. Both wallet balances and transaction
-   *    status update atomically.
+   * 4. Only COMPLETED transactions can reverse.
+   * 5. A reversed transaction cannot reverse again.
+   * 6. Destination wallet must have balance.
+   * 7. Wallet balances are reversed.
+   * 8. Reversal transaction is created.
+   * 9. Original transaction becomes REVERSED.
+   * 10. Ledger entries are reversed.
    * ==========================================
    */
   async reverse(
     userId: number,
     transactionId: number,
   ) {
-    return this.prisma.client.transaction(
-      async (tx) => {
-        /*
-         * Find transaction.
-         */
-        const transaction =
-          await tx.orm.public.Transaction.first({
-            id: transactionId,
-          });
-
-        if (!transaction) {
-          throw new NotFoundException(
-            'Transaction not found',
-          );
-        }
-
-        /*
-         * Validate transaction type.
-         */
-        if (
-          transaction.type !== 'TRANSFER'
-        ) {
-          throw new BadRequestException(
-            'Only transfer transactions can be reversed',
-          );
-        }
-
-        /*
-         * Prevent duplicate reversal.
-         */
-        if (
-          transaction.status === 'REVERSED'
-        ) {
-          throw new BadRequestException(
-            'Transaction has already been reversed',
-          );
-        }
-
-        /*
-         * Only completed transactions
-         * can be reversed.
-         */
-        if (
-          transaction.status !== 'COMPLETED'
-        ) {
-          throw new BadRequestException(
-            'Only completed transactions can be reversed',
-          );
-        }
-
-        /*
-         * Validate wallet IDs.
-         */
-        if (
-          transaction.sourceWalletId === null ||
-          transaction.destinationWalletId === null
-        ) {
-          throw new BadRequestException(
-            'Invalid transfer transaction',
-          );
-        }
-
-        /*
-         * Find source wallet.
-         */
-        const sourceWallet =
-          await tx.orm.public.Wallet.first({
-            id: transaction.sourceWalletId,
-          });
-
-        if (!sourceWallet) {
-          throw new NotFoundException(
-            'Source wallet not found',
-          );
-        }
-
-        /*
-         * Only the sender can reverse.
-         */
-        if (
-          sourceWallet.userId !== userId
-        ) {
-          throw new ForbiddenException(
-            'Only the sender can reverse this transaction',
-          );
-        }
-
-        /*
-         * Find destination wallet.
-         */
-        const destinationWallet =
-          await tx.orm.public.Wallet.first({
-            id: transaction.destinationWalletId,
-          });
-
-        if (!destinationWallet) {
-          throw new NotFoundException(
-            'Destination wallet not found',
-          );
-        }
-
-        /*
-         * Check wallet statuses.
-         */
-        if (
-          sourceWallet.status !== 'ACTIVE'
-        ) {
-          throw new BadRequestException(
-            'Source wallet is not active',
-          );
-        }
-
-        if (
-          destinationWallet.status !==
-          'ACTIVE'
-        ) {
-          throw new BadRequestException(
-            'Destination wallet is not active',
-          );
-        }
-
-        /*
-         * Validate currency consistency.
-         */
-        if (
-          sourceWallet.currency !==
-          destinationWallet.currency
-        ) {
-          throw new BadRequestException(
-            'Wallet currencies do not match',
-          );
-        }
-
-        /*
-         * Transaction amount.
-         */
-        const transactionAmount =
-          BigInt(
-            transaction.amount,
-          );
-
-        /*
-         * Destination wallet must still
-         * contain enough funds.
-         */
-        if (
-          destinationWallet.balance <
-          transactionAmount
-        ) {
-          throw new BadRequestException(
-            'Destination wallet does not have enough balance to reverse this transaction',
-          );
-        }
-
-        /*
-         * Calculate reversed balances.
-         *
-         * Original:
-         *
-         * Source      - amount
-         * Destination + amount
-         *
-         * Reversal:
-         *
-         * Source      + amount
-         * Destination - amount
-         */
-        const sourceNewBalance =
-          sourceWallet.balance +
-          transactionAmount;
-
-        const destinationNewBalance =
-          destinationWallet.balance -
-          transactionAmount;
-
-        /*
-         * Credit source wallet.
-         */
-        const updatedSourceWallet =
-          await tx.orm.public.Wallet
-            .where({
-              id: sourceWallet.id,
-            })
-            .update({
-              balance: sourceNewBalance,
+    /*
+     * STEP 1
+     *
+     * Perform wallet and database operations.
+     */
+    const result =
+      await this.prisma.client.transaction(
+        async (tx) => {
+          /*
+           * Find original transaction.
+           */
+          const transaction =
+            await tx.orm.public.Transaction.first({
+              id: transactionId,
             });
 
-        /*
-         * Debit destination wallet.
-         */
-        const updatedDestinationWallet =
-          await tx.orm.public.Wallet
-            .where({
-              id: destinationWallet.id,
-            })
-            .update({
-              balance: destinationNewBalance,
+          if (!transaction) {
+            throw new NotFoundException(
+              'Transaction not found',
+            );
+          }
+
+          /*
+           * Only transfers can currently
+           * be reversed.
+           */
+          if (
+            transaction.type !== 'TRANSFER'
+          ) {
+            throw new BadRequestException(
+              'Only transfer transactions can be reversed',
+            );
+          }
+
+          /*
+           * Prevent duplicate reversal.
+           */
+          if (
+            transaction.status === 'REVERSED'
+          ) {
+            throw new BadRequestException(
+              'Transaction has already been reversed',
+            );
+          }
+
+          /*
+           * Only completed transactions
+           * can be reversed.
+           */
+          if (
+            transaction.status !== 'COMPLETED'
+          ) {
+            throw new BadRequestException(
+              'Only completed transactions can be reversed',
+            );
+          }
+
+          /*
+           * Validate wallet IDs.
+           */
+          if (
+            transaction.sourceWalletId === null ||
+            transaction.destinationWalletId === null
+          ) {
+            throw new BadRequestException(
+              'Invalid transfer transaction',
+            );
+          }
+
+          /*
+           * Find source wallet.
+           */
+          const sourceWallet =
+            await tx.orm.public.Wallet.first({
+              id: transaction.sourceWalletId,
             });
 
-        /*
-         * Mark transaction as reversed.
-         */
-        const reversedTransaction =
-          await tx.orm.public.Transaction
-            .where({
-              id: transaction.id,
-            })
-            .update({
-              status: 'REVERSED',
+          if (!sourceWallet) {
+            throw new NotFoundException(
+              'Source wallet not found',
+            );
+          }
+
+          /*
+           * Only sender can reverse.
+           */
+          if (
+            sourceWallet.userId !== userId
+          ) {
+            throw new ForbiddenException(
+              'Only the sender can reverse this transaction',
+            );
+          }
+
+          /*
+           * Find destination wallet.
+           */
+          const destinationWallet =
+            await tx.orm.public.Wallet.first({
+              id: transaction.destinationWalletId,
             });
 
-        return {
-          message:
-            'Transaction reversed successfully',
+          if (!destinationWallet) {
+            throw new NotFoundException(
+              'Destination wallet not found',
+            );
+          }
 
-          amount:
-            transactionAmount.toString(),
+          /*
+           * Validate wallet status.
+           */
+          if (
+            sourceWallet.status !== 'ACTIVE'
+          ) {
+            throw new BadRequestException(
+              'Source wallet is not active',
+            );
+          }
 
-          sourceWallet:
-            this.serialize(
+          if (
+            destinationWallet.status !==
+            'ACTIVE'
+          ) {
+            throw new BadRequestException(
+              'Destination wallet is not active',
+            );
+          }
+
+          /*
+           * Validate currencies.
+           */
+          if (
+            sourceWallet.currency !==
+            destinationWallet.currency
+          ) {
+            throw new BadRequestException(
+              'Wallet currencies do not match',
+            );
+          }
+
+          const transactionAmount =
+            BigInt(
+              transaction.amount,
+            );
+
+          /*
+           * Destination wallet must contain
+           * enough balance for reversal.
+           */
+          if (
+            destinationWallet.balance <
+            transactionAmount
+          ) {
+            throw new BadRequestException(
+              'Destination wallet does not have enough balance to reverse this transaction',
+            );
+          }
+
+          /*
+           * Calculate reversal balances.
+           *
+           * Original:
+           *
+           * Source      - amount
+           * Destination + amount
+           *
+           * Reversal:
+           *
+           * Source      + amount
+           * Destination - amount
+           */
+          const sourceNewBalance =
+            sourceWallet.balance +
+            transactionAmount;
+
+          const destinationNewBalance =
+            destinationWallet.balance -
+            transactionAmount;
+
+          /*
+           * Update source wallet.
+           */
+          const updatedSourceWallet =
+            await tx.orm.public.Wallet
+              .where({
+                id: sourceWallet.id,
+              })
+              .update({
+                balance: sourceNewBalance,
+              });
+
+          /*
+           * Update destination wallet.
+           */
+          const updatedDestinationWallet =
+            await tx.orm.public.Wallet
+              .where({
+                id: destinationWallet.id,
+              })
+              .update({
+                balance:
+                  destinationNewBalance,
+              });
+
+          /*
+           * Create reversal transaction.
+           *
+           * Direction is reversed:
+           *
+           * Original:
+           * source -> destination
+           *
+           * Reversal:
+           * destination -> source
+           */
+          const reversalReference =
+            this.generateReversalReference(
+              transaction.reference,
+            );
+
+          const reversalTransaction =
+            await tx.orm.public.Transaction.create({
+              reference:
+                reversalReference,
+
+              type: 'TRANSFER',
+
+              status: 'COMPLETED',
+
+              amount:
+                transactionAmount,
+
+              currency:
+                transaction.currency,
+
+              sourceWalletId:
+                destinationWallet.id,
+
+              destinationWalletId:
+                sourceWallet.id,
+            });
+
+          /*
+           * Mark original transaction
+           * as reversed.
+           */
+          const reversedOriginalTransaction =
+            await tx.orm.public.Transaction
+              .where({
+                id: transaction.id,
+              })
+              .update({
+                status: 'REVERSED',
+              });
+
+          return {
+            transaction,
+
+            reversalTransaction,
+
+            originalTransaction:
+              reversedOriginalTransaction,
+
+            sourceWallet:
               updatedSourceWallet,
-            ),
 
-          destinationWallet:
-            this.serialize(
+            destinationWallet:
               updatedDestinationWallet,
-            ),
 
-          transaction:
-            this.serialize(
-              reversedTransaction,
-            ),
-        };
-      },
+            amount:
+              transactionAmount,
+          };
+        },
+      );
+
+    /*
+     * STEP 2
+     *
+     * Reverse accounting ledger entries.
+     */
+    await this.ledgerService.reverseTransaction(
+      result.transaction.id,
+      result.reversalTransaction.id,
     );
+
+    /*
+     * ==========================================
+     * AUDIT LOG
+     *
+     * Record the completed reversal only after
+     * the financial and ledger operations have
+     * succeeded.
+     * ==========================================
+     */
+    await this.auditService.create({
+      userId,
+
+      action:
+        'TRANSACTION_REVERSED',
+
+      entity:
+        'Transaction',
+
+      entityId:
+        String(result.transaction.id),
+
+      metadata: JSON.stringify({
+        originalTransactionId:
+          result.transaction.id,
+
+        originalReference:
+          result.transaction.reference,
+
+        reversalTransactionId:
+          result.reversalTransaction.id,
+
+        reversalReference:
+          result.reversalTransaction.reference,
+
+        amount:
+          result.amount.toString(),
+
+        currency:
+          result.transaction.currency,
+
+        sourceWalletId:
+          result.transaction.sourceWalletId,
+
+        destinationWalletId:
+          result.transaction.destinationWalletId,
+
+        sourceWalletBalanceAfter:
+          result.sourceWallet
+            ? BigInt(
+                result.sourceWallet.balance,
+              ).toString()
+            : null,
+
+        destinationWalletBalanceAfter:
+          result.destinationWallet
+            ? BigInt(
+                result.destinationWallet.balance,
+              ).toString()
+            : null,
+      }),
+    });
+
+    /*
+     * RESPONSE
+     */
+    return {
+      message:
+        'Transaction reversed successfully',
+
+      amount:
+        result.amount.toString(),
+
+      sourceWallet:
+        this.serialize(
+          result.sourceWallet,
+        ),
+
+      destinationWallet:
+        this.serialize(
+          result.destinationWallet,
+        ),
+
+      originalTransaction:
+        this.serialize(
+          result.originalTransaction,
+        ),
+
+      reversalTransaction:
+        this.serialize(
+          result.reversalTransaction,
+        ),
+    };
   }
 }

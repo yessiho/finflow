@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { WalletsModule } from './wallets/wallets.module.js';
 import { LedgerModule } from './ledger/ledger.module.js';
+import { AuditModule } from './audit/audit.module.js';
 import { TransactionsModule } from './transactions/transactions.module.js';
 
 @Module({
@@ -19,6 +20,7 @@ import { TransactionsModule } from './transactions/transactions.module.js';
     AuthModule,
     WalletsModule,
     LedgerModule,
+    AuditModule,
     TransactionsModule,
   ],
   controllers: [AppController],

@@ -9,10 +9,14 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { TransactionsService } from './transactions.service.js';
 
-type TransactionType = 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER';
+type TransactionType =
+  | 'DEPOSIT'
+  | 'WITHDRAWAL'
+  | 'TRANSFER';
 
 type TransactionStatus =
   | 'PENDING'
@@ -21,7 +25,11 @@ type TransactionStatus =
   | 'FAILED'
   | 'REVERSED';
 
-type Currency = 'NGN' | 'USD' | 'EUR' | 'GBP';
+type Currency =
+  | 'NGN'
+  | 'USD'
+  | 'EUR'
+  | 'GBP';
 
 @Controller('transactions')
 @UseGuards(JwtAuthGuard)
@@ -84,10 +92,10 @@ export class TransactionsController {
    *
    * GET /transactions/analytics
    *
-   * Optional:
-   * ?days=7
-   * ?days=30
-   * ?days=90
+   * Examples:
+   * /transactions/analytics?days=7
+   * /transactions/analytics?days=30
+   * /transactions/analytics?days=90
    * ==========================================
    */
   @Get('analytics')
@@ -120,13 +128,31 @@ export class TransactionsController {
    * ==========================================
    * GET ALL TRANSACTIONS
    *
+   * GET /transactions
+   *
    * Supports:
+   *
    * - Pagination
-   * - Type filtering
+   * - Transaction type filtering
    * - Status filtering
    * - Currency filtering
    * - Reference search
    * - Date range filtering
+   *
+   * Example:
+   *
+   * /transactions?page=1&limit=10
+   *
+   * /transactions?type=DEPOSIT
+   *
+   * /transactions?status=COMPLETED
+   *
+   * /transactions?currency=NGN
+   *
+   * /transactions?search=TXN-12345
+   *
+   * /transactions?startDate=2026-09-01
+   * &endDate=2026-09-04
    * ==========================================
    */
   @Get()
@@ -183,7 +209,7 @@ export class TransactionsController {
 
     /*
      * ==========================================
-     * VALID VALUES
+     * VALID ENUM VALUES
      * ==========================================
      */
     const validTypes: TransactionType[] = [
@@ -275,6 +301,16 @@ export class TransactionsController {
           'Invalid startDate format',
         );
       }
+
+      /*
+       * Start from beginning of selected day
+       */
+      parsedStartDate.setHours(
+        0,
+        0,
+        0,
+        0,
+      );
     }
 
     if (endDate) {
@@ -291,7 +327,7 @@ export class TransactionsController {
       }
 
       /*
-       * Include the entire selected day.
+       * Include the entire selected day
        */
       parsedEndDate.setHours(
         23,
@@ -318,6 +354,35 @@ export class TransactionsController {
 
     /*
      * ==========================================
+     * OPTIONAL DATE RANGE PROTECTION
+     *
+     * Banking applications should avoid
+     * unnecessarily large date queries.
+     *
+     * Maximum: 1 year
+     * ==========================================
+     */
+    if (
+      parsedStartDate &&
+      parsedEndDate
+    ) {
+      const differenceInMilliseconds =
+        parsedEndDate.getTime() -
+        parsedStartDate.getTime();
+
+      const differenceInDays =
+        differenceInMilliseconds /
+        (1000 * 60 * 60 * 24);
+
+      if (differenceInDays > 366) {
+        throw new BadRequestException(
+          'Date range cannot exceed 365 days',
+        );
+      }
+    }
+
+    /*
+     * ==========================================
      * FETCH TRANSACTIONS
      * ==========================================
      */
@@ -329,13 +394,19 @@ export class TransactionsController {
         limit: parsedLimit,
 
         type:
-          type as TransactionType | undefined,
+          type as
+            | TransactionType
+            | undefined,
 
         status:
-          status as TransactionStatus | undefined,
+          status as
+            | TransactionStatus
+            | undefined,
 
         currency:
-          currency as Currency | undefined,
+          currency as
+            | Currency
+            | undefined,
 
         search:
           search?.trim() || undefined,
@@ -353,6 +424,7 @@ export class TransactionsController {
    *
    * GET /transactions/reference/:reference
    *
+   * IMPORTANT:
    * Must come before /:id
    * ==========================================
    */
@@ -365,7 +437,7 @@ export class TransactionsController {
   ) {
     return this.transactionsService.findByReference(
       req.user.id,
-      reference,
+      reference.trim(),
     );
   }
 
@@ -374,6 +446,13 @@ export class TransactionsController {
    * REVERSE TRANSACTION
    *
    * POST /transactions/:id/reverse
+   *
+   * Banking Rule:
+   *
+   * - Original transaction remains unchanged
+   * - Reversal creates an audit trail
+   * - Wallet balances are corrected
+   * - Ledger entries are reversed
    * ==========================================
    */
   @Post(':id/reverse')
@@ -395,6 +474,7 @@ export class TransactionsController {
    *
    * GET /transactions/:id
    *
+   * IMPORTANT:
    * Must come after all specific routes
    * ==========================================
    */

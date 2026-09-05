@@ -20,6 +20,9 @@ type AccountType =
 
 @Injectable()
 export class LedgerService {
+  getLedgerAccounts() {
+    throw new Error('Method not implemented.');
+  }
   constructor(
     private readonly prisma: PrismaService,
   ) {}
@@ -345,9 +348,6 @@ export class LedgerService {
         credit: entry.debit,
       }));
 
-    /*
-     * Reversal happens outside wallet transaction
-     */
     return this.prisma.client.transaction(
       async (tx) => {
         return this.createDoubleEntry(
@@ -361,7 +361,73 @@ export class LedgerService {
 
   /*
    * ==========================================
+   * GET ALL LEDGER ACCOUNTS
+   *
+   * Used by:
+   * GET /ledger/accounts
+   *
+   * Returns each account together with its
+   * calculated debit, credit and balance.
+   * ==========================================
+   */
+  async getAllAccounts() {
+    const accounts =
+      await this.prisma.client.orm.public.LedgerAccount
+        .all();
+
+    const accountBalances = await Promise.all(
+      accounts.map(async (account) => {
+        const entries =
+          await this.prisma.client.orm.public.LedgerEntry
+            .where({
+              accountId: account.id,
+            })
+            .all();
+
+        let totalDebit = 0n;
+        let totalCredit = 0n;
+
+        for (const entry of entries) {
+          totalDebit += entry.debit;
+          totalCredit += entry.credit;
+        }
+
+        let balance = 0n;
+
+        if (
+          account.type === 'ASSET' ||
+          account.type === 'EXPENSE'
+        ) {
+          balance =
+            totalDebit - totalCredit;
+        } else {
+          balance =
+            totalCredit - totalDebit;
+        }
+
+        return {
+          ...account,
+
+          totalDebit:
+            totalDebit.toString(),
+
+          totalCredit:
+            totalCredit.toString(),
+
+          balance:
+            balance.toString(),
+        };
+      }),
+    );
+
+    return accountBalances;
+  }
+
+  /*
+   * ==========================================
    * GET TRANSACTION LEDGER ENTRIES
+   *
+   * GET /ledger/transactions/:transactionId
    * ==========================================
    */
   async getTransactionEntries(
@@ -384,6 +450,8 @@ export class LedgerService {
   /*
    * ==========================================
    * GET ACCOUNT BALANCE
+   *
+   * GET /ledger/accounts/:accountId/balance
    * ==========================================
    */
   async getAccountBalance(
@@ -430,9 +498,15 @@ export class LedgerService {
 
     return {
       account,
-      totalDebit: totalDebit.toString(),
-      totalCredit: totalCredit.toString(),
-      balance: balance.toString(),
+
+      totalDebit:
+        totalDebit.toString(),
+
+      totalCredit:
+        totalCredit.toString(),
+
+      balance:
+        balance.toString(),
     };
   }
 }

@@ -5,19 +5,21 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { PrismaService } from '../prisma/prisma.service.js';
+import { AuditService } from '../audit/audit.service.js';
 import { LedgerService } from '../ledger/ledger.service.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 
 import { CreateWalletDto } from './dto/create-wallet.dto.js';
 import { DepositDto } from './dto/deposit.dto.js';
-import { WithdrawDto } from './dto/withdraw.dto.js';
 import { TransferDto } from './dto/transfer.dto.js';
+import { WithdrawDto } from './dto/withdraw.dto.js';
 
 @Injectable()
 export class WalletsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly ledgerService: LedgerService,
+    private readonly auditService: AuditService,
   ) {}
 
   /*
@@ -34,7 +36,8 @@ export class WalletsService {
     const existingWallet =
       await this.prisma.client.orm.public.Wallet.first({
         userId,
-        currency: currency as 'NGN' | 'USD' | 'EUR' | 'GBP',
+        currency:
+          currency as 'NGN' | 'USD' | 'EUR' | 'GBP',
       });
 
     if (existingWallet) {
@@ -46,10 +49,33 @@ export class WalletsService {
     const wallet =
       await this.prisma.client.orm.public.Wallet.create({
         userId,
-        currency: currency as 'NGN' | 'USD' | 'EUR' | 'GBP',
+        currency:
+          currency as 'NGN' | 'USD' | 'EUR' | 'GBP',
         balance: 0n,
         status: 'ACTIVE',
       });
+
+    /*
+     * ==========================================
+     * AUDIT LOG
+     * ==========================================
+     */
+    await this.auditService.create({
+      userId,
+
+      action: 'WALLET_CREATED',
+
+      entity: 'WALLET',
+
+      entityId: wallet.id.toString(),
+
+      metadata: JSON.stringify({
+        walletId: wallet.id,
+        currency: wallet.currency,
+        status: wallet.status,
+        balance: wallet.balance.toString(),
+      }),
+    });
 
     return this.formatWallet(wallet);
   }
@@ -91,7 +117,9 @@ export class WalletsService {
     }
 
     /*
-     * Find wallet
+     * ==========================================
+     * FIND WALLET
+     * ==========================================
      */
     const wallet =
       await this.prisma.client.orm.public.Wallet.first({
@@ -105,7 +133,9 @@ export class WalletsService {
     }
 
     /*
-     * Verify wallet ownership
+     * ==========================================
+     * VERIFY WALLET OWNERSHIP
+     * ==========================================
      */
     if (wallet.userId !== userId) {
       throw new BadRequestException(
@@ -114,7 +144,9 @@ export class WalletsService {
     }
 
     /*
-     * Check wallet status
+     * ==========================================
+     * CHECK WALLET STATUS
+     * ==========================================
      */
     if (wallet.status !== 'ACTIVE') {
       throw new BadRequestException(
@@ -123,13 +155,19 @@ export class WalletsService {
     }
 
     /*
-     * Calculate new balance
+     * ==========================================
+     * CALCULATE NEW BALANCE
+     * ==========================================
      */
+    const previousBalance = wallet.balance;
+
     const newBalance =
       wallet.balance + amount;
 
     /*
-     * Update wallet balance
+     * ==========================================
+     * UPDATE WALLET BALANCE
+     * ==========================================
      */
     const updatedWallet =
       await this.prisma.client.orm.public.Wallet
@@ -141,7 +179,9 @@ export class WalletsService {
         });
 
     /*
-     * Create transaction
+     * ==========================================
+     * CREATE TRANSACTION
+     * ==========================================
      */
     const transaction =
       await this.prisma.client.orm.public.Transaction.create({
@@ -154,10 +194,12 @@ export class WalletsService {
       });
 
     /*
+     * ==========================================
      * POST DEPOSIT TO LEDGER
      *
      * Debit: Cash Account
      * Credit: Customer Wallet Liability
+     * ==========================================
      */
     await this.ledgerService.postDeposit(
       this.prisma.client,
@@ -165,6 +207,35 @@ export class WalletsService {
       amount,
       wallet.currency,
     );
+
+    /*
+     * ==========================================
+     * AUDIT LOG
+     * ==========================================
+     */
+    await this.auditService.create({
+      userId,
+
+      action: 'DEPOSIT_COMPLETED',
+
+      entity: 'TRANSACTION',
+
+      entityId: transaction.id.toString(),
+
+      metadata: JSON.stringify({
+        transactionId: transaction.id,
+        reference: transaction.reference,
+        walletId,
+        currency: wallet.currency,
+        amount: amount.toString(),
+        previousBalance:
+          previousBalance.toString(),
+        newBalance:
+          newBalance.toString(),
+        status: transaction.status,
+        type: transaction.type,
+      }),
+    });
 
     return {
       message: 'Deposit successful',
@@ -198,7 +269,9 @@ export class WalletsService {
     }
 
     /*
-     * Find wallet
+     * ==========================================
+     * FIND WALLET
+     * ==========================================
      */
     const wallet =
       await this.prisma.client.orm.public.Wallet.first({
@@ -212,7 +285,9 @@ export class WalletsService {
     }
 
     /*
-     * Verify ownership
+     * ==========================================
+     * VERIFY OWNERSHIP
+     * ==========================================
      */
     if (wallet.userId !== userId) {
       throw new BadRequestException(
@@ -221,7 +296,9 @@ export class WalletsService {
     }
 
     /*
-     * Check wallet status
+     * ==========================================
+     * CHECK WALLET STATUS
+     * ==========================================
      */
     if (wallet.status !== 'ACTIVE') {
       throw new BadRequestException(
@@ -230,7 +307,9 @@ export class WalletsService {
     }
 
     /*
-     * Check wallet balance
+     * ==========================================
+     * CHECK WALLET BALANCE
+     * ==========================================
      */
     if (wallet.balance < amount) {
       throw new BadRequestException(
@@ -239,13 +318,19 @@ export class WalletsService {
     }
 
     /*
-     * Calculate new balance
+     * ==========================================
+     * CALCULATE NEW BALANCE
+     * ==========================================
      */
+    const previousBalance = wallet.balance;
+
     const newBalance =
       wallet.balance - amount;
 
     /*
-     * Update wallet balance
+     * ==========================================
+     * UPDATE WALLET BALANCE
+     * ==========================================
      */
     const updatedWallet =
       await this.prisma.client.orm.public.Wallet
@@ -257,7 +342,9 @@ export class WalletsService {
         });
 
     /*
-     * Create transaction
+     * ==========================================
+     * CREATE TRANSACTION
+     * ==========================================
      */
     const transaction =
       await this.prisma.client.orm.public.Transaction.create({
@@ -270,10 +357,12 @@ export class WalletsService {
       });
 
     /*
+     * ==========================================
      * POST WITHDRAWAL TO LEDGER
      *
      * Debit: Customer Wallet Liability
      * Credit: Cash Account
+     * ==========================================
      */
     await this.ledgerService.postWithdrawal(
       this.prisma.client,
@@ -281,6 +370,35 @@ export class WalletsService {
       amount,
       wallet.currency,
     );
+
+    /*
+     * ==========================================
+     * AUDIT LOG
+     * ==========================================
+     */
+    await this.auditService.create({
+      userId,
+
+      action: 'WITHDRAWAL_COMPLETED',
+
+      entity: 'TRANSACTION',
+
+      entityId: transaction.id.toString(),
+
+      metadata: JSON.stringify({
+        transactionId: transaction.id,
+        reference: transaction.reference,
+        walletId,
+        currency: wallet.currency,
+        amount: amount.toString(),
+        previousBalance:
+          previousBalance.toString(),
+        newBalance:
+          newBalance.toString(),
+        status: transaction.status,
+        type: transaction.type,
+      }),
+    });
 
     return {
       message: 'Withdrawal successful',
@@ -311,7 +429,9 @@ export class WalletsService {
     } = transferDto;
 
     /*
-     * Prevent transfer to same wallet
+     * ==========================================
+     * PREVENT TRANSFER TO SAME WALLET
+     * ==========================================
      */
     if (
       sourceWalletId ===
@@ -332,7 +452,9 @@ export class WalletsService {
     }
 
     /*
-     * Find source wallet
+     * ==========================================
+     * FIND SOURCE WALLET
+     * ==========================================
      */
     const sourceWallet =
       await this.prisma.client.orm.public.Wallet.first({
@@ -346,7 +468,9 @@ export class WalletsService {
     }
 
     /*
-     * Verify ownership
+     * ==========================================
+     * VERIFY SOURCE WALLET OWNERSHIP
+     * ==========================================
      */
     if (sourceWallet.userId !== userId) {
       throw new BadRequestException(
@@ -355,7 +479,9 @@ export class WalletsService {
     }
 
     /*
-     * Check source wallet status
+     * ==========================================
+     * CHECK SOURCE WALLET STATUS
+     * ==========================================
      */
     if (sourceWallet.status !== 'ACTIVE') {
       throw new BadRequestException(
@@ -364,7 +490,9 @@ export class WalletsService {
     }
 
     /*
-     * Find destination wallet
+     * ==========================================
+     * FIND DESTINATION WALLET
+     * ==========================================
      */
     const destinationWallet =
       await this.prisma.client.orm.public.Wallet.first({
@@ -378,7 +506,9 @@ export class WalletsService {
     }
 
     /*
-     * Check destination wallet status
+     * ==========================================
+     * CHECK DESTINATION WALLET STATUS
+     * ==========================================
      */
     if (destinationWallet.status !== 'ACTIVE') {
       throw new BadRequestException(
@@ -387,7 +517,9 @@ export class WalletsService {
     }
 
     /*
-     * Prevent cross-currency transfer
+     * ==========================================
+     * PREVENT CROSS-CURRENCY TRANSFER
+     * ==========================================
      */
     if (
       sourceWallet.currency !==
@@ -399,7 +531,9 @@ export class WalletsService {
     }
 
     /*
-     * Check source balance
+     * ==========================================
+     * CHECK SOURCE BALANCE
+     * ==========================================
      */
     if (
       sourceWallet.balance <
@@ -411,8 +545,16 @@ export class WalletsService {
     }
 
     /*
-     * Calculate balances
+     * ==========================================
+     * CALCULATE NEW BALANCES
+     * ==========================================
      */
+    const sourcePreviousBalance =
+      sourceWallet.balance;
+
+    const destinationPreviousBalance =
+      destinationWallet.balance;
+
     const sourceNewBalance =
       sourceWallet.balance -
       transferAmount;
@@ -422,7 +564,9 @@ export class WalletsService {
       transferAmount;
 
     /*
-     * Debit source wallet
+     * ==========================================
+     * DEBIT SOURCE WALLET
+     * ==========================================
      */
     const updatedSourceWallet =
       await this.prisma.client.orm.public.Wallet
@@ -434,7 +578,9 @@ export class WalletsService {
         });
 
     /*
-     * Credit destination wallet
+     * ==========================================
+     * CREDIT DESTINATION WALLET
+     * ==========================================
      */
     const updatedDestinationWallet =
       await this.prisma.client.orm.public.Wallet
@@ -446,7 +592,9 @@ export class WalletsService {
         });
 
     /*
-     * Create transaction
+     * ==========================================
+     * CREATE TRANSACTION
+     * ==========================================
      */
     const transaction =
       await this.prisma.client.orm.public.Transaction.create({
@@ -460,7 +608,9 @@ export class WalletsService {
       });
 
     /*
+     * ==========================================
      * POST TRANSFER TO LEDGER
+     * ==========================================
      */
     await this.ledgerService.postTransfer(
       this.prisma.client,
@@ -468,6 +618,47 @@ export class WalletsService {
       transferAmount,
       sourceWallet.currency,
     );
+
+    /*
+     * ==========================================
+     * AUDIT LOG
+     * ==========================================
+     */
+    await this.auditService.create({
+      userId,
+
+      action: 'TRANSFER_COMPLETED',
+
+      entity: 'TRANSACTION',
+
+      entityId: transaction.id.toString(),
+
+      metadata: JSON.stringify({
+        transactionId: transaction.id,
+        reference: transaction.reference,
+        currency: transaction.currency,
+        amount: transferAmount.toString(),
+
+        sourceWallet: {
+          walletId: sourceWalletId,
+          previousBalance:
+            sourcePreviousBalance.toString(),
+          newBalance:
+            sourceNewBalance.toString(),
+        },
+
+        destinationWallet: {
+          walletId: destinationWalletId,
+          previousBalance:
+            destinationPreviousBalance.toString(),
+          newBalance:
+            destinationNewBalance.toString(),
+        },
+
+        status: transaction.status,
+        type: transaction.type,
+      }),
+    });
 
     return {
       message: 'Transfer successful',
