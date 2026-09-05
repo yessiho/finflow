@@ -1,6 +1,4 @@
-import {
-  Injectable,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -30,9 +28,7 @@ interface FindAuditLogsOptions {
 
 @Injectable()
 export class AuditService {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   /*
    * ==========================================
@@ -48,30 +44,20 @@ export class AuditService {
    * Audit logs should be immutable records.
    * ==========================================
    */
-  async create(
-    input: CreateAuditLogInput,
-  ) {
-    const auditLog =
-      await this.prisma.client.orm.public.AuditLog.create({
-        userId:
-          input.userId ?? null,
+  async create(input: CreateAuditLogInput) {
+    const auditLog = await this.prisma.client.orm.public.AuditLog.create({
+      userId: input.userId ?? null,
 
-        action:
-          input.action,
+      action: input.action,
 
-        entity:
-          input.entity,
+      entity: input.entity,
 
-        entityId:
-          input.entityId ?? null,
+      entityId: input.entityId ?? null,
 
-        metadata:
-          input.metadata ?? null,
-      });
+      metadata: input.metadata ?? null,
+    });
 
-    return this.formatAuditLog(
-      auditLog,
-    );
+    return this.formatAuditLog(auditLog);
   }
 
   /*
@@ -94,23 +80,11 @@ export class AuditService {
    * GET /audit?page=1&limit=20
    * ==========================================
    */
-  async findAll(
-    options: FindAuditLogsOptions = {},
-  ): Promise<any> {
-    const page =
-      options.page &&
-      options.page > 0
-        ? options.page
-        : 1;
+  async findAll(options: FindAuditLogsOptions = {}): Promise<any> {
+    const page = options.page && options.page > 0 ? options.page : 1;
 
     const limit =
-      options.limit &&
-      options.limit > 0
-        ? Math.min(
-            options.limit,
-            100,
-          )
-        : 20;
+      options.limit && options.limit > 0 ? Math.min(options.limit, 100) : 20;
 
     /*
      * Get all audit logs.
@@ -118,89 +92,54 @@ export class AuditService {
      * Current Prisma ORM runtime does not
      * use traditional skip/take pagination.
      */
-    const auditLogs =
-      await this.prisma.client.orm.public.AuditLog
-        .all();
+    const auditLogs = await this.prisma.client.orm.public.AuditLog.all();
 
     /*
      * Apply filters.
      */
-    let filteredLogs =
-      auditLogs.filter(
-        (log: any) => {
-          /*
-           * ACTION FILTER
-           */
-          if (
-            options.action &&
-            log.action !== options.action
-          ) {
-            return false;
-          }
+    let filteredLogs = auditLogs.filter((log: any) => {
+      /*
+       * ACTION FILTER
+       */
+      if (options.action && log.action !== options.action) {
+        return false;
+      }
 
-          /*
-           * ENTITY FILTER
-           */
-          if (
-            options.entity &&
-            log.entity !== options.entity
-          ) {
-            return false;
-          }
+      /*
+       * ENTITY FILTER
+       */
+      if (options.entity && log.entity !== options.entity) {
+        return false;
+      }
 
-          /*
-           * USER FILTER
-           */
-          if (
-            options.userId !== undefined &&
-            log.userId !== options.userId
-          ) {
-            return false;
-          }
+      /*
+       * USER FILTER
+       */
+      if (options.userId !== undefined && log.userId !== options.userId) {
+        return false;
+      }
 
-          return true;
-        },
-      );
+      return true;
+    });
 
     /*
      * Sort newest first.
      */
-    filteredLogs =
-      filteredLogs.sort(
-        (a: any, b: any) =>
-          new Date(
-            b.createdAt,
-          ).getTime() -
-          new Date(
-            a.createdAt,
-          ).getTime(),
-      );
+    filteredLogs = filteredLogs.sort(
+      (a: any, b: any) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
 
-    const total =
-      filteredLogs.length;
+    const total = filteredLogs.length;
 
-    const totalPages =
-      total === 0
-        ? 0
-        : Math.ceil(
-            total / limit,
-          );
+    const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
 
-    const startIndex =
-      (page - 1) * limit;
+    const startIndex = (page - 1) * limit;
 
-    const paginatedLogs =
-      filteredLogs.slice(
-        startIndex,
-        startIndex + limit,
-      );
+    const paginatedLogs = filteredLogs.slice(startIndex, startIndex + limit);
 
     return {
-      data:
-        paginatedLogs.map(
-          (log: any) =>
-            this.formatAuditLog(log),
-        ),
+      data: paginatedLogs.map((log: any) => this.formatAuditLog(log)),
 
       pagination: {
         page,
@@ -229,17 +168,13 @@ export class AuditService {
     } = {},
   ): Promise<any> {
     return this.findAll({
-      page:
-        options.page,
+      page: options.page,
 
-      limit:
-        options.limit,
+      limit: options.limit,
 
-      action:
-        options.action,
+      action: options.action,
 
-      entity:
-        options.entity,
+      entity: options.entity,
 
       userId,
     });
@@ -257,47 +192,24 @@ export class AuditService {
    * LEDGER_ACCOUNT
    * ==========================================
    */
-  async findByEntity(
-    entity: string,
-    entityId?: string,
-  ): Promise<any[]> {
-    const auditLogs =
-      await this.prisma.client.orm.public.AuditLog
-        .all();
+  async findByEntity(entity: string, entityId?: string): Promise<any[]> {
+    const auditLogs = await this.prisma.client.orm.public.AuditLog.all();
 
-    const logs =
-      auditLogs
-        .filter(
-          (log: any) => {
-            const entityMatches =
-              log.entity === entity;
+    const logs = auditLogs
+      .filter((log: any) => {
+        const entityMatches = log.entity === entity;
 
-            const entityIdMatches =
-              entityId === undefined
-                ? true
-                : log.entityId ===
-                  entityId;
+        const entityIdMatches =
+          entityId === undefined ? true : log.entityId === entityId;
 
-            return (
-              entityMatches &&
-              entityIdMatches
-            );
-          },
-        )
-        .sort(
-          (a: any, b: any) =>
-            new Date(
-              b.createdAt,
-            ).getTime() -
-            new Date(
-              a.createdAt,
-            ).getTime(),
-        );
+        return entityMatches && entityIdMatches;
+      })
+      .sort(
+        (a: any, b: any) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
 
-    return logs.map(
-      (log: any) =>
-        this.formatAuditLog(log),
-    );
+    return logs.map((log: any) => this.formatAuditLog(log));
   }
 
   /*
@@ -312,33 +224,17 @@ export class AuditService {
    * TRANSACTION_REVERSED
    * ==========================================
    */
-  async findByAction(
-    action: string,
-  ): Promise<any[]> {
-    const auditLogs =
-      await this.prisma.client.orm.public.AuditLog
-        .all();
+  async findByAction(action: string): Promise<any[]> {
+    const auditLogs = await this.prisma.client.orm.public.AuditLog.all();
 
-    const logs =
-      auditLogs
-        .filter(
-          (log: any) =>
-            log.action === action,
-        )
-        .sort(
-          (a: any, b: any) =>
-            new Date(
-              b.createdAt,
-            ).getTime() -
-            new Date(
-              a.createdAt,
-            ).getTime(),
-        );
+    const logs = auditLogs
+      .filter((log: any) => log.action === action)
+      .sort(
+        (a: any, b: any) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
 
-    return logs.map(
-      (log: any) =>
-        this.formatAuditLog(log),
-    );
+    return logs.map((log: any) => this.formatAuditLog(log));
   }
 
   /*
@@ -349,21 +245,15 @@ export class AuditService {
    * JavaScript objects where possible.
    * ==========================================
    */
-  private formatAuditLog(
-    auditLog: any,
-  ) {
-    let metadata =
-      auditLog.metadata;
+  private formatAuditLog(auditLog: any) {
+    let metadata = auditLog.metadata;
 
     /*
      * Parse JSON metadata safely.
      */
-    if (
-      typeof metadata === 'string'
-    ) {
+    if (typeof metadata === 'string') {
       try {
-        metadata =
-          JSON.parse(metadata);
+        metadata = JSON.parse(metadata);
       } catch {
         /*
          * Keep the original value when

@@ -32,9 +32,7 @@ interface AuthenticatedRequest extends Request {
 @Controller('wallets')
 @UseGuards(JwtAuthGuard)
 export class WalletsController {
-  constructor(
-    private readonly walletsService: WalletsService,
-  ) {}
+  constructor(private readonly walletsService: WalletsService) {}
 
   /*
    * ==========================================
@@ -50,17 +48,11 @@ export class WalletsController {
    *
    * ==========================================
    */
-  private getUserId(
-    req: AuthenticatedRequest,
-  ): number {
-    const userId =
-      req.user.id ??
-      req.user.userId;
+  private getUserId(req: AuthenticatedRequest): number {
+    const userId = req.user.id ?? req.user.userId;
 
     if (!userId) {
-      throw new Error(
-        'Authenticated user ID is missing',
-      );
+      throw new Error('Authenticated user ID is missing');
     }
 
     return userId;
@@ -80,10 +72,7 @@ export class WalletsController {
     @Body()
     createWalletDto: CreateWalletDto,
   ) {
-    return this.walletsService.create(
-      this.getUserId(req),
-      createWalletDto,
-    );
+    return this.walletsService.create(this.getUserId(req), createWalletDto);
   }
 
   /*
@@ -94,12 +83,8 @@ export class WalletsController {
    * ==========================================
    */
   @Get()
-  findMyWallets(
-    @Req() req: AuthenticatedRequest,
-  ) {
-    return this.walletsService.findMyWallets(
-      this.getUserId(req),
-    );
+  findMyWallets(@Req() req: AuthenticatedRequest) {
+    return this.walletsService.findMyWallets(this.getUserId(req));
   }
 
   /*

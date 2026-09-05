@@ -1,10 +1,6 @@
 'use client';
 
-import {
-  Bell,
-  Menu,
-  UserCircle,
-} from 'lucide-react';
+import { Bell, Menu, UserCircle } from 'lucide-react';
 
 interface HeaderProps {
   title?: string;
@@ -17,19 +13,13 @@ export default function Header({
 }: HeaderProps) {
   const user =
     typeof window !== 'undefined'
-      ? JSON.parse(
-          localStorage.getItem('user') ||
-            '{}',
-        )
+      ? JSON.parse(localStorage.getItem('user') || '{}')
       : {};
 
   return (
     <header className="header">
       <div className="header-left">
-        <button
-          className="mobile-menu"
-          onClick={onMenuClick}
-        >
+        <button className="mobile-menu" onClick={onMenuClick}>
           <Menu size={22} />
         </button>
 
@@ -45,13 +35,9 @@ export default function Header({
           <UserCircle size={34} />
 
           <div className="user-info">
-            <strong>
-              {user.firstName || 'User'}
-            </strong>
+            <strong>{user.firstName || 'User'}</strong>
 
-            <span>
-              {user.email || ''}
-            </span>
+            <span>{user.email || ''}</span>
           </div>
         </div>
       </div>

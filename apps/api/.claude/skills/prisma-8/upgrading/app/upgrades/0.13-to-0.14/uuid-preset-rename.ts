@@ -16,9 +16,12 @@ const replacements: Array<[RegExp, string]> = [
   [/\bfield\.uuid\(\)/g, 'field.uuidString()'],
 ];
 
-const raw = execSync('git ls-files --cached --others --exclude-standard -- "*.ts"', {
-  encoding: 'utf-8',
-}).trim();
+const raw = execSync(
+  'git ls-files --cached --others --exclude-standard -- "*.ts"',
+  {
+    encoding: 'utf-8',
+  },
+).trim();
 
 const files = raw.split('\n').filter(Boolean);
 let changed = 0;

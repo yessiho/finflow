@@ -12,9 +12,7 @@ import { LedgerService } from './ledger.service.js';
 @Controller('ledger')
 @UseGuards(JwtAuthGuard)
 export class LedgerController {
-  constructor(
-    private readonly ledgerService: LedgerService,
-  ) {}
+  constructor(private readonly ledgerService: LedgerService) {}
 
   /*
    * ==========================================
@@ -37,15 +35,10 @@ export class LedgerController {
    */
   @Get('transactions/:transactionId')
   async getTransactionEntries(
-    @Param(
-      'transactionId',
-      ParseIntPipe,
-    )
+    @Param('transactionId', ParseIntPipe)
     transactionId: number,
   ) {
-    return this.ledgerService.getTransactionEntries(
-      transactionId,
-    );
+    return this.ledgerService.getTransactionEntries(transactionId);
   }
 
   /*
@@ -57,14 +50,9 @@ export class LedgerController {
    */
   @Get('accounts/:accountId/balance')
   async getAccountBalance(
-    @Param(
-      'accountId',
-      ParseIntPipe,
-    )
+    @Param('accountId', ParseIntPipe)
     accountId: number,
   ) {
-    return this.ledgerService.getAccountBalance(
-      accountId,
-    );
+    return this.ledgerService.getAccountBalance(accountId);
   }
 }

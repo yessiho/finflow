@@ -13,30 +13,17 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { TransactionsService } from './transactions.service.js';
 
-type TransactionType =
-  | 'DEPOSIT'
-  | 'WITHDRAWAL'
-  | 'TRANSFER';
+type TransactionType = 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER';
 
 type TransactionStatus =
-  | 'PENDING'
-  | 'PROCESSING'
-  | 'COMPLETED'
-  | 'FAILED'
-  | 'REVERSED';
+  'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'REVERSED';
 
-type Currency =
-  | 'NGN'
-  | 'USD'
-  | 'EUR'
-  | 'GBP';
+type Currency = 'NGN' | 'USD' | 'EUR' | 'GBP';
 
 @Controller('transactions')
 @UseGuards(JwtAuthGuard)
 export class TransactionsController {
-  constructor(
-    private readonly transactionsService: TransactionsService,
-  ) {}
+  constructor(private readonly transactionsService: TransactionsService) {}
 
   /*
    * ==========================================
@@ -47,9 +34,7 @@ export class TransactionsController {
    */
   @Get('summary')
   async getSummary(@Req() req: any) {
-    return this.transactionsService.getSummary(
-      req.user.id,
-    );
+    return this.transactionsService.getSummary(req.user.id);
   }
 
   /*
@@ -66,15 +51,9 @@ export class TransactionsController {
 
     @Query('limit') limit?: string,
   ) {
-    const parsedLimit = limit
-      ? Number(limit)
-      : 5;
+    const parsedLimit = limit ? Number(limit) : 5;
 
-    if (
-      !Number.isInteger(parsedLimit) ||
-      parsedLimit < 1 ||
-      parsedLimit > 20
-    ) {
+    if (!Number.isInteger(parsedLimit) || parsedLimit < 1 || parsedLimit > 20) {
       throw new BadRequestException(
         'Recent transaction limit must be between 1 and 20',
       );
@@ -104,24 +83,15 @@ export class TransactionsController {
 
     @Query('days') days?: string,
   ) {
-    const parsedDays = days
-      ? Number(days)
-      : 30;
+    const parsedDays = days ? Number(days) : 30;
 
-    if (
-      !Number.isInteger(parsedDays) ||
-      parsedDays < 1 ||
-      parsedDays > 365
-    ) {
+    if (!Number.isInteger(parsedDays) || parsedDays < 1 || parsedDays > 365) {
       throw new BadRequestException(
         'Days must be an integer between 1 and 365',
       );
     }
 
-    return this.transactionsService.getAnalytics(
-      req.user.id,
-      parsedDays,
-    );
+    return this.transactionsService.getAnalytics(req.user.id, parsedDays);
   }
 
   /*
@@ -175,26 +145,17 @@ export class TransactionsController {
 
     @Query('endDate') endDate?: string,
   ) {
-    const parsedPage = page
-      ? Number(page)
-      : 1;
+    const parsedPage = page ? Number(page) : 1;
 
-    const parsedLimit = limit
-      ? Number(limit)
-      : 10;
+    const parsedLimit = limit ? Number(limit) : 10;
 
     /*
      * ==========================================
      * PAGINATION VALIDATION
      * ==========================================
      */
-    if (
-      !Number.isInteger(parsedPage) ||
-      parsedPage < 1
-    ) {
-      throw new BadRequestException(
-        'Page must be a positive integer',
-      );
+    if (!Number.isInteger(parsedPage) || parsedPage < 1) {
+      throw new BadRequestException('Page must be a positive integer');
     }
 
     if (
@@ -202,9 +163,7 @@ export class TransactionsController {
       parsedLimit < 1 ||
       parsedLimit > 100
     ) {
-      throw new BadRequestException(
-        'Limit must be between 1 and 100',
-      );
+      throw new BadRequestException('Limit must be between 1 and 100');
     }
 
     /*
@@ -212,11 +171,7 @@ export class TransactionsController {
      * VALID ENUM VALUES
      * ==========================================
      */
-    const validTypes: TransactionType[] = [
-      'DEPOSIT',
-      'WITHDRAWAL',
-      'TRANSFER',
-    ];
+    const validTypes: TransactionType[] = ['DEPOSIT', 'WITHDRAWAL', 'TRANSFER'];
 
     const validStatuses: TransactionStatus[] = [
       'PENDING',
@@ -226,27 +181,15 @@ export class TransactionsController {
       'REVERSED',
     ];
 
-    const validCurrencies: Currency[] = [
-      'NGN',
-      'USD',
-      'EUR',
-      'GBP',
-    ];
+    const validCurrencies: Currency[] = ['NGN', 'USD', 'EUR', 'GBP'];
 
     /*
      * ==========================================
      * TYPE VALIDATION
      * ==========================================
      */
-    if (
-      type &&
-      !validTypes.includes(
-        type as TransactionType,
-      )
-    ) {
-      throw new BadRequestException(
-        'Invalid transaction type',
-      );
+    if (type && !validTypes.includes(type as TransactionType)) {
+      throw new BadRequestException('Invalid transaction type');
     }
 
     /*
@@ -254,15 +197,8 @@ export class TransactionsController {
      * STATUS VALIDATION
      * ==========================================
      */
-    if (
-      status &&
-      !validStatuses.includes(
-        status as TransactionStatus,
-      )
-    ) {
-      throw new BadRequestException(
-        'Invalid transaction status',
-      );
+    if (status && !validStatuses.includes(status as TransactionStatus)) {
+      throw new BadRequestException('Invalid transaction status');
     }
 
     /*
@@ -270,15 +206,8 @@ export class TransactionsController {
      * CURRENCY VALIDATION
      * ==========================================
      */
-    if (
-      currency &&
-      !validCurrencies.includes(
-        currency as Currency,
-      )
-    ) {
-      throw new BadRequestException(
-        'Invalid currency',
-      );
+    if (currency && !validCurrencies.includes(currency as Currency)) {
+      throw new BadRequestException('Invalid currency');
     }
 
     /*
@@ -292,49 +221,27 @@ export class TransactionsController {
     if (startDate) {
       parsedStartDate = new Date(startDate);
 
-      if (
-        isNaN(
-          parsedStartDate.getTime(),
-        )
-      ) {
-        throw new BadRequestException(
-          'Invalid startDate format',
-        );
+      if (isNaN(parsedStartDate.getTime())) {
+        throw new BadRequestException('Invalid startDate format');
       }
 
       /*
        * Start from beginning of selected day
        */
-      parsedStartDate.setHours(
-        0,
-        0,
-        0,
-        0,
-      );
+      parsedStartDate.setHours(0, 0, 0, 0);
     }
 
     if (endDate) {
       parsedEndDate = new Date(endDate);
 
-      if (
-        isNaN(
-          parsedEndDate.getTime(),
-        )
-      ) {
-        throw new BadRequestException(
-          'Invalid endDate format',
-        );
+      if (isNaN(parsedEndDate.getTime())) {
+        throw new BadRequestException('Invalid endDate format');
       }
 
       /*
        * Include the entire selected day
        */
-      parsedEndDate.setHours(
-        23,
-        59,
-        59,
-        999,
-      );
+      parsedEndDate.setHours(23, 59, 59, 999);
     }
 
     /*
@@ -342,14 +249,8 @@ export class TransactionsController {
      * DATE RANGE VALIDATION
      * ==========================================
      */
-    if (
-      parsedStartDate &&
-      parsedEndDate &&
-      parsedStartDate > parsedEndDate
-    ) {
-      throw new BadRequestException(
-        'startDate cannot be greater than endDate',
-      );
+    if (parsedStartDate && parsedEndDate && parsedStartDate > parsedEndDate) {
+      throw new BadRequestException('startDate cannot be greater than endDate');
     }
 
     /*
@@ -362,22 +263,14 @@ export class TransactionsController {
      * Maximum: 1 year
      * ==========================================
      */
-    if (
-      parsedStartDate &&
-      parsedEndDate
-    ) {
+    if (parsedStartDate && parsedEndDate) {
       const differenceInMilliseconds =
-        parsedEndDate.getTime() -
-        parsedStartDate.getTime();
+        parsedEndDate.getTime() - parsedStartDate.getTime();
 
-      const differenceInDays =
-        differenceInMilliseconds /
-        (1000 * 60 * 60 * 24);
+      const differenceInDays = differenceInMilliseconds / (1000 * 60 * 60 * 24);
 
       if (differenceInDays > 366) {
-        throw new BadRequestException(
-          'Date range cannot exceed 365 days',
-        );
+        throw new BadRequestException('Date range cannot exceed 365 days');
       }
     }
 
@@ -386,36 +279,23 @@ export class TransactionsController {
      * FETCH TRANSACTIONS
      * ==========================================
      */
-    return this.transactionsService.findAll(
-      req.user.id,
-      {
-        page: parsedPage,
+    return this.transactionsService.findAll(req.user.id, {
+      page: parsedPage,
 
-        limit: parsedLimit,
+      limit: parsedLimit,
 
-        type:
-          type as
-            | TransactionType
-            | undefined,
+      type: type as TransactionType | undefined,
 
-        status:
-          status as
-            | TransactionStatus
-            | undefined,
+      status: status as TransactionStatus | undefined,
 
-        currency:
-          currency as
-            | Currency
-            | undefined,
+      currency: currency as Currency | undefined,
 
-        search:
-          search?.trim() || undefined,
+      search: search?.trim() || undefined,
 
-        startDate: parsedStartDate,
+      startDate: parsedStartDate,
 
-        endDate: parsedEndDate,
-      },
-    );
+      endDate: parsedEndDate,
+    });
   }
 
   /*
@@ -462,10 +342,7 @@ export class TransactionsController {
     @Param('id', ParseIntPipe)
     id: number,
   ) {
-    return this.transactionsService.reverse(
-      req.user.id,
-      id,
-    );
+    return this.transactionsService.reverse(req.user.id, id);
   }
 
   /*
@@ -485,9 +362,6 @@ export class TransactionsController {
     @Param('id', ParseIntPipe)
     id: number,
   ) {
-    return this.transactionsService.findOne(
-      req.user.id,
-      id,
-    );
+    return this.transactionsService.findOne(req.user.id, id);
   }
 }

@@ -1,6 +1,6 @@
 ---
-from: "8.0.0-rc.5"
-to: "8.0.0-rc.6"
+from: '8.0.0-rc.5'
+to: '8.0.0-rc.6'
 changes:
   - id: postgres-temporal-representations
     summary: |
@@ -73,10 +73,10 @@ changes:
          timestamp. Where you need a subset match, compare `toString()` or use the type's own
          `equals` / `compare`.
     detection:
-      glob: "**/*.{ts,mts,cts,prisma,json}"
+      glob: '**/*.{ts,mts,cts,prisma,json}'
       regex:
-        - "pg/(date|timestamp|timestamptz|time)@1"
-        - "sql/timestamp@1"
+        - 'pg/(date|timestamp|timestamptz|time)@1'
+        - 'sql/timestamp@1'
         - "field\\.timestamp\\("
       anyMatch: true
   - id: literal-default-needs-the-string-spelling
@@ -101,7 +101,7 @@ changes:
       Function defaults are unaffected — `@default(now())` lowers to a PostgreSQL `now()`
       storage default, never passes through a codec, and works on either representation.
     detection:
-      glob: "**/*.prisma"
+      glob: '**/*.prisma'
       regex:
         - "(Date|Timestamp|Timestamptz|Time)(\\([0-9]+\\))?\\s+@default\\(\""
       anyMatch: true
@@ -114,7 +114,7 @@ changes:
       only scripts that invoke `orm init` and expect it to deliver skills (or pass
       `--skip-skills`) need to change.
     detection:
-      glob: "**/*.{sh,yml,yaml,json,md}"
+      glob: '**/*.{sh,yml,yaml,json,md}'
       regex:
         - '\borm\s+init\b'
       anyMatch: true
@@ -125,7 +125,7 @@ changes:
       the installed toolchain. The restamp is independent of the other changes in this
       release.
     detection:
-      glob: "**/contract.json"
+      glob: '**/contract.json'
       contains:
         - '"version": "8.0.0-rc.5"'
 ---

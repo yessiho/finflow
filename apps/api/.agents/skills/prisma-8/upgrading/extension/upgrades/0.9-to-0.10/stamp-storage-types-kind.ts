@@ -114,8 +114,15 @@ async function findContractSnapshots(root: string): Promise<string[]> {
     for (const entry of entries) {
       if (entry.isDirectory()) {
         if (SKIP_DIRS.has(entry.name)) continue;
-        await walk(join(dir, entry.name), inMigrations || entry.name === 'migrations');
-      } else if (inMigrations && entry.isFile() && CONTRACT_FILES.has(entry.name)) {
+        await walk(
+          join(dir, entry.name),
+          inMigrations || entry.name === 'migrations',
+        );
+      } else if (
+        inMigrations &&
+        entry.isFile() &&
+        CONTRACT_FILES.has(entry.name)
+      ) {
         out.push(join(dir, entry.name));
       }
     }
@@ -154,7 +161,9 @@ function isAlreadyStamped(value: unknown): boolean {
   return kind === 'codec-instance' || kind === 'postgres-enum';
 }
 
-function looksLikeUntaggedCodecTriple(value: unknown): value is UntaggedCodecTriple {
+function looksLikeUntaggedCodecTriple(
+  value: unknown,
+): value is UntaggedCodecTriple {
   if (typeof value !== 'object' || value === null) return false;
   const obj = value as Record<string, unknown>;
   if (
@@ -286,7 +295,8 @@ function formatJson(value: unknown, indentLevel = 0): string {
 
   if (value === null) return 'null';
   if (typeof value === 'string') return JSON.stringify(value);
-  if (typeof value === 'number' || typeof value === 'boolean') return JSON.stringify(value);
+  if (typeof value === 'number' || typeof value === 'boolean')
+    return JSON.stringify(value);
 
   if (Array.isArray(value)) {
     if (value.length === 0) return '[]';
@@ -294,7 +304,9 @@ function formatJson(value: unknown, indentLevel = 0): string {
       const inline = `[${value.map((v) => JSON.stringify(v)).join(', ')}]`;
       if (inline.length <= INLINE_ARRAY_THRESHOLD) return inline;
     }
-    const items = value.map((v) => `${childIndent}${formatJson(v, indentLevel + 1)}`);
+    const items = value.map(
+      (v) => `${childIndent}${formatJson(v, indentLevel + 1)}`,
+    );
     return `[\n${items.join(',\n')}\n${indent}]`;
   }
 
@@ -302,7 +314,8 @@ function formatJson(value: unknown, indentLevel = 0): string {
     const entries = Object.entries(value as Record<string, unknown>);
     if (entries.length === 0) return '{}';
     const lines = entries.map(
-      ([k, v]) => `${childIndent}${JSON.stringify(k)}: ${formatJson(v, indentLevel + 1)}`,
+      ([k, v]) =>
+        `${childIndent}${JSON.stringify(k)}: ${formatJson(v, indentLevel + 1)}`,
     );
     return `{\n${lines.join(',\n')}\n${indent}}`;
   }
@@ -326,12 +339,18 @@ async function processFile(path: string): Promise<Result> {
   }
   const serialised = `${formatJson(outcome.transformed)}\n`;
   if (!dryRun) await writeFile(path, serialised, 'utf-8');
-  return { path, status: dryRun ? 'needs-fix' : 'fixed', stamped: outcome.stamped };
+  return {
+    path,
+    status: dryRun ? 'needs-fix' : 'fixed',
+    stamped: outcome.stamped,
+  };
 }
 
 const contracts = await findContractSnapshots(projectRoot);
 if (contracts.length === 0) {
-  console.error(`No start-contract.json / end-contract.json files found under ${projectRoot}.`);
+  console.error(
+    `No start-contract.json / end-contract.json files found under ${projectRoot}.`,
+  );
   process.exit(1);
 }
 

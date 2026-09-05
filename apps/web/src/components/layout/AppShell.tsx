@@ -9,17 +9,12 @@ interface AppShellProps {
   children: ReactNode;
 }
 
-export default function AppShell({
-  children,
-}: AppShellProps) {
+export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
 
-  const publicRoutes = [
-    '/login',
-  ];
+  const publicRoutes = ['/login'];
 
-  const isPublicRoute =
-    publicRoutes.includes(pathname);
+  const isPublicRoute = publicRoutes.includes(pathname);
 
   if (isPublicRoute) {
     return <>{children}</>;
@@ -29,9 +24,7 @@ export default function AppShell({
     <div className="app-shell">
       <Sidebar />
 
-      <main className="app-main">
-        {children}
-      </main>
+      <main className="app-main">{children}</main>
     </div>
   );
 }

@@ -1,0 +1,36 @@
+{
+  "name": "finflow",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FinFlow Financial Management Platform",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yessiho/finflow.git"
+  },
+  "keywords": [
+    "fintech",
+    "financial-management",
+    "nextjs",
+    "nestjs",
+    "typescript",
+    "monorepo"
+  ],
+  "author": "Yessiho Gbenahon Peter",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yessiho/finflow/issues"
+  },
+  "homepage": "https://github.com/yessiho/finflow#readme",
+  "devDependencies": {
+    "prettier": "^3.9.6"
+  }
+}

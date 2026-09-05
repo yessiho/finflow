@@ -2,6 +2,7 @@
 
 import {
   FormEvent,
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -15,9 +16,7 @@ import {
   ArrowLeftRight,
   ArrowUpFromLine,
   Calendar,
-  CreditCard,
   Eye,
-  Landmark,
   Loader2,
   ReceiptText,
   RefreshCw,
@@ -29,11 +28,7 @@ import { useParams } from 'next/navigation';
 
 import { apiFetch } from '@/lib/api';
 
-type Currency =
-  | 'NGN'
-  | 'USD'
-  | 'EUR'
-  | 'GBP';
+type Currency = 'NGN' | 'USD' | 'EUR' | 'GBP';
 
 interface WalletData {
   id: number;
@@ -47,80 +42,116 @@ interface WalletData {
 
 interface TransactionData {
   id: number;
-
   amount: string;
-
   currency: Currency;
-
-  type:
-    | 'DEPOSIT'
-    | 'WITHDRAWAL'
-    | 'TRANSFER';
-
-  status:
-    | 'PENDING'
-    | 'PROCESSING'
-    | 'COMPLETED'
-    | 'FAILED'
-    | 'REVERSED';
-
+  type: 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER';
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'REVERSED';
   reference: string;
-
   sourceWalletId: number | null;
-
   destinationWalletId: number | null;
-
   createdAt: string;
-
   updatedAt: string;
 }
 
-type ModalType =
-  | 'deposit'
-  | 'withdraw'
-  | 'transfer'
-  | null;
+type ModalType = 'deposit' | 'withdraw' | 'transfer' | null;
+
+type ApiError = {
+  message?: string;
+};
+
+type TransactionResponse = {
+  data?: TransactionData[];
+  transactions?: TransactionData[];
+};
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof (error as ApiError).message === 'string'
+  ) {
+    return (error as ApiError).message as string;
+  }
+
+  return fallback;
+}
+
+function isWalletData(value: unknown): value is WalletData {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    'currency' in value &&
+    'balance' in value
+  );
+}
+
+function isTransactionData(value: unknown): value is TransactionData {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    'amount' in value &&
+    'type' in value
+  );
+}
 
 export default function WalletDetailsPage() {
   const params = useParams();
 
-  const walletId =
-    Number(params.id);
+  const walletId = Number(params.id);
 
-  const [wallet, setWallet] =
-    useState<WalletData | null>(null);
+  const [wallet, setWallet] = useState<WalletData | null>(null);
 
-  const [wallets, setWallets] =
-    useState<WalletData[]>([]);
+  const [wallets, setWallets] = useState<WalletData[]>([]);
 
-  const [transactions, setTransactions] =
-    useState<TransactionData[]>([]);
+  const [transactions, setTransactions] = useState<TransactionData[]>([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [refreshing, setRefreshing] =
-    useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const [error, setError] =
-    useState('');
+  const [error, setError] = useState('');
 
-  const [modalError, setModalError] =
-    useState('');
+  const [modalError, setModalError] = useState('');
 
-  const [modal, setModal] =
-    useState<ModalType>(null);
+  const [modal, setModal] = useState<ModalType>(null);
 
-  const [amount, setAmount] =
-    useState('');
+  const [amount, setAmount] = useState('');
 
-  const [
-    destinationWalletId,
-    setDestinationWalletId,
-  ] = useState('');
+  const [destinationWalletId, setDestinationWalletId] = useState('');
 
-  const [submitting, setSubmitting] =
-    useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  /*
+   * ==========================================
+   * TRANSACTION DIRECTION
+   * ==========================================
+   */
+
+  const getTransactionDirection = useCallback(
+    (transaction: TransactionData): 'credit' | 'debit' => {
+      if (transaction.type === 'DEPOSIT') {
+        return 'credit';
+      }
+
+      if (transaction.type === 'WITHDRAWAL') {
+        return 'debit';
+      }
+
+      if (transaction.destinationWalletId === walletId) {
+        return 'credit';
+      }
+
+      return 'debit';
+    },
+    [walletId],
+  );
 
   /*
    * ==========================================
@@ -128,103 +159,96 @@ export default function WalletDetailsPage() {
    * ==========================================
    */
 
-  async function fetchWalletData(
-    showRefresh = false,
-  ) {
-    try {
-      if (showRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
+  const fetchWalletData = useCallback(
+    async (showRefresh = false) => {
+      try {
+        if (showRefresh) {
+          setRefreshing(true);
+        } else {
+          setLoading(true);
+        }
 
-      setError('');
+        setError('');
 
-      const walletResponse =
-        await apiFetch('/wallets');
+        const walletResponse: unknown = await apiFetch('/wallets');
 
-      const allWallets =
-        Array.isArray(walletResponse)
-          ? walletResponse
+        const allWallets = Array.isArray(walletResponse)
+          ? walletResponse.filter(isWalletData)
           : [];
 
-      setWallets(allWallets);
+        setWallets(allWallets);
 
-      const currentWallet =
-        allWallets.find(
-          (item: WalletData) =>
-            item.id === walletId,
+        const currentWallet = allWallets.find(
+          (item) => item.id === walletId,
         );
 
-      if (!currentWallet) {
-        throw new Error(
-          'Wallet not found',
-        );
-      }
+        if (!currentWallet) {
+          throw new Error('Wallet not found');
+        }
 
-      setWallet(currentWallet);
+        setWallet(currentWallet);
 
-      const transactionResponse =
-        await apiFetch(
+        const transactionResponse: unknown = await apiFetch(
           '/transactions?limit=100',
         );
 
-      let allTransactions:
-        TransactionData[] = [];
+        let allTransactions: TransactionData[] = [];
 
-      if (
-        Array.isArray(
-          transactionResponse,
-        )
-      ) {
-        allTransactions =
-          transactionResponse;
-      } else if (
-        Array.isArray(
-          transactionResponse?.data,
-        )
-      ) {
-        allTransactions =
-          transactionResponse.data;
-      } else if (
-        Array.isArray(
-          transactionResponse?.transactions,
-        )
-      ) {
-        allTransactions =
-          transactionResponse.transactions;
-      }
+        if (Array.isArray(transactionResponse)) {
+          allTransactions = transactionResponse.filter(isTransactionData);
+        } else if (
+          typeof transactionResponse === 'object' &&
+          transactionResponse !== null
+        ) {
+          const response = transactionResponse as TransactionResponse;
 
-      const walletTransactions =
-        allTransactions.filter(
+          if (Array.isArray(response.data)) {
+            allTransactions = response.data.filter(isTransactionData);
+          } else if (Array.isArray(response.transactions)) {
+            allTransactions = response.transactions.filter(
+              isTransactionData,
+            );
+          }
+        }
+
+        const walletTransactions = allTransactions.filter(
           (transaction) =>
-            transaction.sourceWalletId ===
-              walletId ||
-            transaction.destinationWalletId ===
-              walletId,
+            transaction.sourceWalletId === walletId ||
+            transaction.destinationWalletId === walletId,
         );
 
-      setTransactions(
-        walletTransactions,
-      );
-    } catch (error: any) {
-      console.error(error);
+        setTransactions(walletTransactions);
+      } catch (caughtError: unknown) {
+        console.error(caughtError);
 
-      setError(
-        error.message ||
-          'Unable to load wallet information.',
-      );
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }
+        setError(
+          getErrorMessage(
+            caughtError,
+            'Unable to load wallet information.',
+          ),
+        );
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [walletId],
+  );
 
   useEffect(() => {
-    if (!Number.isNaN(walletId)) {
-      fetchWalletData();
+    if (Number.isNaN(walletId)) {
+      queueMicrotask(() => {
+        setLoading(false);
+        setError('Invalid wallet ID.');
+      });
+
+      return;
     }
-  }, [walletId]);
+
+    queueMicrotask(() => {
+      void fetchWalletData();
+    });
+  }, [walletId, fetchWalletData]);
 
   /*
    * ==========================================
@@ -237,31 +261,24 @@ export default function WalletDetailsPage() {
 
     let debits = 0;
 
-    transactions.forEach(
-      (transaction) => {
-        const amount =
-          Number(transaction.amount) || 0;
+    transactions.forEach((transaction) => {
+      const transactionAmount = Number(transaction.amount) || 0;
 
-        const direction =
-          getTransactionDirection(
-            transaction,
-          );
+      const direction = getTransactionDirection(transaction);
 
-        if (direction === 'credit') {
-          credits += amount;
-        } else {
-          debits += amount;
-        }
-      },
-    );
+      if (direction === 'credit') {
+        credits += transactionAmount;
+      } else {
+        debits += transactionAmount;
+      }
+    });
 
     return {
       credits,
       debits,
-      transactionCount:
-        transactions.length,
+      transactionCount: transactions.length,
     };
-  }, [transactions, walletId]);
+  }, [transactions, getTransactionDirection]);
 
   /*
    * ==========================================
@@ -272,19 +289,15 @@ export default function WalletDetailsPage() {
   function formatCurrency(
     value: string | number,
     currency: Currency,
-  ) {
-    const numericValue =
-      Number(value) || 0;
+  ): string {
+    const numericValue = Number(value) || 0;
 
-    return new Intl.NumberFormat(
-      'en-NG',
-      {
-        style: 'currency',
-        currency,
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      },
-    ).format(numericValue);
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(numericValue);
   }
 
   /*
@@ -293,13 +306,8 @@ export default function WalletDetailsPage() {
    * ==========================================
    */
 
-  function getCurrencyFlag(
-    currency: Currency,
-  ) {
-    const flags: Record<
-      Currency,
-      string
-    > = {
+  function getCurrencyFlag(currency: Currency): string {
+    const flags: Record<Currency, string> = {
       NGN: '🇳🇬',
       USD: '🇺🇸',
       EUR: '🇪🇺',
@@ -315,36 +323,22 @@ export default function WalletDetailsPage() {
    * ==========================================
    */
 
-  function formatDate(
-    date: string,
-  ) {
-    return new Intl.DateTimeFormat(
-      'en-NG',
-      {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      },
-    ).format(
-      new Date(date),
-    );
+  function formatDate(date: string): string {
+    return new Intl.DateTimeFormat('en-NG', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).format(new Date(date));
   }
 
-  function formatDateTime(
-    date: string,
-  ) {
-    return new Intl.DateTimeFormat(
-      'en-NG',
-      {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      },
-    ).format(
-      new Date(date),
-    );
+  function formatDateTime(date: string): string {
+    return new Intl.DateTimeFormat('en-NG', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(date));
   }
 
   /*
@@ -353,17 +347,20 @@ export default function WalletDetailsPage() {
    * ==========================================
    */
 
-  function openModal(
-    type: ModalType,
-  ) {
+  function openModal(type: ModalType) {
     setModalError('');
+
     setAmount('');
+
     setDestinationWalletId('');
+
     setModal(type);
   }
 
-  function closeModal() {
-    if (submitting) return;
+  function closeModal(force = false) {
+    if (submitting && !force) {
+      return;
+    }
 
     setModal(null);
 
@@ -372,6 +369,26 @@ export default function WalletDetailsPage() {
     setDestinationWalletId('');
 
     setModalError('');
+  }
+
+  /*
+   * ==========================================
+   * VALIDATE AMOUNT
+   * ==========================================
+   */
+
+  function validateAmount(): number | null {
+    const numericAmount = Number(amount);
+
+    if (!numericAmount || numericAmount <= 0) {
+      setModalError(
+        'Please enter a valid amount greater than zero.',
+      );
+
+      return null;
+    }
+
+    return numericAmount;
   }
 
   /*
@@ -385,31 +402,38 @@ export default function WalletDetailsPage() {
   ) {
     event.preventDefault();
 
-    if (!wallet) return;
+    if (!wallet) {
+      return;
+    }
+
+    const numericAmount = validateAmount();
+
+    if (!numericAmount) {
+      return;
+    }
 
     try {
       setSubmitting(true);
 
       setModalError('');
 
-      await apiFetch(
-        `/wallets/${wallet.id}/deposit`,
-        {
-          method: 'POST',
+      await apiFetch(`/wallets/${wallet.id}/deposit`, {
+        method: 'POST',
 
-          body: JSON.stringify({
-            amount: Number(amount),
-          }),
-        },
-      );
+        body: JSON.stringify({
+          amount: numericAmount,
+        }),
+      });
 
-      closeModal();
+      closeModal(true);
 
       await fetchWalletData(true);
-    } catch (error: any) {
+    } catch (caughtError: unknown) {
       setModalError(
-        error.message ||
+        getErrorMessage(
+          caughtError,
           'Unable to complete deposit.',
+        ),
       );
     } finally {
       setSubmitting(false);
@@ -427,31 +451,46 @@ export default function WalletDetailsPage() {
   ) {
     event.preventDefault();
 
-    if (!wallet) return;
+    if (!wallet) {
+      return;
+    }
+
+    const numericAmount = validateAmount();
+
+    if (!numericAmount) {
+      return;
+    }
+
+    if (numericAmount > Number(wallet.balance)) {
+      setModalError(
+        'Withdrawal amount cannot exceed your available balance.',
+      );
+
+      return;
+    }
 
     try {
       setSubmitting(true);
 
       setModalError('');
 
-      await apiFetch(
-        `/wallets/${wallet.id}/withdraw`,
-        {
-          method: 'POST',
+      await apiFetch(`/wallets/${wallet.id}/withdraw`, {
+        method: 'POST',
 
-          body: JSON.stringify({
-            amount: Number(amount),
-          }),
-        },
-      );
+        body: JSON.stringify({
+          amount: numericAmount,
+        }),
+      });
 
-      closeModal();
+      closeModal(true);
 
       await fetchWalletData(true);
-    } catch (error: any) {
+    } catch (caughtError: unknown) {
       setModalError(
-        error.message ||
+        getErrorMessage(
+          caughtError,
           'Unable to complete withdrawal.',
+        ),
       );
     } finally {
       setSubmitting(false);
@@ -469,74 +508,58 @@ export default function WalletDetailsPage() {
   ) {
     event.preventDefault();
 
-    if (!wallet) return;
+    if (!wallet) {
+      return;
+    }
+
+    const numericAmount = validateAmount();
+
+    if (!numericAmount) {
+      return;
+    }
+
+    if (!destinationWalletId) {
+      setModalError('Please select a destination wallet.');
+
+      return;
+    }
+
+    if (numericAmount > Number(wallet.balance)) {
+      setModalError(
+        'Transfer amount cannot exceed your available balance.',
+      );
+
+      return;
+    }
 
     try {
       setSubmitting(true);
 
       setModalError('');
 
-      await apiFetch(
-        `/wallets/${wallet.id}/transfer`,
-        {
-          method: 'POST',
+      await apiFetch(`/wallets/${wallet.id}/transfer`, {
+        method: 'POST',
 
-          body: JSON.stringify({
-            destinationWalletId:
-              Number(
-                destinationWalletId,
-              ),
+        body: JSON.stringify({
+          destinationWalletId: Number(destinationWalletId),
 
-            amount:
-              Number(amount),
-          }),
-        },
-      );
+          amount: numericAmount,
+        }),
+      });
 
-      closeModal();
+      closeModal(true);
 
       await fetchWalletData(true);
-    } catch (error: any) {
+    } catch (caughtError: unknown) {
       setModalError(
-        error.message ||
+        getErrorMessage(
+          caughtError,
           'Unable to complete transfer.',
+        ),
       );
     } finally {
       setSubmitting(false);
     }
-  }
-
-  /*
-   * ==========================================
-   * TRANSACTION DIRECTION
-   * ==========================================
-   */
-
-  function getTransactionDirection(
-    transaction: TransactionData,
-  ) {
-    if (
-      transaction.type ===
-      'DEPOSIT'
-    ) {
-      return 'credit';
-    }
-
-    if (
-      transaction.type ===
-      'WITHDRAWAL'
-    ) {
-      return 'debit';
-    }
-
-    if (
-      transaction.destinationWalletId ===
-      walletId
-    ) {
-      return 'credit';
-    }
-
-    return 'debit';
   }
 
   /*
@@ -553,13 +576,10 @@ export default function WalletDetailsPage() {
           className="wallet-detail-spinner"
         />
 
-        <h3>
-          Loading wallet
-        </h3>
+        <h3>Loading wallet</h3>
 
         <p>
-          Please wait while we load your
-          financial information.
+          Please wait while we load your financial information.
         </p>
       </div>
     );
@@ -574,28 +594,21 @@ export default function WalletDetailsPage() {
   if (error && !wallet) {
     return (
       <div className="wallet-detail-error-page">
-
         <div className="wallet-detail-error-icon">
           <Wallet size={30} />
         </div>
 
-        <h2>
-          Unable to load wallet
-        </h2>
+        <h2>Unable to load wallet</h2>
 
-        <p>
-          {error}
-        </p>
+        <p>{error}</p>
 
         <Link
           href="/wallets"
           className="wallet-detail-primary-button"
         >
           <ArrowLeft size={18} />
-
           Back to Wallets
         </Link>
-
       </div>
     );
   }
@@ -604,92 +617,83 @@ export default function WalletDetailsPage() {
     return null;
   }
 
+  const availableDestinationWallets = wallets.filter(
+    (item) =>
+      item.id !== wallet.id &&
+      item.currency === wallet.currency,
+  );
+
   return (
     <div className="wallet-detail-page">
-
       {/* ======================================
           PAGE HEADER
       ====================================== */}
 
       <div className="wallet-detail-header">
-
         <div className="wallet-detail-header-left">
-
           <Link
             href="/wallets"
             className="wallet-detail-back-button"
           >
             <ArrowLeft size={17} />
 
-            <span>
-              Back to Wallets
-            </span>
+            <span>Back to Wallets</span>
           </Link>
 
           <div className="wallet-detail-title">
-
             <div className="wallet-detail-currency-icon">
-              {getCurrencyFlag(
-                wallet.currency,
-              )}
+              {getCurrencyFlag(wallet.currency)}
             </div>
 
             <div>
-
               <div className="wallet-detail-title-top">
-
-                <h1>
-                  {wallet.currency} Wallet
-                </h1>
+                <h1>{wallet.currency} Wallet</h1>
 
                 <span
                   className={`wallet-detail-status ${wallet.status.toLowerCase()}`}
                 >
                   {wallet.status}
                 </span>
-
               </div>
 
               <p>
-                Manage your wallet balance,
-                transactions and transfers.
+                Manage your wallet balance, transactions and
+                transfers.
               </p>
-
             </div>
-
           </div>
-
         </div>
 
         <button
           type="button"
           className="wallet-detail-refresh-button"
-          onClick={() =>
-            fetchWalletData(true)
-          }
+          onClick={() => void fetchWalletData(true)}
           disabled={refreshing}
         >
           <RefreshCw
             size={17}
             className={
-              refreshing
-                ? 'wallet-detail-spinning'
-                : ''
+              refreshing ? 'wallet-detail-spinning' : ''
             }
           />
 
-          {refreshing
-            ? 'Refreshing...'
-            : 'Refresh'}
+          {refreshing ? 'Refreshing...' : 'Refresh'}
         </button>
-
       </div>
 
       {/* ERROR */}
 
       {error && (
         <div className="wallet-detail-alert">
-          {error}
+          <span>{error}</span>
+
+          <button
+            type="button"
+            onClick={() => setError('')}
+            aria-label="Close error"
+          >
+            <X size={16} />
+          </button>
         </div>
       )}
 
@@ -698,15 +702,10 @@ export default function WalletDetailsPage() {
       ====================================== */}
 
       <section className="wallet-detail-balance-card">
-
         <div className="wallet-detail-balance-main">
-
           <div className="wallet-detail-balance-label">
-
             <Wallet size={18} />
-
             Available Balance
-
           </div>
 
           <h2>
@@ -717,54 +716,31 @@ export default function WalletDetailsPage() {
           </h2>
 
           <p>
-            Current available funds in this
-            wallet.
+            Current available funds in this wallet.
           </p>
-
         </div>
 
         <div className="wallet-detail-balance-meta">
-
           <div>
+            <span>Wallet ID</span>
 
-            <span>
-              Wallet ID
-            </span>
-
-            <strong>
-              #{wallet.id}
-            </strong>
-
+            <strong>#{wallet.id}</strong>
           </div>
 
           <div>
+            <span>Currency</span>
 
-            <span>
-              Currency
-            </span>
-
-            <strong>
-              {wallet.currency}
-            </strong>
-
+            <strong>{wallet.currency}</strong>
           </div>
 
           <div>
-
-            <span>
-              Created
-            </span>
+            <span>Created</span>
 
             <strong>
-              {formatDate(
-                wallet.createdAt,
-              )}
+              {formatDate(wallet.createdAt)}
             </strong>
-
           </div>
-
         </div>
-
       </section>
 
       {/* ======================================
@@ -772,18 +748,13 @@ export default function WalletDetailsPage() {
       ====================================== */}
 
       <section className="wallet-detail-stats-grid">
-
         <div className="wallet-detail-stat-card">
-
           <div className="wallet-detail-stat-icon credit">
             <ArrowDownToLine size={20} />
           </div>
 
           <div>
-
-            <span>
-              Total Credits
-            </span>
+            <span>Total Credits</span>
 
             <strong>
               {formatCurrency(
@@ -791,22 +762,16 @@ export default function WalletDetailsPage() {
                 wallet.currency,
               )}
             </strong>
-
           </div>
-
         </div>
 
         <div className="wallet-detail-stat-card">
-
           <div className="wallet-detail-stat-icon debit">
             <ArrowUpFromLine size={20} />
           </div>
 
           <div>
-
-            <span>
-              Total Debits
-            </span>
+            <span>Total Debits</span>
 
             <strong>
               {formatCurrency(
@@ -814,31 +779,22 @@ export default function WalletDetailsPage() {
                 wallet.currency,
               )}
             </strong>
-
           </div>
-
         </div>
 
         <div className="wallet-detail-stat-card">
-
           <div className="wallet-detail-stat-icon neutral">
             <ReceiptText size={20} />
           </div>
 
           <div>
-
-            <span>
-              Transactions
-            </span>
+            <span>Transactions</span>
 
             <strong>
               {walletStats.transactionCount}
             </strong>
-
           </div>
-
         </div>
-
       </section>
 
       {/* ======================================
@@ -846,106 +802,65 @@ export default function WalletDetailsPage() {
       ====================================== */}
 
       <section className="wallet-detail-actions-section">
-
         <div className="wallet-detail-section-heading">
-
           <div>
-
-            <h2>
-              Wallet Actions
-            </h2>
+            <h2>Wallet Actions</h2>
 
             <p>
-              Perform financial operations
-              securely.
+              Perform financial operations securely.
             </p>
-
           </div>
-
         </div>
 
         <div className="wallet-detail-actions-grid">
-
           <button
             type="button"
-            onClick={() =>
-              openModal('deposit')
-            }
+            onClick={() => openModal('deposit')}
             className="wallet-detail-action-card"
           >
-
             <div className="wallet-detail-action-icon deposit">
               <ArrowDownToLine size={22} />
             </div>
 
             <div>
+              <strong>Deposit Money</strong>
 
-              <strong>
-                Deposit Money
-              </strong>
-
-              <span>
-                Add funds to this wallet
-              </span>
-
+              <span>Add funds to this wallet</span>
             </div>
-
           </button>
 
           <button
             type="button"
-            onClick={() =>
-              openModal('withdraw')
-            }
+            onClick={() => openModal('withdraw')}
             className="wallet-detail-action-card"
           >
-
             <div className="wallet-detail-action-icon withdraw">
               <ArrowUpFromLine size={22} />
             </div>
 
             <div>
+              <strong>Withdraw Money</strong>
 
-              <strong>
-                Withdraw Money
-              </strong>
-
-              <span>
-                Withdraw available funds
-              </span>
-
+              <span>Withdraw available funds</span>
             </div>
-
           </button>
 
           <button
             type="button"
-            onClick={() =>
-              openModal('transfer')
-            }
+            onClick={() => openModal('transfer')}
             className="wallet-detail-action-card"
           >
-
             <div className="wallet-detail-action-icon transfer">
               <ArrowLeftRight size={22} />
             </div>
 
             <div>
+              <strong>Transfer Money</strong>
 
-              <strong>
-                Transfer Money
-              </strong>
-
-              <span>
-                Send funds to another wallet
-              </span>
-
+              <span>Send funds to another wallet</span>
             </div>
-
           </button>
-
         </div>
-
       </section>
 
       {/* ======================================
@@ -953,28 +868,20 @@ export default function WalletDetailsPage() {
       ====================================== */}
 
       <section className="wallet-detail-history">
-
         <div className="wallet-detail-history-header">
-
           <div>
-
             <div className="wallet-detail-section-icon">
               <ReceiptText size={20} />
             </div>
 
             <div>
-
-              <h2>
-                Transaction History
-              </h2>
+              <h2>Transaction History</h2>
 
               <p>
-                Recent financial activity
-                associated with this wallet.
+                Recent financial activity associated with this
+                wallet.
               </p>
-
             </div>
-
           </div>
 
           <Link
@@ -982,130 +889,86 @@ export default function WalletDetailsPage() {
             className="wallet-detail-view-all"
           >
             View All
-
             <Eye size={17} />
           </Link>
-
         </div>
 
         {transactions.length === 0 ? (
-
           <div className="wallet-detail-empty">
-
             <div className="wallet-detail-empty-icon">
               <ReceiptText size={38} />
             </div>
 
-            <h3>
-              No transactions yet
-            </h3>
+            <h3>No transactions yet</h3>
 
             <p>
-              Your wallet transactions will
-              appear here once activity begins.
+              Your wallet transactions will appear here once
+              activity begins.
             </p>
-
           </div>
-
         ) : (
-
           <div className="wallet-detail-transaction-list">
+            {transactions.map((transaction) => {
+              const direction =
+                getTransactionDirection(transaction);
 
-            {transactions.map(
-              (transaction) => {
-                const direction =
-                  getTransactionDirection(
-                    transaction,
-                  );
-
-                return (
-
-                  <Link
-                    key={transaction.id}
-                    href={`/transactions/${transaction.id}`}
-                    className="wallet-detail-transaction-item"
+              return (
+                <Link
+                  key={transaction.id}
+                  href={`/transactions/${transaction.id}`}
+                  className="wallet-detail-transaction-item"
+                >
+                  <div
+                    className={`wallet-detail-transaction-icon ${direction}`}
                   >
+                    {direction === 'credit' ? (
+                      <ArrowDownToLine size={19} />
+                    ) : (
+                      <ArrowUpFromLine size={19} />
+                    )}
+                  </div>
 
-                    <div
-                      className={`wallet-detail-transaction-icon ${direction}`}
-                    >
+                  <div className="wallet-detail-transaction-info">
+                    <strong>{transaction.type}</strong>
 
-                      {direction ===
-                      'credit' ? (
-                        <ArrowDownToLine
-                          size={19}
-                        />
-                      ) : (
-                        <ArrowUpFromLine
-                          size={19}
-                        />
+                    <span>{transaction.reference}</span>
+
+                    <small>
+                      <Calendar size={13} />
+
+                      {formatDateTime(
+                        transaction.createdAt,
                       )}
+                    </small>
+                  </div>
 
-                    </div>
+                  <div className="wallet-detail-transaction-right">
+                    <strong
+                      className={
+                        direction === 'credit'
+                          ? 'wallet-detail-credit'
+                          : 'wallet-detail-debit'
+                      }
+                    >
+                      {direction === 'credit' ? '+' : '-'}
 
-                    <div className="wallet-detail-transaction-info">
+                      {formatCurrency(
+                        transaction.amount,
+                        transaction.currency,
+                      )}
+                    </strong>
 
-                      <strong>
-                        {transaction.type}
-                      </strong>
-
-                      <span>
-                        {transaction.reference}
-                      </span>
-
-                      <small>
-
-                        <Calendar size={13} />
-
-                        {formatDateTime(
-                          transaction.createdAt,
-                        )}
-
-                      </small>
-
-                    </div>
-
-                    <div className="wallet-detail-transaction-right">
-
-                      <strong
-                        className={
-                          direction ===
-                          'credit'
-                            ? 'wallet-detail-credit'
-                            : 'wallet-detail-debit'
-                        }
-                      >
-
-                        {direction ===
-                        'credit'
-                          ? '+'
-                          : '-'}
-
-                        {formatCurrency(
-                          transaction.amount,
-                          transaction.currency,
-                        )}
-
-                      </strong>
-
-                      <span
-                        className={`wallet-detail-transaction-status ${transaction.status.toLowerCase()}`}
-                      >
-                        {transaction.status}
-                      </span>
-
-                    </div>
-
-                  </Link>
-
-                );
-              },
-            )}
-
+                    <span
+                      className={`wallet-detail-transaction-status ${transaction.status.toLowerCase()}`}
+                    >
+                      {transaction.status}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
-
         )}
-
       </section>
 
       {/* ======================================
@@ -1113,49 +976,43 @@ export default function WalletDetailsPage() {
       ====================================== */}
 
       {modal === 'deposit' && (
-
-        <div className="wallet-detail-modal-overlay">
-
-          <div className="wallet-detail-modal">
-
+        <div
+          className="wallet-detail-modal-overlay"
+          onClick={() => closeModal()}
+        >
+          <div
+            className="wallet-detail-modal"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
             <div className="wallet-detail-modal-header">
-
               <div className="wallet-detail-modal-title">
-
                 <div className="wallet-detail-modal-icon deposit">
                   <ArrowDownToLine size={21} />
                 </div>
 
                 <div>
-
-                  <h2>
-                    Deposit Money
-                  </h2>
+                  <h2>Deposit Money</h2>
 
                   <p>
-                    Add funds to your{' '}
-                    {wallet.currency} wallet.
+                    Add funds to your {wallet.currency} wallet.
                   </p>
-
                 </div>
-
               </div>
 
               <button
                 type="button"
                 className="wallet-detail-modal-close"
-                onClick={closeModal}
+                onClick={() => closeModal()}
                 disabled={submitting}
+                aria-label="Close deposit modal"
               >
                 <X size={20} />
               </button>
-
             </div>
 
-            <form
-              onSubmit={handleDeposit}
-            >
-
+            <form onSubmit={handleDeposit}>
               {modalError && (
                 <div className="wallet-detail-modal-error">
                   {modalError}
@@ -1163,16 +1020,10 @@ export default function WalletDetailsPage() {
               )}
 
               <div className="wallet-detail-form-field">
-
-                <label>
-                  Deposit Amount
-                </label>
+                <label>Deposit Amount</label>
 
                 <div className="wallet-detail-input-wrapper">
-
-                  <span>
-                    {wallet.currency}
-                  </span>
+                  <span>{wallet.currency}</span>
 
                   <input
                     type="number"
@@ -1181,23 +1032,18 @@ export default function WalletDetailsPage() {
                     placeholder="0.00"
                     value={amount}
                     onChange={(event) =>
-                      setAmount(
-                        event.target.value,
-                      )
+                      setAmount(event.target.value)
                     }
                     required
                   />
-
                 </div>
-
               </div>
 
               <div className="wallet-detail-modal-actions">
-
                 <button
                   type="button"
                   className="wallet-detail-secondary-button"
-                  onClick={closeModal}
+                  onClick={() => closeModal()}
                   disabled={submitting}
                 >
                   Cancel
@@ -1208,7 +1054,6 @@ export default function WalletDetailsPage() {
                   className="wallet-detail-primary-button"
                   disabled={submitting}
                 >
-
                   {submitting && (
                     <Loader2
                       size={17}
@@ -1219,17 +1064,11 @@ export default function WalletDetailsPage() {
                   {submitting
                     ? 'Processing...'
                     : 'Deposit Money'}
-
                 </button>
-
               </div>
-
             </form>
-
           </div>
-
         </div>
-
       )}
 
       {/* ======================================
@@ -1237,49 +1076,44 @@ export default function WalletDetailsPage() {
       ====================================== */}
 
       {modal === 'withdraw' && (
-
-        <div className="wallet-detail-modal-overlay">
-
-          <div className="wallet-detail-modal">
-
+        <div
+          className="wallet-detail-modal-overlay"
+          onClick={() => closeModal()}
+        >
+          <div
+            className="wallet-detail-modal"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
             <div className="wallet-detail-modal-header">
-
               <div className="wallet-detail-modal-title">
-
                 <div className="wallet-detail-modal-icon withdraw">
                   <ArrowUpFromLine size={21} />
                 </div>
 
                 <div>
-
-                  <h2>
-                    Withdraw Money
-                  </h2>
+                  <h2>Withdraw Money</h2>
 
                   <p>
-                    Withdraw funds from your{' '}
-                    {wallet.currency} wallet.
+                    Withdraw funds from your {wallet.currency}{' '}
+                    wallet.
                   </p>
-
                 </div>
-
               </div>
 
               <button
                 type="button"
                 className="wallet-detail-modal-close"
-                onClick={closeModal}
+                onClick={() => closeModal()}
                 disabled={submitting}
+                aria-label="Close withdrawal modal"
               >
                 <X size={20} />
               </button>
-
             </div>
 
-            <form
-              onSubmit={handleWithdraw}
-            >
-
+            <form onSubmit={handleWithdraw}>
               {modalError && (
                 <div className="wallet-detail-modal-error">
                   {modalError}
@@ -1287,10 +1121,7 @@ export default function WalletDetailsPage() {
               )}
 
               <div className="wallet-detail-current-balance">
-
-                <span>
-                  Available Balance
-                </span>
+                <span>Available Balance</span>
 
                 <strong>
                   {formatCurrency(
@@ -1298,20 +1129,13 @@ export default function WalletDetailsPage() {
                     wallet.currency,
                   )}
                 </strong>
-
               </div>
 
               <div className="wallet-detail-form-field">
-
-                <label>
-                  Withdrawal Amount
-                </label>
+                <label>Withdrawal Amount</label>
 
                 <div className="wallet-detail-input-wrapper">
-
-                  <span>
-                    {wallet.currency}
-                  </span>
+                  <span>{wallet.currency}</span>
 
                   <input
                     type="number"
@@ -1320,23 +1144,18 @@ export default function WalletDetailsPage() {
                     placeholder="0.00"
                     value={amount}
                     onChange={(event) =>
-                      setAmount(
-                        event.target.value,
-                      )
+                      setAmount(event.target.value)
                     }
                     required
                   />
-
                 </div>
-
               </div>
 
               <div className="wallet-detail-modal-actions">
-
                 <button
                   type="button"
                   className="wallet-detail-secondary-button"
-                  onClick={closeModal}
+                  onClick={() => closeModal()}
                   disabled={submitting}
                 >
                   Cancel
@@ -1347,7 +1166,6 @@ export default function WalletDetailsPage() {
                   className="wallet-detail-danger-button"
                   disabled={submitting}
                 >
-
                   {submitting && (
                     <Loader2
                       size={17}
@@ -1358,17 +1176,11 @@ export default function WalletDetailsPage() {
                   {submitting
                     ? 'Processing...'
                     : 'Withdraw Money'}
-
                 </button>
-
               </div>
-
             </form>
-
           </div>
-
         </div>
-
       )}
 
       {/* ======================================
@@ -1376,49 +1188,43 @@ export default function WalletDetailsPage() {
       ====================================== */}
 
       {modal === 'transfer' && (
-
-        <div className="wallet-detail-modal-overlay">
-
-          <div className="wallet-detail-modal">
-
+        <div
+          className="wallet-detail-modal-overlay"
+          onClick={() => closeModal()}
+        >
+          <div
+            className="wallet-detail-modal"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
             <div className="wallet-detail-modal-header">
-
               <div className="wallet-detail-modal-title">
-
                 <div className="wallet-detail-modal-icon transfer">
                   <ArrowLeftRight size={21} />
                 </div>
 
                 <div>
-
-                  <h2>
-                    Transfer Money
-                  </h2>
+                  <h2>Transfer Money</h2>
 
                   <p>
-                    Transfer funds securely to
-                    another wallet.
+                    Transfer funds securely to another wallet.
                   </p>
-
                 </div>
-
               </div>
 
               <button
                 type="button"
                 className="wallet-detail-modal-close"
-                onClick={closeModal}
+                onClick={() => closeModal()}
                 disabled={submitting}
+                aria-label="Close transfer modal"
               >
                 <X size={20} />
               </button>
-
             </div>
 
-            <form
-              onSubmit={handleTransfer}
-            >
-
+            <form onSubmit={handleTransfer}>
               {modalError && (
                 <div className="wallet-detail-modal-error">
                   {modalError}
@@ -1426,18 +1232,12 @@ export default function WalletDetailsPage() {
               )}
 
               <div className="wallet-detail-form-field">
-
-                <label>
-                  From Wallet
-                </label>
+                <label>From Wallet</label>
 
                 <div className="wallet-detail-readonly-field">
-
                   <Wallet size={18} />
 
-                  <span>
-                    {wallet.currency} Wallet
-                  </span>
+                  <span>{wallet.currency} Wallet</span>
 
                   <strong>
                     {formatCurrency(
@@ -1445,21 +1245,14 @@ export default function WalletDetailsPage() {
                       wallet.currency,
                     )}
                   </strong>
-
                 </div>
-
               </div>
 
               <div className="wallet-detail-form-field">
-
-                <label>
-                  Destination Wallet
-                </label>
+                <label>Destination Wallet</label>
 
                 <select
-                  value={
-                    destinationWalletId
-                  }
+                  value={destinationWalletId}
                   onChange={(event) =>
                     setDestinationWalletId(
                       event.target.value,
@@ -1467,46 +1260,36 @@ export default function WalletDetailsPage() {
                   }
                   required
                 >
-
                   <option value="">
                     Select destination wallet
                   </option>
 
-                  {wallets
-                    .filter(
-                      (item) =>
-                        item.id !==
-                          wallet.id &&
-                        item.currency ===
-                          wallet.currency,
-                    )
-                    .map((item) => (
-
+                  {availableDestinationWallets.map(
+                    (item) => (
                       <option
                         key={item.id}
                         value={item.id}
                       >
-                        {item.currency} Wallet
-                        {' '}— Wallet #{item.id}
+                        {item.currency} Wallet — Wallet #
+                        {item.id}
                       </option>
-
-                    ))}
-
+                    ),
+                  )}
                 </select>
 
+                {availableDestinationWallets.length === 0 && (
+                  <small className="wallet-detail-modal-error">
+                    No other {wallet.currency} wallet is available
+                    for transfer.
+                  </small>
+                )}
               </div>
 
               <div className="wallet-detail-form-field">
-
-                <label>
-                  Transfer Amount
-                </label>
+                <label>Transfer Amount</label>
 
                 <div className="wallet-detail-input-wrapper">
-
-                  <span>
-                    {wallet.currency}
-                  </span>
+                  <span>{wallet.currency}</span>
 
                   <input
                     type="number"
@@ -1515,23 +1298,18 @@ export default function WalletDetailsPage() {
                     placeholder="0.00"
                     value={amount}
                     onChange={(event) =>
-                      setAmount(
-                        event.target.value,
-                      )
+                      setAmount(event.target.value)
                     }
                     required
                   />
-
                 </div>
-
               </div>
 
               <div className="wallet-detail-modal-actions">
-
                 <button
                   type="button"
                   className="wallet-detail-secondary-button"
-                  onClick={closeModal}
+                  onClick={() => closeModal()}
                   disabled={submitting}
                 >
                   Cancel
@@ -1540,9 +1318,11 @@ export default function WalletDetailsPage() {
                 <button
                   type="submit"
                   className="wallet-detail-primary-button"
-                  disabled={submitting}
+                  disabled={
+                    submitting ||
+                    availableDestinationWallets.length === 0
+                  }
                 >
-
                   {submitting && (
                     <Loader2
                       size={17}
@@ -1553,19 +1333,12 @@ export default function WalletDetailsPage() {
                   {submitting
                     ? 'Processing...'
                     : 'Transfer Money'}
-
                 </button>
-
               </div>
-
             </form>
-
           </div>
-
         </div>
-
       )}
-
     </div>
   );
 }

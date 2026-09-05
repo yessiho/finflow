@@ -1,12 +1,12 @@
 # Upgrade Prisma 8 (user app)
 
-This reference upgrades a project that **consumes** Prisma 8 via the public package API (`@internal/postgres`, `@internal/mongo`, the contract files in `prisma/`, etc.). If the project is itself a Prisma 8 *extension*, use [`upgrade-extension.md`](upgrade-extension.md) instead — or both, if the repo contains both an app and an extension package.
+This reference upgrades a project that **consumes** Prisma 8 via the public package API (`@internal/postgres`, `@internal/mongo`, the contract files in `prisma/`, etc.). If the project is itself a Prisma 8 _extension_, use [`upgrade-extension.md`](upgrade-extension.md) instead — or both, if the repo contains both an app and an extension package.
 
 The per-transition instructions this reference reads live under [`../upgrading/app/upgrades/`](../upgrading/app/upgrades/).
 
 ## Step 0 — Upgrade to the newest instructions, then re-read
 
-The upgrade instructions ship inside the installed Prisma packages, so the copy on disk describes the version currently installed — not the version being upgraded *to*. Bug fixes to *old* per-transition instructions ship with each release as part of the cumulative set, so the newest copy is the one to run.
+The upgrade instructions ship inside the installed Prisma packages, so the copy on disk describes the version currently installed — not the version being upgraded _to_. Bug fixes to _old_ per-transition instructions ship with each release as part of the cumulative set, so the newest copy is the one to run.
 
 Do the version bump first (step 1 of the per-step flow below), re-sync the skills from the newly installed packages (`prisma skills sync`), and re-read this reference and the per-transition instructions before applying any code translation. If the agent runtime supports an in-session refresh, perform it after the sync; otherwise finish the session's reasoning against the re-read files.
 
@@ -32,7 +32,7 @@ If `prisma.config.ts` is absent or names no extensions, skip the pre-flight.
 This flow applies when the project **consumes** Prisma Next:
 
 - `package.json` declares one or more `@internal/*` packages under `dependencies` / `devDependencies`, and
-- the package is *not* itself an extension (no `@internal/contract` (or other SPI) under `dependencies`/`peerDependencies`; name does not match `^@.*/extension-`; not referenced from a sibling app's `prisma.config.ts`).
+- the package is _not_ itself an extension (no `@internal/contract` (or other SPI) under `dependencies`/`peerDependencies`; name does not match `^@.*/extension-`; not referenced from a sibling app's `prisma.config.ts`).
 
 If the project also matches the extension-author role, run **this** flow first and then [`upgrade-extension.md`](upgrade-extension.md) in the same session. If detection is ambiguous, ask the user.
 

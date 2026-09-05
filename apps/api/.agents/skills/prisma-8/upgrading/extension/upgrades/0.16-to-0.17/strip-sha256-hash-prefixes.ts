@@ -126,10 +126,16 @@ function sha256Hex(input: string): string {
  * so the same function works at write time (no hash yet) and at recompute
  * time (rehashing an already-attested record over the bare-hex envelope).
  */
-function computeMigrationHash(metadata: Record<string, unknown>, ops: unknown): string {
+function computeMigrationHash(
+  metadata: Record<string, unknown>,
+  ops: unknown,
+): string {
   const { migrationHash: _migrationHash, ...strippedMeta } = metadata;
 
-  const partHashes = [canonicalizeJson(strippedMeta), canonicalizeJson(ops)].map(sha256Hex);
+  const partHashes = [
+    canonicalizeJson(strippedMeta),
+    canonicalizeJson(ops),
+  ].map(sha256Hex);
   return sha256Hex(canonicalizeJson(partHashes));
 }
 
@@ -141,12 +147,19 @@ function computeMigrationHash(metadata: Record<string, unknown>, ops: unknown): 
 const LEGACY_HASH_LITERAL = /(["'])sha256:([0-9a-f]{64}|empty)\1/g;
 
 function stripHashPrefixes(text: string): string {
-  return text.replace(LEGACY_HASH_LITERAL, (_full, quote: string, hash: string) => {
-    return `${quote}${hash}${quote}`;
-  });
+  return text.replace(
+    LEGACY_HASH_LITERAL,
+    (_full, quote: string, hash: string) => {
+      return `${quote}${hash}${quote}`;
+    },
+  );
 }
 
-function replaceMigrationHash(text: string, oldHash: string, newHash: string): string {
+function replaceMigrationHash(
+  text: string,
+  oldHash: string,
+  newHash: string,
+): string {
   if (oldHash === newHash) return text;
   const re = new RegExp(`("migrationHash"[ \\t]*:[ \\t]*)"${oldHash}"`);
   if (re.exec(text) === null) {
@@ -228,7 +241,11 @@ const results: Result[] = [];
 /** Old migration hash (as previously stored, prefixed) → recomputed bare hash. */
 const migrationHashMap = new Map<string, string>();
 
-async function emit(path: string, before: string, after: string): Promise<Result> {
+async function emit(
+  path: string,
+  before: string,
+  after: string,
+): Promise<Result> {
   if (after === before) {
     return { path, status: 'already-clean' };
   }
@@ -291,7 +308,9 @@ async function processPackage(manifestPath: string): Promise<Result[]> {
 
   const oldStoredHash = parsed['migrationHash'];
   if (typeof oldStoredHash !== 'string') {
-    throw new Error(`${manifestPath}: manifest is missing a string \`migrationHash\` field`);
+    throw new Error(
+      `${manifestPath}: manifest is missing a string \`migrationHash\` field`,
+    );
   }
   const strippedOldHash = stripHashPrefixes(`"${oldStoredHash}"`).slice(1, -1);
   migrationHashMap.set(oldStoredHash, newHash);
@@ -341,8 +360,13 @@ async function processRefFile(path: string): Promise<Result> {
 
 // --- Driver ---------------------------------------------------------------
 
-const { manifests, refFiles, snapshotFiles } = await findMigrationArtifacts(projectRoot);
-if (manifests.length === 0 && refFiles.length === 0 && snapshotFiles.length === 0) {
+const { manifests, refFiles, snapshotFiles } =
+  await findMigrationArtifacts(projectRoot);
+if (
+  manifests.length === 0 &&
+  refFiles.length === 0 &&
+  snapshotFiles.length === 0
+) {
   console.error(`No migration artifacts found under ${projectRoot}.`);
   process.exit(1);
 }
@@ -366,7 +390,9 @@ for (const result of results) {
     alreadyClean += 1;
   } else if (result.status === 'skipped-no-ops') {
     skipped += 1;
-    console.log(`SKIP  ${rel}  (no sibling ops.json — not a migration package)`);
+    console.log(
+      `SKIP  ${rel}  (no sibling ops.json — not a migration package)`,
+    );
   } else {
     changed += 1;
     const verb = dryRun ? 'WOULD FIX' : 'FIXED';

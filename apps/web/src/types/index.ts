@@ -1,13 +1,6 @@
-export type Currency =
-  | 'NGN'
-  | 'USD'
-  | 'EUR'
-  | 'GBP';
+export type Currency = 'NGN' | 'USD' | 'EUR' | 'GBP';
 
-export type WalletStatus =
-  | 'ACTIVE'
-  | 'INACTIVE'
-  | 'SUSPENDED';
+export type WalletStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
 
 export interface Wallet {
   id: number;
@@ -19,17 +12,10 @@ export interface Wallet {
   updatedAt: string;
 }
 
-export type TransactionType =
-  | 'DEPOSIT'
-  | 'WITHDRAWAL'
-  | 'TRANSFER';
+export type TransactionType = 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER';
 
 export type TransactionStatus =
-  | 'PENDING'
-  | 'PROCESSING'
-  | 'COMPLETED'
-  | 'FAILED'
-  | 'REVERSED';
+  'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'REVERSED';
 
 export interface Transaction {
   id: number;

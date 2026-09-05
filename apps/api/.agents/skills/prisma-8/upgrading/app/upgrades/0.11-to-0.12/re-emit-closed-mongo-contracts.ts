@@ -90,7 +90,10 @@ async function resolveContractJson(configDir: string): Promise<string | null> {
 
 async function isMongoContract(contractPath: string): Promise<boolean> {
   const raw = await readFile(contractPath, 'utf-8');
-  return raw.includes('"kind": "mongo-database"') || raw.includes('"kind":"mongo-database"');
+  return (
+    raw.includes('"kind": "mongo-database"') ||
+    raw.includes('"kind":"mongo-database"')
+  );
 }
 
 /**
@@ -127,7 +130,11 @@ function contractLooksClosed(raw: string): boolean {
 
     const hasProperties = isJsonObject(node['properties']);
     const isPolymorphicTopLevel = Array.isArray(node['oneOf']);
-    if (hasProperties && !isPolymorphicTopLevel && node['additionalProperties'] !== false) {
+    if (
+      hasProperties &&
+      !isPolymorphicTopLevel &&
+      node['additionalProperties'] !== false
+    ) {
       return false;
     }
 
@@ -155,7 +162,9 @@ async function packageJsonHasEmitScript(configDir: string): Promise<boolean> {
 async function runEmit(configDir: string): Promise<void> {
   const hasEmitScript = await packageJsonHasEmitScript(configDir);
   const cmd = hasEmitScript ? 'pnpm' : 'pnpm';
-  const args = hasEmitScript ? ['emit'] : ['exec', 'prisma-next', 'contract', 'emit'];
+  const args = hasEmitScript
+    ? ['emit']
+    : ['exec', 'prisma-next', 'contract', 'emit'];
   await execFileAsync(cmd, args, { cwd: configDir, env: process.env });
 }
 

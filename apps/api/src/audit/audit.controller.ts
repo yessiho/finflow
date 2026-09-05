@@ -12,9 +12,7 @@ import { AuditService } from './audit.service.js';
 @Controller('audit')
 @UseGuards(JwtAuthGuard)
 export class AuditController {
-  constructor(
-    private readonly auditService: AuditService,
-  ) {}
+  constructor(private readonly auditService: AuditService) {}
 
   /*
    * ==========================================
@@ -43,30 +41,19 @@ export class AuditController {
 
     @Query('userId') userId?: string,
   ): Promise<unknown> {
-    const parsedPage = page
-      ? Number(page)
-      : 1;
+    const parsedPage = page ? Number(page) : 1;
 
-    const parsedLimit = limit
-      ? Number(limit)
-      : 20;
+    const parsedLimit = limit ? Number(limit) : 20;
 
-    const parsedUserId = userId
-      ? Number(userId)
-      : undefined;
+    const parsedUserId = userId ? Number(userId) : undefined;
 
     /*
      * ==========================================
      * PAGE VALIDATION
      * ==========================================
      */
-    if (
-      !Number.isInteger(parsedPage) ||
-      parsedPage < 1
-    ) {
-      throw new BadRequestException(
-        'Page must be a positive integer',
-      );
+    if (!Number.isInteger(parsedPage) || parsedPage < 1) {
+      throw new BadRequestException('Page must be a positive integer');
     }
 
     /*
@@ -79,9 +66,7 @@ export class AuditController {
       parsedLimit < 1 ||
       parsedLimit > 100
     ) {
-      throw new BadRequestException(
-        'Limit must be between 1 and 100',
-      );
+      throw new BadRequestException('Limit must be between 1 and 100');
     }
 
     /*
@@ -91,14 +76,9 @@ export class AuditController {
      */
     if (
       parsedUserId !== undefined &&
-      (
-        !Number.isInteger(parsedUserId) ||
-        parsedUserId < 1
-      )
+      (!Number.isInteger(parsedUserId) || parsedUserId < 1)
     ) {
-      throw new BadRequestException(
-        'User ID must be a positive integer',
-      );
+      throw new BadRequestException('User ID must be a positive integer');
     }
 
     return this.auditService.findAll({
@@ -106,11 +86,9 @@ export class AuditController {
 
       limit: parsedLimit,
 
-      action:
-        action?.trim() || undefined,
+      action: action?.trim() || undefined,
 
-      entity:
-        entity?.trim() || undefined,
+      entity: entity?.trim() || undefined,
 
       userId: parsedUserId,
     });

@@ -1,31 +1,17 @@
-import {
-  BadRequestException,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service.js';
 
-type Currency =
-  | 'NGN'
-  | 'USD'
-  | 'EUR'
-  | 'GBP';
+type Currency = 'NGN' | 'USD' | 'EUR' | 'GBP';
 
-type AccountType =
-  | 'ASSET'
-  | 'LIABILITY'
-  | 'REVENUE'
-  | 'EXPENSE'
-  | 'EQUITY';
+type AccountType = 'ASSET' | 'LIABILITY' | 'REVENUE' | 'EXPENSE' | 'EQUITY';
 
 @Injectable()
 export class LedgerService {
   getLedgerAccounts() {
     throw new Error('Method not implemented.');
   }
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   /*
    * ==========================================
@@ -39,10 +25,9 @@ export class LedgerService {
     type: AccountType,
     currency: Currency,
   ) {
-    const existingAccount =
-      await tx.orm.public.LedgerAccount.first({
-        code,
-      });
+    const existingAccount = await tx.orm.public.LedgerAccount.first({
+      code,
+    });
 
     if (existingAccount) {
       return existingAccount;
@@ -62,10 +47,7 @@ export class LedgerService {
    * GET CASH ACCOUNT
    * ==========================================
    */
-  async getCashAccount(
-    tx: any,
-    currency: Currency,
-  ) {
+  async getCashAccount(tx: any, currency: Currency) {
     return this.getOrCreateAccount(
       tx,
       `CASH-${currency}`,
@@ -80,10 +62,7 @@ export class LedgerService {
    * GET WALLET LIABILITY ACCOUNT
    * ==========================================
    */
-  async getWalletLiabilityAccount(
-    tx: any,
-    currency: Currency,
-  ) {
+  async getWalletLiabilityAccount(tx: any, currency: Currency) {
     return this.getOrCreateAccount(
       tx,
       `WALLET-${currency}`,
@@ -115,28 +94,17 @@ export class LedgerService {
     let totalCredit = 0n;
 
     for (const entry of entries) {
-      if (
-        entry.debit < 0n ||
-        entry.credit < 0n
-      ) {
-        throw new BadRequestException(
-          'Ledger amounts cannot be negative',
-        );
+      if (entry.debit < 0n || entry.credit < 0n) {
+        throw new BadRequestException('Ledger amounts cannot be negative');
       }
 
-      if (
-        entry.debit > 0n &&
-        entry.credit > 0n
-      ) {
+      if (entry.debit > 0n && entry.credit > 0n) {
         throw new BadRequestException(
           'A ledger entry cannot contain both debit and credit amounts',
         );
       }
 
-      if (
-        entry.debit === 0n &&
-        entry.credit === 0n
-      ) {
+      if (entry.debit === 0n && entry.credit === 0n) {
         throw new BadRequestException(
           'A ledger entry must contain a debit or credit amount',
         );
@@ -147,9 +115,7 @@ export class LedgerService {
     }
 
     if (totalDebit !== totalCredit) {
-      throw new BadRequestException(
-        'Ledger transaction is not balanced',
-      );
+      throw new BadRequestException('Ledger transaction is not balanced');
     }
 
     return {
@@ -180,13 +146,12 @@ export class LedgerService {
     const createdEntries = [];
 
     for (const entry of entries) {
-      const createdEntry =
-        await tx.orm.public.LedgerEntry.create({
-          transactionId,
-          accountId: entry.accountId,
-          debit: entry.debit,
-          credit: entry.credit,
-        });
+      const createdEntry = await tx.orm.public.LedgerEntry.create({
+        transactionId,
+        accountId: entry.accountId,
+        debit: entry.debit,
+        credit: entry.credit,
+      });
 
       createdEntries.push(createdEntry);
     }
@@ -208,34 +173,22 @@ export class LedgerService {
     amount: bigint,
     currency: Currency,
   ) {
-    const cashAccount =
-      await this.getCashAccount(
-        tx,
-        currency,
-      );
+    const cashAccount = await this.getCashAccount(tx, currency);
 
-    const walletAccount =
-      await this.getWalletLiabilityAccount(
-        tx,
-        currency,
-      );
+    const walletAccount = await this.getWalletLiabilityAccount(tx, currency);
 
-    return this.createDoubleEntry(
-      tx,
-      transactionId,
-      [
-        {
-          accountId: cashAccount.id,
-          debit: amount,
-          credit: 0n,
-        },
-        {
-          accountId: walletAccount.id,
-          debit: 0n,
-          credit: amount,
-        },
-      ],
-    );
+    return this.createDoubleEntry(tx, transactionId, [
+      {
+        accountId: cashAccount.id,
+        debit: amount,
+        credit: 0n,
+      },
+      {
+        accountId: walletAccount.id,
+        debit: 0n,
+        credit: amount,
+      },
+    ]);
   }
 
   /*
@@ -252,34 +205,22 @@ export class LedgerService {
     amount: bigint,
     currency: Currency,
   ) {
-    const cashAccount =
-      await this.getCashAccount(
-        tx,
-        currency,
-      );
+    const cashAccount = await this.getCashAccount(tx, currency);
 
-    const walletAccount =
-      await this.getWalletLiabilityAccount(
-        tx,
-        currency,
-      );
+    const walletAccount = await this.getWalletLiabilityAccount(tx, currency);
 
-    return this.createDoubleEntry(
-      tx,
-      transactionId,
-      [
-        {
-          accountId: walletAccount.id,
-          debit: amount,
-          credit: 0n,
-        },
-        {
-          accountId: cashAccount.id,
-          debit: 0n,
-          credit: amount,
-        },
-      ],
-    );
+    return this.createDoubleEntry(tx, transactionId, [
+      {
+        accountId: walletAccount.id,
+        debit: amount,
+        credit: 0n,
+      },
+      {
+        accountId: cashAccount.id,
+        debit: 0n,
+        credit: amount,
+      },
+    ]);
   }
 
   /*
@@ -295,28 +236,20 @@ export class LedgerService {
     amount: bigint,
     currency: Currency,
   ) {
-    const walletAccount =
-      await this.getWalletLiabilityAccount(
-        tx,
-        currency,
-      );
+    const walletAccount = await this.getWalletLiabilityAccount(tx, currency);
 
-    return this.createDoubleEntry(
-      tx,
-      transactionId,
-      [
-        {
-          accountId: walletAccount.id,
-          debit: amount,
-          credit: 0n,
-        },
-        {
-          accountId: walletAccount.id,
-          debit: 0n,
-          credit: amount,
-        },
-      ],
-    );
+    return this.createDoubleEntry(tx, transactionId, [
+      {
+        accountId: walletAccount.id,
+        debit: amount,
+        credit: 0n,
+      },
+      {
+        accountId: walletAccount.id,
+        debit: 0n,
+        credit: amount,
+      },
+    ]);
   }
 
   /*
@@ -329,34 +262,23 @@ export class LedgerService {
     reversalTransactionId: number,
   ) {
     const originalEntries =
-      await this.prisma.client.orm.public.LedgerEntry
-        .where({
-          transactionId: originalTransactionId,
-        })
-        .all();
+      await this.prisma.client.orm.public.LedgerEntry.where({
+        transactionId: originalTransactionId,
+      }).all();
 
     if (!originalEntries.length) {
-      throw new BadRequestException(
-        'No ledger entries found for transaction',
-      );
+      throw new BadRequestException('No ledger entries found for transaction');
     }
 
-    const reversalEntries =
-      originalEntries.map((entry) => ({
-        accountId: entry.accountId,
-        debit: entry.credit,
-        credit: entry.debit,
-      }));
+    const reversalEntries = originalEntries.map((entry) => ({
+      accountId: entry.accountId,
+      debit: entry.credit,
+      credit: entry.debit,
+    }));
 
-    return this.prisma.client.transaction(
-      async (tx) => {
-        return this.createDoubleEntry(
-          tx,
-          reversalTransactionId,
-          reversalEntries,
-        );
-      },
-    );
+    return this.prisma.client.transaction(async (tx) => {
+      return this.createDoubleEntry(tx, reversalTransactionId, reversalEntries);
+    });
   }
 
   /*
@@ -371,18 +293,13 @@ export class LedgerService {
    * ==========================================
    */
   async getAllAccounts() {
-    const accounts =
-      await this.prisma.client.orm.public.LedgerAccount
-        .all();
+    const accounts = await this.prisma.client.orm.public.LedgerAccount.all();
 
     const accountBalances = await Promise.all(
       accounts.map(async (account) => {
-        const entries =
-          await this.prisma.client.orm.public.LedgerEntry
-            .where({
-              accountId: account.id,
-            })
-            .all();
+        const entries = await this.prisma.client.orm.public.LedgerEntry.where({
+          accountId: account.id,
+        }).all();
 
         let totalDebit = 0n;
         let totalCredit = 0n;
@@ -394,28 +311,20 @@ export class LedgerService {
 
         let balance = 0n;
 
-        if (
-          account.type === 'ASSET' ||
-          account.type === 'EXPENSE'
-        ) {
-          balance =
-            totalDebit - totalCredit;
+        if (account.type === 'ASSET' || account.type === 'EXPENSE') {
+          balance = totalDebit - totalCredit;
         } else {
-          balance =
-            totalCredit - totalDebit;
+          balance = totalCredit - totalDebit;
         }
 
         return {
           ...account,
 
-          totalDebit:
-            totalDebit.toString(),
+          totalDebit: totalDebit.toString(),
 
-          totalCredit:
-            totalCredit.toString(),
+          totalCredit: totalCredit.toString(),
 
-          balance:
-            balance.toString(),
+          balance: balance.toString(),
         };
       }),
     );
@@ -430,15 +339,10 @@ export class LedgerService {
    * GET /ledger/transactions/:transactionId
    * ==========================================
    */
-  async getTransactionEntries(
-    transactionId: number,
-  ) {
-    const entries =
-      await this.prisma.client.orm.public.LedgerEntry
-        .where({
-          transactionId,
-        })
-        .all();
+  async getTransactionEntries(transactionId: number) {
+    const entries = await this.prisma.client.orm.public.LedgerEntry.where({
+      transactionId,
+    }).all();
 
     return entries.map((entry) => ({
       ...entry,
@@ -454,26 +358,18 @@ export class LedgerService {
    * GET /ledger/accounts/:accountId/balance
    * ==========================================
    */
-  async getAccountBalance(
-    accountId: number,
-  ) {
-    const account =
-      await this.prisma.client.orm.public.LedgerAccount.first({
-        id: accountId,
-      });
+  async getAccountBalance(accountId: number) {
+    const account = await this.prisma.client.orm.public.LedgerAccount.first({
+      id: accountId,
+    });
 
     if (!account) {
-      throw new BadRequestException(
-        'Ledger account not found',
-      );
+      throw new BadRequestException('Ledger account not found');
     }
 
-    const entries =
-      await this.prisma.client.orm.public.LedgerEntry
-        .where({
-          accountId,
-        })
-        .all();
+    const entries = await this.prisma.client.orm.public.LedgerEntry.where({
+      accountId,
+    }).all();
 
     let totalDebit = 0n;
     let totalCredit = 0n;
@@ -485,28 +381,20 @@ export class LedgerService {
 
     let balance: bigint;
 
-    if (
-      account.type === 'ASSET' ||
-      account.type === 'EXPENSE'
-    ) {
-      balance =
-        totalDebit - totalCredit;
+    if (account.type === 'ASSET' || account.type === 'EXPENSE') {
+      balance = totalDebit - totalCredit;
     } else {
-      balance =
-        totalCredit - totalDebit;
+      balance = totalCredit - totalDebit;
     }
 
     return {
       account,
 
-      totalDebit:
-        totalDebit.toString(),
+      totalDebit: totalDebit.toString(),
 
-      totalCredit:
-        totalCredit.toString(),
+      totalCredit: totalCredit.toString(),
 
-      balance:
-        balance.toString(),
+      balance: balance.toString(),
     };
   }
 }

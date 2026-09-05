@@ -106,7 +106,9 @@ async function packageJsonHasEmitScript(dir: string): Promise<boolean> {
   }
 }
 
-async function packageJsonHasBuildContractSpaceScript(dir: string): Promise<boolean> {
+async function packageJsonHasBuildContractSpaceScript(
+  dir: string,
+): Promise<boolean> {
   const pkgPath = join(dir, 'package.json');
   if (!(await pathExists(pkgPath))) return false;
   const raw = await readFile(pkgPath, 'utf-8');
@@ -168,7 +170,9 @@ for (const configDir of configDirs) {
 }
 
 if (targets.length === 0) {
-  console.error(`No Postgres public-default migration candidates under ${projectRoot}.`);
+  console.error(
+    `No Postgres public-default migration candidates under ${projectRoot}.`,
+  );
   process.exit(dryRun ? 0 : 1);
 }
 

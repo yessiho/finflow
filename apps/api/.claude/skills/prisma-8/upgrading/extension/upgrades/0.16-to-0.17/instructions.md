@@ -1,6 +1,6 @@
 ---
-from: "0.16"
-to: "0.17"
+from: '0.16'
+to: '0.17'
 changes:
   - id: strip-sha256-hash-prefixes
     summary: |
@@ -23,7 +23,7 @@ changes:
       hash mismatch on verify — there is no compatibility shim; re-sign against the regenerated
       contract (`prisma-next db sign`).
     detection:
-      glob: "**/*.{json,ts,mts,cts,tsx}"
+      glob: '**/*.{json,ts,mts,cts,tsx}'
       contains:
         - 'sha256:'
       anyMatch: true
@@ -67,10 +67,10 @@ changes:
       conversion. Run it, review the diff, then typecheck your extension package
       to confirm every rewritten `migration.ts` import resolves.
     detection:
-      glob: "**/migration.ts"
+      glob: '**/migration.ts'
       contains:
-        - "./start-contract.json"
-        - "./end-contract.json"
+        - './start-contract.json'
+        - './end-contract.json'
         - "./start-contract'"
         - "./end-contract'"
       anyMatch: true
@@ -100,7 +100,7 @@ changes:
       (same invocation as above; one run folds both migration-package and
       ref-paired snapshots), then review the diff.
     detection:
-      glob: "**/refs/*.contract.json"
+      glob: '**/refs/*.contract.json'
       anyMatch: true
   - id: extension-packs-key-renamed-to-extensions
     summary: |
@@ -124,31 +124,31 @@ changes:
       release: `contract.source.sourceFormat` → `format`, and the target
       façades' `defineConfig` option `outputPath` → `output`.
     detection:
-      glob: "**/*.{ts,json}"
+      glob: '**/*.{ts,json}'
       contains:
-        - "extensionPacks"
-        - "composedExtensionPacks"
+        - 'extensionPacks'
+        - 'composedExtensionPacks'
       anyMatch: true
   - id: orm-count-only-mutation-terminals-renamed
     summary: Replace `createCount(...)`, `updateCount(...)`, and `deleteCount()` with `createAndCount(...)`, `updateAndCount(...)`, and `deleteAndCount()` in ORM call sites; arguments, guards, behavior, and `Promise<number>` results are unchanged, and no compatibility aliases remain.
     detection:
-      glob: "**/*.{ts,tsx,mts,cts}"
+      glob: '**/*.{ts,tsx,mts,cts}'
       contains:
-        - ".createCount("
-        - ".updateCount("
-        - ".deleteCount("
+        - '.createCount('
+        - '.updateCount('
+        - '.deleteCount('
       anyMatch: true
   - id: adopt-sql-json-projection-ast-foundations
     summary: Migrate relational AST construction and traversal to explicit JSON projection wrappers, expanded scalar-expression variants, grouped function-source aliases, and codec-preserving forwarded projections.
     detection:
-      glob: "**/*.{ts,tsx}"
+      glob: '**/*.{ts,tsx}'
       contains:
-        - "JsonObjectExpr"
-        - "JsonArrayAggExpr"
-        - "ExprVisitor"
-        - "AnyExpression"
-        - "FunctionSource.of"
-        - "ProjectionItem.of"
+        - 'JsonObjectExpr'
+        - 'JsonArrayAggExpr'
+        - 'ExprVisitor'
+        - 'AnyExpression'
+        - 'FunctionSource.of'
+        - 'ProjectionItem.of'
       anyMatch: true
   - id: scalar-type-descriptors-channel-removed
     summary: |
@@ -166,18 +166,18 @@ changes:
       deleted, and `validateScalarTypeCodecIds` now takes the authoring type namespace instead of
       a descriptor map.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "scalarTypeDescriptors"
-        - "assembleScalarTypeDescriptors"
+        - 'scalarTypeDescriptors'
+        - 'assembleScalarTypeDescriptors'
       anyMatch: true
   - id: postgres-native-types-move-to-type-position
     summary: |
       PostgreSQL native storage types are authored directly in PSL type position, and the legacy `@db.*` attribute channel is removed. Rewrite `BaseType @db.Type` as `Type` and `BaseType @db.Type(args)` as `Type(args)` in extension schemas and test fixtures, then re-run contract emission. Any remaining `@db.X(args)` fails with `@db.X(args) is no longer supported; use X(args) in type position`, preserving the constructor name and arguments in the suggested replacement. The supported translations are `@db.Char` → `Char`, `@db.VarChar` → `VarChar`, `@db.Numeric` → `Numeric`, `@db.Uuid` → `Uuid`, `@db.Inet` → `Inet`, `@db.SmallInt` → `SmallInt`, `@db.Real` → `Real`, `@db.Timestamp` → `Timestamp`, `@db.Timestamptz` → `Timestamptz`, `@db.Date` → `Date`, `@db.Time` → `Time`, and `@db.Timetz` → `Timetz`; preserve constructor arguments. Rewrite the old native-json spelling `Json @db.Json` as bare `Json`. This source migration preserves native types and supplied type parameters. It also preserves codec ids except for `@db.Date` → `Date`, which rebinds `pg/timestamptz@1` to `pg/date@1`, changes the contract storage hash, and requires re-emission plus re-signing; see the `postgres-date-rebound-to-pg-date` entry below. Separately, apply the `postgres-json-rebound-to-native-json` entry below to old bare `Json` fields that meant jsonb storage.
     detection:
-      glob: "**/*.prisma"
+      glob: '**/*.prisma'
       contains:
-        - "@db."
+        - '@db.'
       anyMatch: true
   - id: postgres-json-rebound-to-native-json
     summary: |
@@ -191,9 +191,9 @@ changes:
       plus the new `Jsonb -> { codecId: 'pg/jsonb@1', nativeType: 'jsonb' }` entry. PSL
       value-object storage columns still emit jsonb (the interpreter now prefers the target's `Jsonb` scalar and falls back to `Json`). The removed `@db.Json` spelling must be rewritten from `Json @db.Json` to bare `Json`; any remaining use fails with migration guidance to use `Json` in type position. SQLite and Mongo `Json` bindings and the TS builder surface (`field.json()`, `jsonbColumn`) are unchanged.
     detection:
-      glob: "**/*.{prisma,ts,mts,cts}"
+      glob: '**/*.{prisma,ts,mts,cts}'
       contains:
-        - "Json"
+        - 'Json'
       anyMatch: true
   - id: default-generators-no-longer-set-storage
     summary: |
@@ -216,15 +216,15 @@ changes:
       char storage explicitly in the type position (`Char(36) @default(uuid())`, …), then
       re-emit.
     detection:
-      glob: "**/*.{ts,mts,cts,prisma}"
+      glob: '**/*.{ts,mts,cts,prisma}'
       contains:
-        - "resolveGeneratedColumnDescriptor"
-        - "resolveBuiltinGeneratedColumnDescriptor"
-        - "baseScalar"
-        - "@default(uuid("
-        - "@default(cuid("
-        - "@default(nanoid("
-        - "@default(ulid("
+        - 'resolveGeneratedColumnDescriptor'
+        - 'resolveBuiltinGeneratedColumnDescriptor'
+        - 'baseScalar'
+        - '@default(uuid('
+        - '@default(cuid('
+        - '@default(nanoid('
+        - '@default(ulid('
       anyMatch: true
   - id: postgres-date-rebound-to-pg-date
     summary: |
@@ -235,7 +235,7 @@ changes:
       decode over date columns now succeeds instead of failing with `RUNTIME.DECODE_FAILED`.
       Contracts emitted before the upgrade keep working (`pg/timestamptz@1` still exists).
     detection:
-      glob: "**/*.{prisma,ts,mts,cts}"
+      glob: '**/*.{prisma,ts,mts,cts}'
       regex:
         - '@db\.Date'
         - '\sDate(\s|\?|\[|$)'
@@ -251,9 +251,9 @@ changes:
       (`isStructuredError` from `@internal/utils/structured-error`). Message text is
       unchanged.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "SqlEscapeError"
+        - 'SqlEscapeError'
   - id: supabase-error-classes-removed
     summary: |
       The `SupabaseConfigError` and `InvalidJwtError` classes are deleted from
@@ -266,10 +266,10 @@ changes:
       (`isStructuredError` from `@internal/utils/structured-error`). Message
       text is unchanged.
     detection:
-      glob: "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}"
+      glob: '**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}'
       contains:
-        - "SupabaseConfigError"
-        - "InvalidJwtError"
+        - 'SupabaseConfigError'
+        - 'InvalidJwtError'
       anyMatch: true
 
   - id: rls-wire-name-helpers-moved-to-sql-schema-ir-naming
@@ -288,12 +288,12 @@ changes:
       `computeIndexContentHash`, `WIRE_NAME_PREFIX_MAX_LENGTH`, and
       `assertWireNamePrefixLength` for packs that construct index wire names.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "formatRlsPolicyWireName"
-        - "parseRlsPolicyWireName"
-        - "normalizePredicate"
-        - "RlsPolicyWireName"
+        - 'formatRlsPolicyWireName'
+        - 'parseRlsPolicyWireName'
+        - 'normalizePredicate'
+        - 'RlsPolicyWireName'
       anyMatch: true
   - id: rls-policy-migration-literal-carries-the-naming-union
     summary: |
@@ -311,11 +311,11 @@ changes:
       pack ships that calls `createRlsPolicy` — a 0.16 file fails to compile with
       `Property 'naming' is missing`.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "PostgresRlsPolicyMigrationInput"
-        - "rlsPolicyInputFromFlat"
-        - "createRlsPolicy"
+        - 'PostgresRlsPolicyMigrationInput'
+        - 'rlsPolicyInputFromFlat'
+        - 'createRlsPolicy'
       anyMatch: true
   - id: sql-index-entities-are-name-identified
     summary: |
@@ -340,11 +340,11 @@ changes:
       `indexes-are-name-identified` entry for the database-convergence flow — the first
       widening plan is renames-only).
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "SqlIndexIR"
-        - "indexes: ["
-        - "indexes:["
+        - 'SqlIndexIR'
+        - 'indexes: ['
+        - 'indexes:['
       anyMatch: true
   - id: framework-error-classes-removed
     summary: |
@@ -359,20 +359,20 @@ changes:
       (`isStructuredError` from `@internal/utils/structured-error`). Message
       text is unchanged.
     detection:
-      glob: "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}"
+      glob: '**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}'
       contains:
-        - "ConfigFileNotFoundError"
-        - "ConfigValidationError"
-        - "DomainNamespaceResolutionError"
+        - 'ConfigFileNotFoundError'
+        - 'ConfigValidationError'
+        - 'DomainNamespaceResolutionError'
       anyMatch: true
   - id: postgres-extension-codecs-require-target-descriptors
     summary: Migrate PostgreSQL-bound extension codecs to the target-owned descriptor protocol and contribute one target-typed descriptor set through runtime and control stacks.
     detection:
-      glob: "**/*.{ts,tsx}"
+      glob: '**/*.{ts,tsx}'
       contains:
-        - "extends CodecDescriptorImpl"
-        - "CodecDescriptorImpl<"
-        - "readonly AnyCodecDescriptor[]"
+        - 'extends CodecDescriptorImpl'
+        - 'CodecDescriptorImpl<'
+        - 'readonly AnyCodecDescriptor[]'
       anyMatch: true
   - id: rls-policies-gain-exact-names
     summary: |
@@ -398,15 +398,15 @@ changes:
       `@@map("physical name")` to author the exact mode (additive — wire lowering is
       byte-unchanged).
     detection:
-      glob: "**/*.{ts,mts,cts,prisma}"
+      glob: '**/*.{ts,mts,cts,prisma}'
       contains:
-        - "PostgresRlsPolicy"
-        - "PostgresPolicySchemaNode"
-        - "policy_select"
-        - "policy_insert"
-        - "policy_update"
-        - "policy_delete"
-        - "policy_all"
+        - 'PostgresRlsPolicy'
+        - 'PostgresPolicySchemaNode'
+        - 'policy_select'
+        - 'policy_insert'
+        - 'policy_update'
+        - 'policy_delete'
+        - 'policy_all'
   - id: codec-json-projections-must-agree-with-encode-json
     summary: |
       A target codec descriptor's `jsonProjection` hook is now live rather than a placeholder:
@@ -421,11 +421,11 @@ changes:
       late, because the value has already been converted. `encodeJson` / `decodeJson` move with
       the projection, in the same change.
     detection:
-      glob: "**/*.{ts,tsx}"
+      glob: '**/*.{ts,tsx}'
       contains:
-        - "jsonProjection"
-        - "PostgresCodecDescriptor"
-        - "SqliteCodecDescriptor"
+        - 'jsonProjection'
+        - 'PostgresCodecDescriptor'
+        - 'SqliteCodecDescriptor'
       anyMatch: true
   - id: pgvector-json-form-is-a-numeric-array
     summary: |
@@ -437,9 +437,9 @@ changes:
       array form. Note the element type: an application value must be exactly representable as a
       32-bit float to round-trip at all.
     detection:
-      glob: "**/*.{ts,tsx,json}"
+      glob: '**/*.{ts,tsx,json}'
       contains:
-        - "pg/vector@1"
+        - 'pg/vector@1'
       anyMatch: true
   - id: default-literal-value-resolves-through-the-codec-json-channel
     summary: |
@@ -454,10 +454,10 @@ changes:
       `encodeJson` return type publishes its JSON type through the new channel; one that does not
       keeps the `JsonValue` the base signature promises.
     detection:
-      glob: "**/*.{ts,d.ts}"
+      glob: '**/*.{ts,d.ts}'
       contains:
-        - "DefaultLiteralValue"
-        - "ExtractCodecTypes"
+        - 'DefaultLiteralValue'
+        - 'ExtractCodecTypes'
       anyMatch: true
   - id: pg-int8-application-values-are-bigint
     summary: |
@@ -469,10 +469,10 @@ changes:
       previously returned a `number` for a safe integer and a string only past 2^53 — if your
       extension compares introspected defaults against contract defaults, that split is gone.
     detection:
-      glob: "**/*.{ts,tsx}"
+      glob: '**/*.{ts,tsx}'
       contains:
-        - "pg/int8@1"
-        - "parsePostgresDefault"
+        - 'pg/int8@1'
+        - 'parsePostgresDefault'
       anyMatch: true
   - id: extension-column-codecs-must-be-declared-as-target-descriptors
     summary: |
@@ -486,11 +486,11 @@ changes:
       emitting the bare column would produce exactly the uncanonical JSON the projection exists to
       replace. Publish the same target-typed set in both places.
     detection:
-      glob: "**/*.{ts,tsx}"
+      glob: '**/*.{ts,tsx}'
       contains:
-        - "codecTypes"
-        - "codecs: () =>"
-        - "SqlRuntimeExtensionDescriptor"
+        - 'codecTypes'
+        - 'codecs: () =>'
+        - 'SqlRuntimeExtensionDescriptor'
       anyMatch: true
   - id: contract-infer-emits-full-fidelity
     summary: |
@@ -508,11 +508,11 @@ changes:
       `name:` — a heuristic: a name that is not wire-shaped, or whose hash does not
       recompute, adopts as exact `map:`.
     detection:
-      glob: "**/*.{ts,mts,cts,prisma}"
+      glob: '**/*.{ts,mts,cts,prisma}'
       contains:
-        - "inferPslContract"
-        - "contract infer"
-        - "@@rls"
+        - 'inferPslContract'
+        - 'contract infer'
+        - '@@rls'
       anyMatch: true
   - id: postgres-packages-now-ship-types-pg
     summary: |
@@ -529,9 +529,9 @@ changes:
       `@types/pg` from your extension and take it transitively, or pin it to the version
       `@internal/postgres` depends on.
     detection:
-      glob: "**/package.json"
+      glob: '**/package.json'
       contains:
-        - "@types/pg"
+        - '@types/pg'
       anyMatch: true
   - id: build-against-published-packages-not-workspace-names
     summary: |
@@ -552,7 +552,7 @@ changes:
       dependency rather than a dependency, so an application cannot end up with two copies of
       the target it is registered against.
     detection:
-      glob: "**/package.json"
+      glob: '**/package.json'
       contains:
         - '"@internal/'
       anyMatch: true
@@ -614,16 +614,17 @@ Relational JSON container AST construction now requires an explicit value-projec
 `FunctionSource.of(fn, args, alias)` now groups alias state so returned-column aliases cannot exist without a table alias. Replace a string third argument such as `FunctionSource.of(fn, args, 'rows')` with `FunctionSource.of(fn, args, { alias: 'rows' })`; when returned-column names are required, pass `{ alias: 'rows', columnAliases: ['value', 'ordinality'] }`. Calls that omit the alias remain unchanged.
 
 When an extension forwards an existing `ProjectionItem` through a derived-table or row-number wrapper, preserve its known codec in the reconstructed projection: use `ProjectionItem.of(item.alias, ColumnRef.of(wrapperAlias, item.alias), item.codec)`. Leave the codec undefined only for computed or otherwise unknown projected results. After applying the applicable edits, run the extension's typecheck and tests; update AST-shape fixtures to assert the explicit wrapper nodes and preserved codec metadata.
+
 ## `rls-wire-name-helpers-moved-to-sql-schema-ir-naming`
 
 The wire-name mechanics are family-shared from 0.17 (they now serve secondary indexes as well as RLS policies), so the helpers moved from the target-postgres RLS module to `@internal/sql-schema-ir/naming` under generalized names. Apply the mechanical rename:
 
 | 0.16 (`@internal/target-postgres/rls-canonicalize`) | 0.17 (`@internal/sql-schema-ir/naming`) |
-| --- | --- |
-| `formatRlsPolicyWireName(prefix, hash)` | `formatWireName(prefix, hash)` |
-| `parseRlsPolicyWireName(name)` | `parseWireName(name)` |
-| `normalizePredicate(sql)` | `normalizeSqlBody(sql)` |
-| `RlsPolicyWireName` (type) | `WireName` (type) |
+| --------------------------------------------------- | --------------------------------------- |
+| `formatRlsPolicyWireName(prefix, hash)`             | `formatWireName(prefix, hash)`          |
+| `parseRlsPolicyWireName(name)`                      | `parseWireName(name)`                   |
+| `normalizePredicate(sql)`                           | `normalizeSqlBody(sql)`                 |
+| `RlsPolicyWireName` (type)                          | `WireName` (type)                       |
 
 Behavior is byte-identical — same `<prefix>_<8hex>` format and parse pattern, same treat-as-all-prefix contract for names that do not parse, same minimal trim-and-collapse normalizer (still a stability commitment: any change would re-suffix every wire name). `@internal/target-postgres/rls-canonicalize` keeps the RLS-specific exports (`computeContentHash`, `ContentHashParts`, `POLICY_OPERATION_PREDICATES`, `RlsPolicyOperation`); there are no re-export shims for the moved names. The naming module additionally exposes `computeIndexContentHash`, `WIRE_NAME_PREFIX_MAX_LENGTH` (54), and `assertWireNamePrefixLength` — the index-side siblings of the RLS hash assembly.
 
@@ -654,10 +655,10 @@ Re-emit your pack's contract space with the upgraded toolchain (`build:contract-
 
 `PostgresRlsPolicyMigrationInput` is gone. The parameter `Migration#createRlsPolicy` accepts, and the shape `CreatePostgresRlsPolicyCall.renderTypeScript` writes into a generated migration, is now `RenderedRlsPolicyLiteral` — `PostgresRlsPolicyInput` with absent-valued keys omittable, which is how a machine-rendered literal spells absence. The practical difference is the name:
 
-| 0.16 | 0.17 |
-| --- | --- |
+| 0.16                                                | 0.17                                                               |
+| --------------------------------------------------- | ------------------------------------------------------------------ |
 | `name: "post_owner_a1b2c3d4", prefix: "post_owner"` | `naming: { kind: "wire", prefix: "post_owner", hash: "a1b2c3d4" }` |
-| `name: "Tenant members can read"` | `naming: { kind: "exact", name: "Tenant members can read" }` |
+| `name: "Tenant members can read"`                   | `naming: { kind: "exact", name: "Tenant members can read" }`       |
 
 The two flat fields could disagree; the union cannot be written wrong, which is why the migration authoring surface carries it.
 
@@ -671,7 +672,7 @@ For every codec descriptor contributed by a PostgreSQL extension, add `@internal
 
 Change a PostgreSQL-bound descriptor that extends `CodecDescriptorImpl<P>` to extend `PostgresCodecDescriptor<P>`. Keep its codec id, traits, target types, `paramsSchema`, factory, output renderer and column helpers unchanged; there is no longer a `meta` / `metaFor` channel to carry alongside, and the descriptor's `nativeTypeFor()` is the only place a native type is declared. Add `protected override nativeType(params: P): string` returning the same trusted PostgreSQL native type spelling the extension already uses, and add `protected override jsonProjection(expression: ProjectionExpr, params: P): ProjectionExpr`.
 
-`return expression` is a claim, not a placeholder: the production JSON renderers call `projectJson()` for every column-valued entry they build, so an identity projection asserts that your codec's stored form already *is* its canonical JSON. Write one only where that holds, and where it does not, see `codec-json-projections-must-agree-with-encode-json` below.
+`return expression` is a claim, not a placeholder: the production JSON renderers call `projectJson()` for every column-valued entry they build, so an identity projection asserts that your codec's stored form already _is_ its canonical JSON. Write one only where that holds, and where it does not, see `codec-json-projections-must-agree-with-encode-json` below.
 
 When the extension contributes a reusable target-neutral SQL descriptor instead of owning its descriptor class, keep the generic descriptor unchanged and wrap it with `postgresCodec(genericDescriptor, { nativeType, jsonProjection })`. Supply the native type and the canonical JSON projection as above. The wrapper delegates the generic descriptor's codec id, literals, parameter schema, factory, renderers and target types, and adds the PostgreSQL discriminant and target methods.
 
@@ -709,7 +710,7 @@ Slice-2 shipped `jsonProjection` as a typed hook that every descriptor implement
 The ordering is the part worth internalising, because it is the same in all three shapes it has taken:
 
 - a numeric cast to `text` sits inside the projected expression, so it applies before the JSON constructor can render the value as a JSON number;
-- a base64 encoding *replaces* the target's own conversion rather than post-processing it, because the target would otherwise have already emitted its hex form;
+- a base64 encoding _replaces_ the target's own conversion rather than post-processing it, because the target would otherwise have already emitted its hex form;
 - a widening of a narrow float to a wider one happens before any text rendering, because the printing is what discards precision.
 
 In each case a transformation applied to the constructor's output would be too late. If you are authoring a projection, ask what the target does to the value if you do nothing, and whether that is recoverable.
@@ -722,7 +723,7 @@ The route matters as much as the destination here. Casting a vector's text form 
 
 ## `default-literal-value-resolves-through-the-codec-json-channel`
 
-Before this change the emitted type said a literal default had the codec's *application* type. That was true only while the two coincided. For a codec whose application value is a `bigint` and whose canonical JSON is a decimal string, it described a `bigint` sitting in a file that holds `"0"` — which surfaced as an assignability failure rather than as a wrong-but-quiet type.
+Before this change the emitted type said a literal default had the codec's _application_ type. That was true only while the two coincided. For a codec whose application value is a `bigint` and whose canonical JSON is a decimal string, it described a `bigint` sitting in a file that holds `"0"` — which surfaced as an assignability failure rather than as a wrong-but-quiet type.
 
 Regenerating is sufficient; no hand edits to a `contract.d.ts` are needed.
 

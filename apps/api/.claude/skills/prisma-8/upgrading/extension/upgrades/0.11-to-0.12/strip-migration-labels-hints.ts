@@ -110,10 +110,16 @@ function sha256Hex(input: string): string {
  * at write time (no hash yet) and at recompute time (rehashing an
  * already-attested record over the slimmed envelope).
  */
-function computeMigrationHash(metadata: Record<string, unknown>, ops: unknown): string {
+function computeMigrationHash(
+  metadata: Record<string, unknown>,
+  ops: unknown,
+): string {
   const { migrationHash: _migrationHash, ...strippedMeta } = metadata;
 
-  const partHashes = [canonicalizeJson(strippedMeta), canonicalizeJson(ops)].map(sha256Hex);
+  const partHashes = [
+    canonicalizeJson(strippedMeta),
+    canonicalizeJson(ops),
+  ].map(sha256Hex);
   return `sha256:${sha256Hex(canonicalizeJson(partHashes))}`;
 }
 
@@ -196,7 +202,11 @@ function removeTopLevelKey(text: string, key: string): string {
   return text.slice(0, lineStart) + text.slice(after);
 }
 
-function replaceMigrationHash(text: string, oldHash: string, newHash: string): string {
+function replaceMigrationHash(
+  text: string,
+  oldHash: string,
+  newHash: string,
+): string {
   if (oldHash === newHash) return text;
   // Tolerate any whitespace around the colon (`"migrationHash":"…"`,
   // `"migrationHash" : "…"`), matching the leniency of `removeTopLevelKey`.
@@ -296,7 +306,9 @@ async function processFile(path: string): Promise<Result> {
   } else if (out !== raw) {
     // labels/hints were present but there is no string migrationHash to update
     // — a malformed manifest we refuse to guess at.
-    throw new Error(`${path}: manifest is missing a string \`migrationHash\` field`);
+    throw new Error(
+      `${path}: manifest is missing a string \`migrationHash\` field`,
+    );
   }
 
   if (out === raw) {
@@ -324,7 +336,9 @@ for (const path of manifests) {
     alreadyClean += 1;
   } else if (result.status === 'skipped-no-ops') {
     skipped += 1;
-    console.log(`SKIP  ${rel}  (no sibling ops.json — not a migration package)`);
+    console.log(
+      `SKIP  ${rel}  (no sibling ops.json — not a migration package)`,
+    );
   } else {
     changed += 1;
     const verb = dryRun ? 'WOULD FIX' : 'FIXED';

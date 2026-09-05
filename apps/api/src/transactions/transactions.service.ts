@@ -11,23 +11,12 @@ import { LedgerService } from '../ledger/ledger.service.js';
 
 import { AuditService } from '../audit/audit.service.js';
 
-type TransactionType =
-  | 'DEPOSIT'
-  | 'WITHDRAWAL'
-  | 'TRANSFER';
+type TransactionType = 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER';
 
 type TransactionStatus =
-  | 'PENDING'
-  | 'PROCESSING'
-  | 'COMPLETED'
-  | 'FAILED'
-  | 'REVERSED';
+  'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'REVERSED';
 
-type Currency =
-  | 'NGN'
-  | 'USD'
-  | 'EUR'
-  | 'GBP';
+type Currency = 'NGN' | 'USD' | 'EUR' | 'GBP';
 
 interface TransactionFilters {
   page?: number;
@@ -71,12 +60,8 @@ export class TransactionsService {
    */
   private serialize<T>(data: T): T {
     return JSON.parse(
-      JSON.stringify(
-        data,
-        (_, value) =>
-          typeof value === 'bigint'
-            ? value.toString()
-            : value,
+      JSON.stringify(data, (_, value) =>
+        typeof value === 'bigint' ? value.toString() : value,
       ),
     );
   }
@@ -86,16 +71,10 @@ export class TransactionsService {
    * GET USER WALLETS
    * ==========================================
    */
-  private async getUserWallets(
-    userId: number,
-  ) {
-    const wallets =
-      await this.prisma.client.orm.public.Wallet.all();
+  private async getUserWallets(userId: number) {
+    const wallets = await this.prisma.client.orm.public.Wallet.all();
 
-    return wallets.filter(
-      (wallet: any) =>
-        wallet.userId === userId,
-    );
+    return wallets.filter((wallet: any) => wallet.userId === userId);
   }
 
   /*
@@ -103,15 +82,10 @@ export class TransactionsService {
    * GET USER WALLET IDS
    * ==========================================
    */
-  private async getUserWalletIds(
-    userId: number,
-  ): Promise<number[]> {
-    const wallets =
-      await this.getUserWallets(userId);
+  private async getUserWalletIds(userId: number): Promise<number[]> {
+    const wallets = await this.getUserWallets(userId);
 
-    return wallets.map(
-      (wallet: any) => wallet.id,
-    );
+    return wallets.map((wallet: any) => wallet.id);
   }
 
   /*
@@ -123,39 +97,26 @@ export class TransactionsService {
    * destination wallet.
    * ==========================================
    */
-  private async getUserTransactions(
-    userId: number,
-  ) {
-    const walletIds =
-      await this.getUserWalletIds(userId);
+  private async getUserTransactions(userId: number) {
+    const walletIds = await this.getUserWalletIds(userId);
 
     if (walletIds.length === 0) {
       return [];
     }
 
-    const transactions =
-      await this.prisma.client.orm.public.Transaction.all();
+    const transactions = await this.prisma.client.orm.public.Transaction.all();
 
-    return transactions.filter(
-      (transaction: any) => {
-        const hasSourceAccess =
-          transaction.sourceWalletId !== null &&
-          walletIds.includes(
-            transaction.sourceWalletId,
-          );
+    return transactions.filter((transaction: any) => {
+      const hasSourceAccess =
+        transaction.sourceWalletId !== null &&
+        walletIds.includes(transaction.sourceWalletId);
 
-        const hasDestinationAccess =
-          transaction.destinationWalletId !== null &&
-          walletIds.includes(
-            transaction.destinationWalletId,
-          );
+      const hasDestinationAccess =
+        transaction.destinationWalletId !== null &&
+        walletIds.includes(transaction.destinationWalletId);
 
-        return (
-          hasSourceAccess ||
-          hasDestinationAccess
-        );
-      },
-    );
+      return hasSourceAccess || hasDestinationAccess;
+    });
   }
 
   /*
@@ -163,59 +124,39 @@ export class TransactionsService {
    * CHECK TRANSACTION ACCESS
    * ==========================================
    */
-  private async checkTransactionAccess(
-    userId: number,
-    transaction: any,
-  ) {
-    const walletIds =
-      await this.getUserWalletIds(userId);
+  private async checkTransactionAccess(userId: number, transaction: any) {
+    const walletIds = await this.getUserWalletIds(userId);
 
     const hasSourceAccess =
       transaction.sourceWalletId !== null &&
-      walletIds.includes(
-        transaction.sourceWalletId,
-      );
+      walletIds.includes(transaction.sourceWalletId);
 
     const hasDestinationAccess =
       transaction.destinationWalletId !== null &&
-      walletIds.includes(
-        transaction.destinationWalletId,
-      );
+      walletIds.includes(transaction.destinationWalletId);
 
-    if (
-      !hasSourceAccess &&
-      !hasDestinationAccess
-    ) {
+    if (!hasSourceAccess && !hasDestinationAccess) {
       await this.auditService.create({
         userId,
 
-        action:
-          'TRANSACTION_ACCESS_DENIED',
+        action: 'TRANSACTION_ACCESS_DENIED',
 
-        entity:
-          'Transaction',
+        entity: 'Transaction',
 
-        entityId:
-          String(transaction.id),
+        entityId: String(transaction.id),
 
         metadata: JSON.stringify({
-          transactionId:
-            transaction.id,
+          transactionId: transaction.id,
 
-          reference:
-            transaction.reference,
+          reference: transaction.reference,
 
-          type:
-            transaction.type,
+          type: transaction.type,
 
-          currency:
-            transaction.currency,
+          currency: transaction.currency,
 
-          sourceWalletId:
-            transaction.sourceWalletId,
+          sourceWalletId: transaction.sourceWalletId,
 
-          destinationWalletId:
-            transaction.destinationWalletId,
+          destinationWalletId: transaction.destinationWalletId,
         }),
       });
 
@@ -233,8 +174,7 @@ export class TransactionsService {
    * ==========================================
    */
   async getSummary(userId: number) {
-    const userTransactions =
-      await this.getUserTransactions(userId);
+    const userTransactions = await this.getUserTransactions(userId);
 
     if (userTransactions.length === 0) {
       return {
@@ -270,30 +210,20 @@ export class TransactionsService {
 
     let reversedTransactions = 0;
 
-    for (
-      const transaction of userTransactions
-    ) {
-      if (
-        transaction.status === 'COMPLETED'
-      ) {
+    for (const transaction of userTransactions) {
+      if (transaction.status === 'COMPLETED') {
         completedTransactions++;
       }
 
-      if (
-        transaction.status === 'PENDING'
-      ) {
+      if (transaction.status === 'PENDING') {
         pendingTransactions++;
       }
 
-      if (
-        transaction.status === 'FAILED'
-      ) {
+      if (transaction.status === 'FAILED') {
         failedTransactions++;
       }
 
-      if (
-        transaction.status === 'REVERSED'
-      ) {
+      if (transaction.status === 'REVERSED') {
         reversedTransactions++;
       }
 
@@ -304,41 +234,29 @@ export class TransactionsService {
         continue;
       }
 
-      const amount = BigInt(
-        transaction.amount ?? 0,
-      );
+      const amount = BigInt(transaction.amount ?? 0);
 
-      if (
-        transaction.type === 'DEPOSIT'
-      ) {
+      if (transaction.type === 'DEPOSIT') {
         totalDeposits += amount;
       }
 
-      if (
-        transaction.type === 'WITHDRAWAL'
-      ) {
+      if (transaction.type === 'WITHDRAWAL') {
         totalWithdrawals += amount;
       }
 
-      if (
-        transaction.type === 'TRANSFER'
-      ) {
+      if (transaction.type === 'TRANSFER') {
         totalTransfers += amount;
       }
     }
 
     return {
-      totalTransactions:
-        userTransactions.length,
+      totalTransactions: userTransactions.length,
 
-      totalDeposits:
-        totalDeposits.toString(),
+      totalDeposits: totalDeposits.toString(),
 
-      totalWithdrawals:
-        totalWithdrawals.toString(),
+      totalWithdrawals: totalWithdrawals.toString(),
 
-      totalTransfers:
-        totalTransfers.toString(),
+      totalTransfers: totalTransfers.toString(),
 
       completedTransactions,
 
@@ -357,41 +275,21 @@ export class TransactionsService {
    * GET /transactions/recent
    * ==========================================
    */
-  async getRecentTransactions(
-    userId: number,
-    limit = 5,
-  ) {
+  async getRecentTransactions(userId: number, limit = 5) {
     const safeLimit =
-      Number.isInteger(limit) &&
-      limit > 0
-        ? Math.min(limit, 100)
-        : 5;
+      Number.isInteger(limit) && limit > 0 ? Math.min(limit, 100) : 5;
 
-    const userTransactions =
-      await this.getUserTransactions(userId);
+    const userTransactions = await this.getUserTransactions(userId);
 
-    userTransactions.sort(
-      (a: any, b: any) => {
-        const dateA =
-          new Date(
-            String(a.createdAt),
-          ).getTime();
+    userTransactions.sort((a: any, b: any) => {
+      const dateA = new Date(String(a.createdAt)).getTime();
 
-        const dateB =
-          new Date(
-            String(b.createdAt),
-          ).getTime();
+      const dateB = new Date(String(b.createdAt)).getTime();
 
-        return dateB - dateA;
-      },
-    );
+      return dateB - dateA;
+    });
 
-    return this.serialize(
-      userTransactions.slice(
-        0,
-        safeLimit,
-      ),
-    );
+    return this.serialize(userTransactions.slice(0, safeLimit));
   }
 
   /*
@@ -401,52 +299,25 @@ export class TransactionsService {
    * GET /transactions/analytics
    * ==========================================
    */
-  async getAnalytics(
-    userId: number,
-    days = 30,
-  ) {
+  async getAnalytics(userId: number, days = 30) {
     const safeDays =
-      Number.isInteger(days) &&
-      days > 0
-        ? Math.min(days, 365)
-        : 30;
+      Number.isInteger(days) && days > 0 ? Math.min(days, 365) : 30;
 
     const endDate = new Date();
 
     const startDate = new Date();
 
-    startDate.setDate(
-      endDate.getDate() -
-        safeDays +
-        1,
-    );
+    startDate.setDate(endDate.getDate() - safeDays + 1);
 
-    startDate.setHours(
-      0,
-      0,
-      0,
-      0,
-    );
+    startDate.setHours(0, 0, 0, 0);
 
-    const userTransactions =
-      await this.getUserTransactions(userId);
+    const userTransactions = await this.getUserTransactions(userId);
 
-    const transactions =
-      userTransactions.filter(
-        (transaction: any) => {
-          const transactionDate =
-            new Date(
-              String(
-                transaction.createdAt,
-              ),
-            );
+    const transactions = userTransactions.filter((transaction: any) => {
+      const transactionDate = new Date(String(transaction.createdAt));
 
-          return (
-            transactionDate >= startDate &&
-            transactionDate <= endDate
-          );
-        },
-      );
+      return transactionDate >= startDate && transactionDate <= endDate;
+    });
 
     let totalAmount = 0n;
 
@@ -466,10 +337,7 @@ export class TransactionsService {
       }
     >();
 
-    const statusMap = new Map<
-      TransactionStatus,
-      number
-    >();
+    const statusMap = new Map<TransactionStatus, number>();
 
     const currencyMap = new Map<
       string,
@@ -512,57 +380,39 @@ export class TransactionsService {
       'TRANSFER',
     ];
 
-    for (
-      const type of transactionTypes
-    ) {
+    for (const type of transactionTypes) {
       typeMap.set(type, {
         count: 0,
         amount: 0n,
       });
     }
 
-    const transactionStatuses: TransactionStatus[] =
-      [
-        'PENDING',
-        'PROCESSING',
-        'COMPLETED',
-        'FAILED',
-        'REVERSED',
-      ];
+    const transactionStatuses: TransactionStatus[] = [
+      'PENDING',
+      'PROCESSING',
+      'COMPLETED',
+      'FAILED',
+      'REVERSED',
+    ];
 
-    for (
-      const status of transactionStatuses
-    ) {
+    for (const status of transactionStatuses) {
       statusMap.set(status, 0);
     }
 
-    for (
-      const transaction of transactions
-    ) {
-      const amount = BigInt(
-        transaction.amount ?? 0,
-      );
+    for (const transaction of transactions) {
+      const amount = BigInt(transaction.amount ?? 0);
 
-      const type =
-        transaction.type as TransactionType;
+      const type = transaction.type as TransactionType;
 
-      const status =
-        transaction.status as TransactionStatus;
+      const status = transaction.status as TransactionStatus;
 
-      const currency =
-        transaction.currency;
+      const currency = transaction.currency;
 
-      statusMap.set(
-        status,
-        (statusMap.get(status) ?? 0) + 1,
-      );
+      statusMap.set(status, (statusMap.get(status) ?? 0) + 1);
 
-      const isFinanciallyValid =
-        status !== 'REVERSED' &&
-        status !== 'FAILED';
+      const isFinanciallyValid = status !== 'REVERSED' && status !== 'FAILED';
 
-      const typeData =
-        typeMap.get(type);
+      const typeData = typeMap.get(type);
 
       if (typeData) {
         typeData.count++;
@@ -572,17 +422,14 @@ export class TransactionsService {
         }
       }
 
-      if (
-        !currencyMap.has(currency)
-      ) {
+      if (!currencyMap.has(currency)) {
         currencyMap.set(currency, {
           count: 0,
           amount: 0n,
         });
       }
 
-      const currencyData =
-        currencyMap.get(currency)!;
+      const currencyData = currencyMap.get(currency)!;
 
       currencyData.count++;
 
@@ -593,42 +440,26 @@ export class TransactionsService {
       if (isFinanciallyValid) {
         totalAmount += amount;
 
-        if (
-          type === 'DEPOSIT'
-        ) {
+        if (type === 'DEPOSIT') {
           totalDeposits += amount;
         }
 
-        if (
-          type === 'WITHDRAWAL'
-        ) {
+        if (type === 'WITHDRAWAL') {
           totalWithdrawals += amount;
         }
 
-        if (
-          type === 'TRANSFER'
-        ) {
+        if (type === 'TRANSFER') {
           totalTransfers += amount;
         }
 
-        if (
-          status === 'COMPLETED'
-        ) {
+        if (status === 'COMPLETED') {
           completedAmount += amount;
         }
       }
 
-      const transactionDate =
-        new Date(
-          String(
-            transaction.createdAt,
-          ),
-        );
+      const transactionDate = new Date(String(transaction.createdAt));
 
-      const dayKey =
-        transactionDate
-          .toISOString()
-          .slice(0, 10);
+      const dayKey = transactionDate.toISOString().slice(0, 10);
 
       if (!dailyMap.has(dayKey)) {
         dailyMap.set(dayKey, {
@@ -640,37 +471,27 @@ export class TransactionsService {
         });
       }
 
-      const dailyData =
-        dailyMap.get(dayKey)!;
+      const dailyData = dailyMap.get(dayKey)!;
 
       dailyData.count++;
 
       if (isFinanciallyValid) {
         dailyData.amount += amount;
 
-        if (
-          type === 'DEPOSIT'
-        ) {
+        if (type === 'DEPOSIT') {
           dailyData.deposits += amount;
         }
 
-        if (
-          type === 'WITHDRAWAL'
-        ) {
+        if (type === 'WITHDRAWAL') {
           dailyData.withdrawals += amount;
         }
 
-        if (
-          type === 'TRANSFER'
-        ) {
+        if (type === 'TRANSFER') {
           dailyData.transfers += amount;
         }
       }
 
-      const weekKey =
-        this.getWeekKey(
-          transactionDate,
-        );
+      const weekKey = this.getWeekKey(transactionDate);
 
       if (!weeklyMap.has(weekKey)) {
         weeklyMap.set(weekKey, {
@@ -679,8 +500,7 @@ export class TransactionsService {
         });
       }
 
-      const weeklyData =
-        weeklyMap.get(weekKey)!;
+      const weeklyData = weeklyMap.get(weekKey)!;
 
       weeklyData.count++;
 
@@ -688,10 +508,7 @@ export class TransactionsService {
         weeklyData.amount += amount;
       }
 
-      const monthKey =
-        transactionDate
-          .toISOString()
-          .slice(0, 7);
+      const monthKey = transactionDate.toISOString().slice(0, 7);
 
       if (!monthlyMap.has(monthKey)) {
         monthlyMap.set(monthKey, {
@@ -700,8 +517,7 @@ export class TransactionsService {
         });
       }
 
-      const monthlyData =
-        monthlyMap.get(monthKey)!;
+      const monthlyData = monthlyMap.get(monthKey)!;
 
       monthlyData.count++;
 
@@ -714,159 +530,87 @@ export class TransactionsService {
       period: {
         days: safeDays,
 
-        startDate:
-          startDate.toISOString(),
+        startDate: startDate.toISOString(),
 
-        endDate:
-          endDate.toISOString(),
+        endDate: endDate.toISOString(),
       },
 
       overview: {
-        totalTransactions:
-          transactions.length,
+        totalTransactions: transactions.length,
 
-        totalAmount:
-          totalAmount.toString(),
+        totalAmount: totalAmount.toString(),
 
-        totalDeposits:
-          totalDeposits.toString(),
+        totalDeposits: totalDeposits.toString(),
 
-        totalWithdrawals:
-          totalWithdrawals.toString(),
+        totalWithdrawals: totalWithdrawals.toString(),
 
-        totalTransfers:
-          totalTransfers.toString(),
+        totalTransfers: totalTransfers.toString(),
 
-        completedAmount:
-          completedAmount.toString(),
+        completedAmount: completedAmount.toString(),
       },
 
-      byType:
-        transactionTypes.map(
-          (type) => {
-            const data =
-              typeMap.get(type)!;
+      byType: transactionTypes.map((type) => {
+        const data = typeMap.get(type)!;
 
-            return {
-              type,
+        return {
+          type,
 
-              count:
-                data.count,
+          count: data.count,
 
-              amount:
-                data.amount.toString(),
-            };
-          },
-        ),
+          amount: data.amount.toString(),
+        };
+      }),
 
-      byStatus:
-        transactionStatuses.map(
-          (status) => ({
-            status,
+      byStatus: transactionStatuses.map((status) => ({
+        status,
 
-            count:
-              statusMap.get(
-                status,
-              ) ?? 0,
-          }),
-        ),
+        count: statusMap.get(status) ?? 0,
+      })),
 
-      byCurrency:
-        Array.from(
-          currencyMap.entries(),
-        ).map(
-          ([
-            currency,
-            data,
-          ]) => ({
-            currency,
+      byCurrency: Array.from(currencyMap.entries()).map(([currency, data]) => ({
+        currency,
 
-            count:
-              data.count,
+        count: data.count,
 
-            amount:
-              data.amount.toString(),
-          }),
-        ),
+        amount: data.amount.toString(),
+      })),
 
       charts: {
-        daily:
-          Array.from(
-            dailyMap.entries(),
-          )
-            .sort(
-              ([a], [b]) =>
-                a.localeCompare(b),
-            )
-            .map(
-              ([
-                date,
-                data,
-              ]) => ({
-                date,
+        daily: Array.from(dailyMap.entries())
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([date, data]) => ({
+            date,
 
-                count:
-                  data.count,
+            count: data.count,
 
-                amount:
-                  data.amount.toString(),
+            amount: data.amount.toString(),
 
-                deposits:
-                  data.deposits.toString(),
+            deposits: data.deposits.toString(),
 
-                withdrawals:
-                  data.withdrawals.toString(),
+            withdrawals: data.withdrawals.toString(),
 
-                transfers:
-                  data.transfers.toString(),
-              }),
-            ),
+            transfers: data.transfers.toString(),
+          })),
 
-        weekly:
-          Array.from(
-            weeklyMap.entries(),
-          )
-            .sort(
-              ([a], [b]) =>
-                a.localeCompare(b),
-            )
-            .map(
-              ([
-                week,
-                data,
-              ]) => ({
-                week,
+        weekly: Array.from(weeklyMap.entries())
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([week, data]) => ({
+            week,
 
-                count:
-                  data.count,
+            count: data.count,
 
-                amount:
-                  data.amount.toString(),
-              }),
-            ),
+            amount: data.amount.toString(),
+          })),
 
-        monthly:
-          Array.from(
-            monthlyMap.entries(),
-          )
-            .sort(
-              ([a], [b]) =>
-                a.localeCompare(b),
-            )
-            .map(
-              ([
-                month,
-                data,
-              ]) => ({
-                month,
+        monthly: Array.from(monthlyMap.entries())
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([month, data]) => ({
+            month,
 
-                count:
-                  data.count,
+            count: data.count,
 
-                amount:
-                  data.amount.toString(),
-              }),
-            ),
+            amount: data.amount.toString(),
+          })),
       },
     };
   }
@@ -889,63 +633,36 @@ export class TransactionsService {
       currency?: Currency;
     } = {},
   ) {
-    const {
-      startDate,
-      endDate,
-      currency,
-    } = filters;
+    const { startDate, endDate, currency } = filters;
 
-    let transactions =
-      await this.getUserTransactions(userId);
+    let transactions = await this.getUserTransactions(userId);
 
     /*
      * DATE FILTERS
      */
     if (startDate) {
-      transactions =
-        transactions.filter(
-          (transaction: any) => {
-            const transactionDate =
-              new Date(
-                String(
-                  transaction.createdAt,
-                ),
-              );
+      transactions = transactions.filter((transaction: any) => {
+        const transactionDate = new Date(String(transaction.createdAt));
 
-            return (
-              transactionDate >= startDate
-            );
-          },
-        );
+        return transactionDate >= startDate;
+      });
     }
 
     if (endDate) {
-      transactions =
-        transactions.filter(
-          (transaction: any) => {
-            const transactionDate =
-              new Date(
-                String(
-                  transaction.createdAt,
-                ),
-              );
+      transactions = transactions.filter((transaction: any) => {
+        const transactionDate = new Date(String(transaction.createdAt));
 
-            return (
-              transactionDate <= endDate
-            );
-          },
-        );
+        return transactionDate <= endDate;
+      });
     }
 
     /*
      * CURRENCY FILTER
      */
     if (currency) {
-      transactions =
-        transactions.filter(
-          (transaction: any) =>
-            transaction.currency === currency,
-        );
+      transactions = transactions.filter(
+        (transaction: any) => transaction.currency === currency,
+      );
     }
 
     let completedTransactions = 0;
@@ -983,94 +700,61 @@ export class TransactionsService {
       }
     >();
 
-    for (
-      const transaction of transactions
-    ) {
-      const amount = BigInt(
-        transaction.amount ?? 0,
-      );
+    for (const transaction of transactions) {
+      const amount = BigInt(transaction.amount ?? 0);
 
       /*
        * STATUS COUNTS
        */
-      if (
-        transaction.status === 'COMPLETED'
-      ) {
+      if (transaction.status === 'COMPLETED') {
         completedTransactions++;
       }
 
-      if (
-        transaction.status === 'PENDING'
-      ) {
+      if (transaction.status === 'PENDING') {
         pendingTransactions++;
       }
 
-      if (
-        transaction.status ===
-        'PROCESSING'
-      ) {
+      if (transaction.status === 'PROCESSING') {
         processingTransactions++;
       }
 
-      if (
-        transaction.status === 'FAILED'
-      ) {
+      if (transaction.status === 'FAILED') {
         failedTransactions++;
       }
 
-      if (
-        transaction.status ===
-        'REVERSED'
-      ) {
+      if (transaction.status === 'REVERSED') {
         reversedTransactions++;
       }
 
       /*
        * TRANSACTION TYPE COUNTS
        */
-      if (
-        transaction.type === 'DEPOSIT'
-      ) {
+      if (transaction.type === 'DEPOSIT') {
         depositCount++;
       }
 
-      if (
-        transaction.type ===
-        'WITHDRAWAL'
-      ) {
+      if (transaction.type === 'WITHDRAWAL') {
         withdrawalCount++;
       }
 
-      if (
-        transaction.type === 'TRANSFER'
-      ) {
+      if (transaction.type === 'TRANSFER') {
         transferCount++;
       }
 
       /*
        * INITIALIZE CURRENCY DATA
        */
-      if (
-        !currencyMap.has(
-          transaction.currency,
-        )
-      ) {
-        currencyMap.set(
-          transaction.currency,
-          {
-            transactionCount: 0,
-            volume: 0n,
-            deposits: 0n,
-            withdrawals: 0n,
-            transfers: 0n,
-          },
-        );
+      if (!currencyMap.has(transaction.currency)) {
+        currencyMap.set(transaction.currency, {
+          transactionCount: 0,
+          volume: 0n,
+          deposits: 0n,
+          withdrawals: 0n,
+          transfers: 0n,
+        });
       }
 
-      const currencyData =
-        currencyMap.get(
-          transaction.currency,
-        )!;
+      const currencyData = currencyMap.get(transaction.currency)!;
 
       currencyData.transactionCount++;
 
@@ -1080,8 +764,7 @@ export class TransactionsService {
        * volume.
        */
       const isFinanciallyValid =
-        transaction.status !== 'FAILED' &&
-        transaction.status !== 'REVERSED';
+        transaction.status !== 'FAILED' && transaction.status !== 'REVERSED';
 
       if (!isFinanciallyValid) {
         continue;
@@ -1094,9 +777,7 @@ export class TransactionsService {
       /*
        * DEPOSIT
        */
-      if (
-        transaction.type === 'DEPOSIT'
-      ) {
+      if (transaction.type === 'DEPOSIT') {
         totalDepositVolume += amount;
 
         currencyData.deposits += amount;
@@ -1105,10 +786,7 @@ export class TransactionsService {
       /*
        * WITHDRAWAL
        */
-      if (
-        transaction.type ===
-        'WITHDRAWAL'
-      ) {
+      if (transaction.type === 'WITHDRAWAL') {
         totalWithdrawalVolume += amount;
 
         currencyData.withdrawals += amount;
@@ -1117,9 +795,7 @@ export class TransactionsService {
       /*
        * TRANSFER
        */
-      if (
-        transaction.type === 'TRANSFER'
-      ) {
+      if (transaction.type === 'TRANSFER') {
         totalTransferVolume += amount;
 
         currencyData.transfers += amount;
@@ -1128,8 +804,7 @@ export class TransactionsService {
 
     return {
       overview: {
-        totalTransactions:
-          transactions.length,
+        totalTransactions: transactions.length,
 
         completedTransactions,
 
@@ -1145,58 +820,36 @@ export class TransactionsService {
       transactionTypes: {
         deposits: depositCount,
 
-        withdrawals:
-          withdrawalCount,
+        withdrawals: withdrawalCount,
 
         transfers: transferCount,
       },
 
       financialVolume: {
-        total:
-          totalTransactionVolume.toString(),
+        total: totalTransactionVolume.toString(),
 
-        deposits:
-          totalDepositVolume.toString(),
+        deposits: totalDepositVolume.toString(),
 
-        withdrawals:
-          totalWithdrawalVolume.toString(),
+        withdrawals: totalWithdrawalVolume.toString(),
 
-        transfers:
-          totalTransferVolume.toString(),
+        transfers: totalTransferVolume.toString(),
       },
 
-      currencyBreakdown:
-        Array.from(
-          currencyMap.entries(),
-        )
-          .sort(
-            ([a], [b]) =>
-              a.localeCompare(b),
-          )
-          .map(
-            ([
-              currencyCode,
-              data,
-            ]) => ({
-              currency:
-                currencyCode,
+      currencyBreakdown: Array.from(currencyMap.entries())
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([currencyCode, data]) => ({
+          currency: currencyCode,
 
-              transactionCount:
-                data.transactionCount,
+          transactionCount: data.transactionCount,
 
-              volume:
-                data.volume.toString(),
+          volume: data.volume.toString(),
 
-              deposits:
-                data.deposits.toString(),
+          deposits: data.deposits.toString(),
 
-              withdrawals:
-                data.withdrawals.toString(),
+          withdrawals: data.withdrawals.toString(),
 
-              transfers:
-                data.transfers.toString(),
-            }),
-          ),
+          transfers: data.transfers.toString(),
+        })),
     };
   }
 
@@ -1236,213 +889,121 @@ export class TransactionsService {
       maxAmount,
     } = filters;
 
-    const safePage =
-      Number.isFinite(page) &&
-      page > 0
-        ? Math.floor(page)
-        : 1;
+    const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
 
     const safeLimit =
-      Number.isFinite(limit) &&
-      limit > 0
-        ? Math.min(
-            Math.floor(limit),
-            100,
-          )
+      Number.isFinite(limit) && limit > 0
+        ? Math.min(Math.floor(limit), 100)
         : 20;
 
-    let transactions =
-      await this.getUserTransactions(
-        userId,
-      );
+    let transactions = await this.getUserTransactions(userId);
 
     /*
      * TYPE FILTER
      */
     if (type) {
-      transactions =
-        transactions.filter(
-          (transaction: any) =>
-            transaction.type === type,
-        );
+      transactions = transactions.filter(
+        (transaction: any) => transaction.type === type,
+      );
     }
 
     /*
      * STATUS FILTER
      */
     if (status) {
-      transactions =
-        transactions.filter(
-          (transaction: any) =>
-            transaction.status === status,
-        );
+      transactions = transactions.filter(
+        (transaction: any) => transaction.status === status,
+      );
     }
 
     /*
      * CURRENCY FILTER
      */
     if (currency) {
-      transactions =
-        transactions.filter(
-          (transaction: any) =>
-            transaction.currency ===
-            currency,
-        );
+      transactions = transactions.filter(
+        (transaction: any) => transaction.currency === currency,
+      );
     }
 
     /*
      * SEARCH
      */
-    if (
-      search &&
-      search.trim().length > 0
-    ) {
-      const normalizedSearch =
-        search
-          .trim()
-          .toLowerCase();
+    if (search && search.trim().length > 0) {
+      const normalizedSearch = search.trim().toLowerCase();
 
-      transactions =
-        transactions.filter(
-          (transaction: any) => {
-            const transactionId =
-              String(
-                transaction.id,
-              ).toLowerCase();
+      transactions = transactions.filter((transaction: any) => {
+        const transactionId = String(transaction.id).toLowerCase();
 
-            const reference =
-              String(
-                transaction.reference ??
-                  '',
-              ).toLowerCase();
+        const reference = String(transaction.reference ?? '').toLowerCase();
 
-            return (
-              transactionId.includes(
-                normalizedSearch,
-              ) ||
-              reference.includes(
-                normalizedSearch,
-              )
-            );
-          },
+        return (
+          transactionId.includes(normalizedSearch) ||
+          reference.includes(normalizedSearch)
         );
+      });
     }
 
     /*
      * START DATE
      */
     if (startDate) {
-      transactions =
-        transactions.filter(
-          (transaction: any) => {
-            const transactionDate =
-              new Date(
-                String(
-                  transaction.createdAt,
-                ),
-              );
+      transactions = transactions.filter((transaction: any) => {
+        const transactionDate = new Date(String(transaction.createdAt));
 
-            return (
-              transactionDate >= startDate
-            );
-          },
-        );
+        return transactionDate >= startDate;
+      });
     }
 
     /*
      * END DATE
      */
     if (endDate) {
-      transactions =
-        transactions.filter(
-          (transaction: any) => {
-            const transactionDate =
-              new Date(
-                String(
-                  transaction.createdAt,
-                ),
-              );
+      transactions = transactions.filter((transaction: any) => {
+        const transactionDate = new Date(String(transaction.createdAt));
 
-            return (
-              transactionDate <= endDate
-            );
-          },
-        );
+        return transactionDate <= endDate;
+      });
     }
 
     /*
      * MINIMUM AMOUNT
      */
-    if (
-      minAmount !== undefined
-    ) {
-      transactions =
-        transactions.filter(
-          (transaction: any) =>
-            BigInt(
-              transaction.amount ?? 0,
-            ) >= minAmount,
-        );
+    if (minAmount !== undefined) {
+      transactions = transactions.filter(
+        (transaction: any) => BigInt(transaction.amount ?? 0) >= minAmount,
+      );
     }
 
     /*
      * MAXIMUM AMOUNT
      */
-    if (
-      maxAmount !== undefined
-    ) {
-      transactions =
-        transactions.filter(
-          (transaction: any) =>
-            BigInt(
-              transaction.amount ?? 0,
-            ) <= maxAmount,
-        );
+    if (maxAmount !== undefined) {
+      transactions = transactions.filter(
+        (transaction: any) => BigInt(transaction.amount ?? 0) <= maxAmount,
+      );
     }
 
     /*
      * MOST RECENT FIRST
      */
-    transactions.sort(
-      (a: any, b: any) => {
-        const dateA =
-          new Date(
-            String(a.createdAt),
-          ).getTime();
+    transactions.sort((a: any, b: any) => {
+      const dateA = new Date(String(a.createdAt)).getTime();
 
-        const dateB =
-          new Date(
-            String(b.createdAt),
-          ).getTime();
+      const dateB = new Date(String(b.createdAt)).getTime();
 
-        return dateB - dateA;
-      },
-    );
+      return dateB - dateA;
+    });
 
-    const total =
-      transactions.length;
+    const total = transactions.length;
 
-    const totalPages =
-      Math.max(
-        1,
-        Math.ceil(
-          total / safeLimit,
-        ),
-      );
+    const totalPages = Math.max(1, Math.ceil(total / safeLimit));
 
-    const startIndex =
-      (safePage - 1) *
-      safeLimit;
+    const startIndex = (safePage - 1) * safeLimit;
 
-    const data =
-      transactions.slice(
-        startIndex,
-        startIndex + safeLimit,
-      );
+    const data = transactions.slice(startIndex, startIndex + safeLimit);
 
     return {
-      data:
-        this.serialize(data),
+      data: this.serialize(data),
 
       meta: {
         total,
@@ -1453,11 +1014,9 @@ export class TransactionsService {
 
         totalPages,
 
-        hasPreviousPage:
-          safePage > 1,
+        hasPreviousPage: safePage > 1,
 
-        hasNextPage:
-          safePage < totalPages,
+        hasNextPage: safePage < totalPages,
       },
     };
   }
@@ -1471,48 +1030,25 @@ export class TransactionsService {
    * 2026-W36
    * ==========================================
    */
-  private getWeekKey(
-    date: Date,
-  ): string {
-    const tempDate =
-      new Date(
-        Date.UTC(
-          date.getFullYear(),
-          date.getMonth(),
-          date.getDate(),
-        ),
-      );
-
-    const dayNumber =
-      tempDate.getUTCDay() || 7;
-
-    tempDate.setUTCDate(
-      tempDate.getUTCDate() +
-        4 -
-        dayNumber,
+  private getWeekKey(date: Date): string {
+    const tempDate = new Date(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
     );
 
-    const yearStart =
-      new Date(
-        Date.UTC(
-          tempDate.getUTCFullYear(),
-          0,
-          1,
-        ),
-      );
+    const dayNumber = tempDate.getUTCDay() || 7;
 
-    const weekNumber =
-      Math.ceil(
-        ((tempDate.getTime() -
-          yearStart.getTime()) /
-          86400000 +
-          1) /
-          7,
-      );
+    tempDate.setUTCDate(tempDate.getUTCDate() + 4 - dayNumber);
 
-    return `${tempDate.getUTCFullYear()}-W${String(
-      weekNumber,
-    ).padStart(2, '0')}`;
+    const yearStart = new Date(Date.UTC(tempDate.getUTCFullYear(), 0, 1));
+
+    const weekNumber = Math.ceil(
+      ((tempDate.getTime() - yearStart.getTime()) / 86400000 + 1) / 7,
+    );
+
+    return `${tempDate.getUTCFullYear()}-W${String(weekNumber).padStart(
+      2,
+      '0',
+    )}`;
   }
 
   /*
@@ -1530,10 +1066,7 @@ export class TransactionsService {
    * - Amount filtering
    * ==========================================
    */
-  async findAll(
-    userId: number,
-    filters: TransactionFilters = {},
-  ) {
+  async findAll(userId: number, filters: TransactionFilters = {}) {
     const {
       page = 1,
       limit = 10,
@@ -1547,210 +1080,124 @@ export class TransactionsService {
       maxAmount,
     } = filters;
 
-    const safePage =
-      Number.isFinite(page) &&
-      page > 0
-        ? Math.floor(page)
-        : 1;
+    const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
 
     const safeLimit =
-      Number.isFinite(limit) &&
-      limit > 0
-        ? Math.min(
-            Math.floor(limit),
-            100,
-          )
+      Number.isFinite(limit) && limit > 0
+        ? Math.min(Math.floor(limit), 100)
         : 10;
 
-    let filteredTransactions =
-      await this.getUserTransactions(
-        userId,
-      );
+    let filteredTransactions = await this.getUserTransactions(userId);
 
     /*
      * TYPE FILTER
      */
     if (type) {
-      filteredTransactions =
-        filteredTransactions.filter(
-          (transaction: any) =>
-            transaction.type === type,
-        );
+      filteredTransactions = filteredTransactions.filter(
+        (transaction: any) => transaction.type === type,
+      );
     }
 
     /*
      * STATUS FILTER
      */
     if (status) {
-      filteredTransactions =
-        filteredTransactions.filter(
-          (transaction: any) =>
-            transaction.status === status,
-        );
+      filteredTransactions = filteredTransactions.filter(
+        (transaction: any) => transaction.status === status,
+      );
     }
 
     /*
      * CURRENCY FILTER
      */
     if (currency) {
-      filteredTransactions =
-        filteredTransactions.filter(
-          (transaction: any) =>
-            transaction.currency === currency,
-        );
+      filteredTransactions = filteredTransactions.filter(
+        (transaction: any) => transaction.currency === currency,
+      );
     }
 
     /*
      * SEARCH
      */
-    if (
-      search &&
-      search.trim().length > 0
-    ) {
-      const normalizedSearch =
-        search.trim().toLowerCase();
+    if (search && search.trim().length > 0) {
+      const normalizedSearch = search.trim().toLowerCase();
 
-      filteredTransactions =
-        filteredTransactions.filter(
-          (transaction: any) => {
-            const transactionId =
-              String(
-                transaction.id,
-              ).toLowerCase();
+      filteredTransactions = filteredTransactions.filter((transaction: any) => {
+        const transactionId = String(transaction.id).toLowerCase();
 
-            const reference =
-              String(
-                transaction.reference ?? '',
-              ).toLowerCase();
+        const reference = String(transaction.reference ?? '').toLowerCase();
 
-            return (
-              transactionId.includes(
-                normalizedSearch,
-              ) ||
-              reference.includes(
-                normalizedSearch,
-              )
-            );
-          },
+        return (
+          transactionId.includes(normalizedSearch) ||
+          reference.includes(normalizedSearch)
         );
+      });
     }
 
     /*
      * START DATE
      */
     if (startDate) {
-      filteredTransactions =
-        filteredTransactions.filter(
-          (transaction: any) => {
-            const transactionDate =
-              new Date(
-                String(
-                  transaction.createdAt,
-                ),
-              );
+      filteredTransactions = filteredTransactions.filter((transaction: any) => {
+        const transactionDate = new Date(String(transaction.createdAt));
 
-            return (
-              transactionDate >= startDate
-            );
-          },
-        );
+        return transactionDate >= startDate;
+      });
     }
 
     /*
      * END DATE
      */
     if (endDate) {
-      filteredTransactions =
-        filteredTransactions.filter(
-          (transaction: any) => {
-            const transactionDate =
-              new Date(
-                String(
-                  transaction.createdAt,
-                ),
-              );
+      filteredTransactions = filteredTransactions.filter((transaction: any) => {
+        const transactionDate = new Date(String(transaction.createdAt));
 
-            return (
-              transactionDate <= endDate
-            );
-          },
-        );
+        return transactionDate <= endDate;
+      });
     }
 
     /*
      * MINIMUM AMOUNT
      */
-    if (
-      minAmount !== undefined
-    ) {
-      filteredTransactions =
-        filteredTransactions.filter(
-          (transaction: any) =>
-            BigInt(
-              transaction.amount ?? 0,
-            ) >= minAmount,
-        );
+    if (minAmount !== undefined) {
+      filteredTransactions = filteredTransactions.filter(
+        (transaction: any) => BigInt(transaction.amount ?? 0) >= minAmount,
+      );
     }
 
     /*
      * MAXIMUM AMOUNT
      */
-    if (
-      maxAmount !== undefined
-    ) {
-      filteredTransactions =
-        filteredTransactions.filter(
-          (transaction: any) =>
-            BigInt(
-              transaction.amount ?? 0,
-            ) <= maxAmount,
-        );
+    if (maxAmount !== undefined) {
+      filteredTransactions = filteredTransactions.filter(
+        (transaction: any) => BigInt(transaction.amount ?? 0) <= maxAmount,
+      );
     }
 
     /*
      * MOST RECENT FIRST
      */
-    filteredTransactions.sort(
-      (a: any, b: any) => {
-        const dateA =
-          new Date(
-            String(a.createdAt),
-          ).getTime();
+    filteredTransactions.sort((a: any, b: any) => {
+      const dateA = new Date(String(a.createdAt)).getTime();
 
-        const dateB =
-          new Date(
-            String(b.createdAt),
-          ).getTime();
+      const dateB = new Date(String(b.createdAt)).getTime();
 
-        return dateB - dateA;
-      },
+      return dateB - dateA;
+    });
+
+    const total = filteredTransactions.length;
+
+    const totalPages = Math.max(1, Math.ceil(total / safeLimit));
+
+    const startIndex = (safePage - 1) * safeLimit;
+
+    const paginatedTransactions = filteredTransactions.slice(
+      startIndex,
+      startIndex + safeLimit,
     );
 
-    const total =
-      filteredTransactions.length;
-
-    const totalPages =
-      Math.max(
-        1,
-        Math.ceil(
-          total / safeLimit,
-        ),
-      );
-
-    const startIndex =
-      (safePage - 1) *
-      safeLimit;
-
-    const paginatedTransactions =
-      filteredTransactions.slice(
-        startIndex,
-        startIndex + safeLimit,
-      );
-
     return {
-      data: this.serialize(
-        paginatedTransactions,
-      ),
+      data: this.serialize(paginatedTransactions),
 
       meta: {
         total,
@@ -1761,11 +1208,9 @@ export class TransactionsService {
 
         totalPages,
 
-        hasPreviousPage:
-          safePage > 1,
+        hasPreviousPage: safePage > 1,
 
-        hasNextPage:
-          safePage < totalPages,
+        hasNextPage: safePage < totalPages,
       },
     };
   }
@@ -1775,65 +1220,44 @@ export class TransactionsService {
    * GET TRANSACTION BY ID
    * ==========================================
    */
-  async findOne(
-    userId: number,
-    transactionId: number,
-  ) {
-    const transaction =
-      await this.prisma.client.orm.public.Transaction.first({
-        id: transactionId,
-      });
+  async findOne(userId: number, transactionId: number) {
+    const transaction = await this.prisma.client.orm.public.Transaction.first({
+      id: transactionId,
+    });
 
     if (!transaction) {
-      throw new NotFoundException(
-        'Transaction not found',
-      );
+      throw new NotFoundException('Transaction not found');
     }
 
-    await this.checkTransactionAccess(
-      userId,
-      transaction,
-    );
+    await this.checkTransactionAccess(userId, transaction);
 
     await this.auditService.create({
       userId,
 
-      action:
-        'TRANSACTION_VIEWED',
+      action: 'TRANSACTION_VIEWED',
 
-      entity:
-        'Transaction',
+      entity: 'Transaction',
 
-      entityId:
-        String(transaction.id),
+      entityId: String(transaction.id),
 
       metadata: JSON.stringify({
-        transactionId:
-          transaction.id,
+        transactionId: transaction.id,
 
-        reference:
-          transaction.reference,
+        reference: transaction.reference,
 
-        lookupMethod:
-          'ID',
+        lookupMethod: 'ID',
 
-        type:
-          transaction.type,
+        type: transaction.type,
 
-        amount:
-          BigInt(transaction.amount).toString(),
+        amount: BigInt(transaction.amount).toString(),
 
-        currency:
-          transaction.currency,
+        currency: transaction.currency,
 
-        status:
-          transaction.status,
+        status: transaction.status,
       }),
     });
 
-    return this.serialize(
-      transaction,
-    );
+    return this.serialize(transaction);
   }
 
   /*
@@ -1841,65 +1265,44 @@ export class TransactionsService {
    * GET TRANSACTION BY REFERENCE
    * ==========================================
    */
-  async findByReference(
-    userId: number,
-    reference: string,
-  ) {
-    const transaction =
-      await this.prisma.client.orm.public.Transaction.first({
-        reference,
-      });
+  async findByReference(userId: number, reference: string) {
+    const transaction = await this.prisma.client.orm.public.Transaction.first({
+      reference,
+    });
 
     if (!transaction) {
-      throw new NotFoundException(
-        'Transaction not found',
-      );
+      throw new NotFoundException('Transaction not found');
     }
 
-    await this.checkTransactionAccess(
-      userId,
-      transaction,
-    );
+    await this.checkTransactionAccess(userId, transaction);
 
     await this.auditService.create({
       userId,
 
-      action:
-        'TRANSACTION_VIEWED',
+      action: 'TRANSACTION_VIEWED',
 
-      entity:
-        'Transaction',
+      entity: 'Transaction',
 
-      entityId:
-        String(transaction.id),
+      entityId: String(transaction.id),
 
       metadata: JSON.stringify({
-        transactionId:
-          transaction.id,
+        transactionId: transaction.id,
 
-        reference:
-          transaction.reference,
+        reference: transaction.reference,
 
-        lookupMethod:
-          'REFERENCE',
+        lookupMethod: 'REFERENCE',
 
-        type:
-          transaction.type,
+        type: transaction.type,
 
-        amount:
-          BigInt(transaction.amount).toString(),
+        amount: BigInt(transaction.amount).toString(),
 
-        currency:
-          transaction.currency,
+        currency: transaction.currency,
 
-        status:
-          transaction.status,
+        status: transaction.status,
       }),
     });
 
-    return this.serialize(
-      transaction,
-    );
+    return this.serialize(transaction);
   }
 
   /*
@@ -1907,9 +1310,7 @@ export class TransactionsService {
    * GENERATE REVERSAL REFERENCE
    * ==========================================
    */
-  private generateReversalReference(
-    originalReference: string,
-  ): string {
+  private generateReversalReference(originalReference: string): string {
     return `REV-${Date.now()}-${originalReference}`;
   }
 
@@ -1933,284 +1334,215 @@ export class TransactionsService {
    * 10. Ledger entries are reversed.
    * ==========================================
    */
-  async reverse(
-    userId: number,
-    transactionId: number,
-  ) {
+  async reverse(userId: number, transactionId: number) {
     /*
      * STEP 1
      *
      * Perform wallet and database operations.
      */
-    const result =
-      await this.prisma.client.transaction(
-        async (tx) => {
-          /*
-           * Find original transaction.
-           */
-          const transaction =
-            await tx.orm.public.Transaction.first({
-              id: transactionId,
-            });
+    const result = await this.prisma.client.transaction(async (tx) => {
+      /*
+       * Find original transaction.
+       */
+      const transaction = await tx.orm.public.Transaction.first({
+        id: transactionId,
+      });
 
-          if (!transaction) {
-            throw new NotFoundException(
-              'Transaction not found',
-            );
-          }
+      if (!transaction) {
+        throw new NotFoundException('Transaction not found');
+      }
 
-          /*
-           * Only transfers can currently
-           * be reversed.
-           */
-          if (
-            transaction.type !== 'TRANSFER'
-          ) {
-            throw new BadRequestException(
-              'Only transfer transactions can be reversed',
-            );
-          }
+      /*
+       * Only transfers can currently
+       * be reversed.
+       */
+      if (transaction.type !== 'TRANSFER') {
+        throw new BadRequestException(
+          'Only transfer transactions can be reversed',
+        );
+      }
 
-          /*
-           * Prevent duplicate reversal.
-           */
-          if (
-            transaction.status === 'REVERSED'
-          ) {
-            throw new BadRequestException(
-              'Transaction has already been reversed',
-            );
-          }
+      /*
+       * Prevent duplicate reversal.
+       */
+      if (transaction.status === 'REVERSED') {
+        throw new BadRequestException('Transaction has already been reversed');
+      }
 
-          /*
-           * Only completed transactions
-           * can be reversed.
-           */
-          if (
-            transaction.status !== 'COMPLETED'
-          ) {
-            throw new BadRequestException(
-              'Only completed transactions can be reversed',
-            );
-          }
+      /*
+       * Only completed transactions
+       * can be reversed.
+       */
+      if (transaction.status !== 'COMPLETED') {
+        throw new BadRequestException(
+          'Only completed transactions can be reversed',
+        );
+      }
 
-          /*
-           * Validate wallet IDs.
-           */
-          if (
-            transaction.sourceWalletId === null ||
-            transaction.destinationWalletId === null
-          ) {
-            throw new BadRequestException(
-              'Invalid transfer transaction',
-            );
-          }
+      /*
+       * Validate wallet IDs.
+       */
+      if (
+        transaction.sourceWalletId === null ||
+        transaction.destinationWalletId === null
+      ) {
+        throw new BadRequestException('Invalid transfer transaction');
+      }
 
-          /*
-           * Find source wallet.
-           */
-          const sourceWallet =
-            await tx.orm.public.Wallet.first({
-              id: transaction.sourceWalletId,
-            });
+      /*
+       * Find source wallet.
+       */
+      const sourceWallet = await tx.orm.public.Wallet.first({
+        id: transaction.sourceWalletId,
+      });
 
-          if (!sourceWallet) {
-            throw new NotFoundException(
-              'Source wallet not found',
-            );
-          }
+      if (!sourceWallet) {
+        throw new NotFoundException('Source wallet not found');
+      }
 
-          /*
-           * Only sender can reverse.
-           */
-          if (
-            sourceWallet.userId !== userId
-          ) {
-            throw new ForbiddenException(
-              'Only the sender can reverse this transaction',
-            );
-          }
+      /*
+       * Only sender can reverse.
+       */
+      if (sourceWallet.userId !== userId) {
+        throw new ForbiddenException(
+          'Only the sender can reverse this transaction',
+        );
+      }
 
-          /*
-           * Find destination wallet.
-           */
-          const destinationWallet =
-            await tx.orm.public.Wallet.first({
-              id: transaction.destinationWalletId,
-            });
+      /*
+       * Find destination wallet.
+       */
+      const destinationWallet = await tx.orm.public.Wallet.first({
+        id: transaction.destinationWalletId,
+      });
 
-          if (!destinationWallet) {
-            throw new NotFoundException(
-              'Destination wallet not found',
-            );
-          }
+      if (!destinationWallet) {
+        throw new NotFoundException('Destination wallet not found');
+      }
 
-          /*
-           * Validate wallet status.
-           */
-          if (
-            sourceWallet.status !== 'ACTIVE'
-          ) {
-            throw new BadRequestException(
-              'Source wallet is not active',
-            );
-          }
+      /*
+       * Validate wallet status.
+       */
+      if (sourceWallet.status !== 'ACTIVE') {
+        throw new BadRequestException('Source wallet is not active');
+      }
 
-          if (
-            destinationWallet.status !==
-            'ACTIVE'
-          ) {
-            throw new BadRequestException(
-              'Destination wallet is not active',
-            );
-          }
+      if (destinationWallet.status !== 'ACTIVE') {
+        throw new BadRequestException('Destination wallet is not active');
+      }
 
-          /*
-           * Validate currencies.
-           */
-          if (
-            sourceWallet.currency !==
-            destinationWallet.currency
-          ) {
-            throw new BadRequestException(
-              'Wallet currencies do not match',
-            );
-          }
+      /*
+       * Validate currencies.
+       */
+      if (sourceWallet.currency !== destinationWallet.currency) {
+        throw new BadRequestException('Wallet currencies do not match');
+      }
 
-          const transactionAmount =
-            BigInt(
-              transaction.amount,
-            );
+      const transactionAmount = BigInt(transaction.amount);
 
-          /*
-           * Destination wallet must contain
-           * enough balance for reversal.
-           */
-          if (
-            destinationWallet.balance <
-            transactionAmount
-          ) {
-            throw new BadRequestException(
-              'Destination wallet does not have enough balance to reverse this transaction',
-            );
-          }
+      /*
+       * Destination wallet must contain
+       * enough balance for reversal.
+       */
+      if (destinationWallet.balance < transactionAmount) {
+        throw new BadRequestException(
+          'Destination wallet does not have enough balance to reverse this transaction',
+        );
+      }
 
-          /*
-           * Calculate reversal balances.
-           *
-           * Original:
-           *
-           * Source      - amount
-           * Destination + amount
-           *
-           * Reversal:
-           *
-           * Source      + amount
-           * Destination - amount
-           */
-          const sourceNewBalance =
-            sourceWallet.balance +
-            transactionAmount;
+      /*
+       * Calculate reversal balances.
+       *
+       * Original:
+       *
+       * Source      - amount
+       * Destination + amount
+       *
+       * Reversal:
+       *
+       * Source      + amount
+       * Destination - amount
+       */
+      const sourceNewBalance = sourceWallet.balance + transactionAmount;
 
-          const destinationNewBalance =
-            destinationWallet.balance -
-            transactionAmount;
+      const destinationNewBalance =
+        destinationWallet.balance - transactionAmount;
 
-          /*
-           * Update source wallet.
-           */
-          const updatedSourceWallet =
-            await tx.orm.public.Wallet
-              .where({
-                id: sourceWallet.id,
-              })
-              .update({
-                balance: sourceNewBalance,
-              });
+      /*
+       * Update source wallet.
+       */
+      const updatedSourceWallet = await tx.orm.public.Wallet.where({
+        id: sourceWallet.id,
+      }).update({
+        balance: sourceNewBalance,
+      });
 
-          /*
-           * Update destination wallet.
-           */
-          const updatedDestinationWallet =
-            await tx.orm.public.Wallet
-              .where({
-                id: destinationWallet.id,
-              })
-              .update({
-                balance:
-                  destinationNewBalance,
-              });
+      /*
+       * Update destination wallet.
+       */
+      const updatedDestinationWallet = await tx.orm.public.Wallet.where({
+        id: destinationWallet.id,
+      }).update({
+        balance: destinationNewBalance,
+      });
 
-          /*
-           * Create reversal transaction.
-           *
-           * Direction is reversed:
-           *
-           * Original:
-           * source -> destination
-           *
-           * Reversal:
-           * destination -> source
-           */
-          const reversalReference =
-            this.generateReversalReference(
-              transaction.reference,
-            );
-
-          const reversalTransaction =
-            await tx.orm.public.Transaction.create({
-              reference:
-                reversalReference,
-
-              type: 'TRANSFER',
-
-              status: 'COMPLETED',
-
-              amount:
-                transactionAmount,
-
-              currency:
-                transaction.currency,
-
-              sourceWalletId:
-                destinationWallet.id,
-
-              destinationWalletId:
-                sourceWallet.id,
-            });
-
-          /*
-           * Mark original transaction
-           * as reversed.
-           */
-          const reversedOriginalTransaction =
-            await tx.orm.public.Transaction
-              .where({
-                id: transaction.id,
-              })
-              .update({
-                status: 'REVERSED',
-              });
-
-          return {
-            transaction,
-
-            reversalTransaction,
-
-            originalTransaction:
-              reversedOriginalTransaction,
-
-            sourceWallet:
-              updatedSourceWallet,
-
-            destinationWallet:
-              updatedDestinationWallet,
-
-            amount:
-              transactionAmount,
-          };
-        },
+      /*
+       * Create reversal transaction.
+       *
+       * Direction is reversed:
+       *
+       * Original:
+       * source -> destination
+       *
+       * Reversal:
+       * destination -> source
+       */
+      const reversalReference = this.generateReversalReference(
+        transaction.reference,
       );
+
+      const reversalTransaction = await tx.orm.public.Transaction.create({
+        reference: reversalReference,
+
+        type: 'TRANSFER',
+
+        status: 'COMPLETED',
+
+        amount: transactionAmount,
+
+        currency: transaction.currency,
+
+        sourceWalletId: destinationWallet.id,
+
+        destinationWalletId: sourceWallet.id,
+      });
+
+      /*
+       * Mark original transaction
+       * as reversed.
+       */
+      const reversedOriginalTransaction = await tx.orm.public.Transaction.where(
+        {
+          id: transaction.id,
+        },
+      ).update({
+        status: 'REVERSED',
+      });
+
+      return {
+        transaction,
+
+        reversalTransaction,
+
+        originalTransaction: reversedOriginalTransaction,
+
+        sourceWallet: updatedSourceWallet,
+
+        destinationWallet: updatedDestinationWallet,
+
+        amount: transactionAmount,
+      };
+    });
 
     /*
      * STEP 2
@@ -2234,53 +1566,36 @@ export class TransactionsService {
     await this.auditService.create({
       userId,
 
-      action:
-        'TRANSACTION_REVERSED',
+      action: 'TRANSACTION_REVERSED',
 
-      entity:
-        'Transaction',
+      entity: 'Transaction',
 
-      entityId:
-        String(result.transaction.id),
+      entityId: String(result.transaction.id),
 
       metadata: JSON.stringify({
-        originalTransactionId:
-          result.transaction.id,
+        originalTransactionId: result.transaction.id,
 
-        originalReference:
-          result.transaction.reference,
+        originalReference: result.transaction.reference,
 
-        reversalTransactionId:
-          result.reversalTransaction.id,
+        reversalTransactionId: result.reversalTransaction.id,
 
-        reversalReference:
-          result.reversalTransaction.reference,
+        reversalReference: result.reversalTransaction.reference,
 
-        amount:
-          result.amount.toString(),
+        amount: result.amount.toString(),
 
-        currency:
-          result.transaction.currency,
+        currency: result.transaction.currency,
 
-        sourceWalletId:
-          result.transaction.sourceWalletId,
+        sourceWalletId: result.transaction.sourceWalletId,
 
-        destinationWalletId:
-          result.transaction.destinationWalletId,
+        destinationWalletId: result.transaction.destinationWalletId,
 
-        sourceWalletBalanceAfter:
-          result.sourceWallet
-            ? BigInt(
-                result.sourceWallet.balance,
-              ).toString()
-            : null,
+        sourceWalletBalanceAfter: result.sourceWallet
+          ? BigInt(result.sourceWallet.balance).toString()
+          : null,
 
-        destinationWalletBalanceAfter:
-          result.destinationWallet
-            ? BigInt(
-                result.destinationWallet.balance,
-              ).toString()
-            : null,
+        destinationWalletBalanceAfter: result.destinationWallet
+          ? BigInt(result.destinationWallet.balance).toString()
+          : null,
       }),
     });
 
@@ -2288,31 +1603,17 @@ export class TransactionsService {
      * RESPONSE
      */
     return {
-      message:
-        'Transaction reversed successfully',
+      message: 'Transaction reversed successfully',
 
-      amount:
-        result.amount.toString(),
+      amount: result.amount.toString(),
 
-      sourceWallet:
-        this.serialize(
-          result.sourceWallet,
-        ),
+      sourceWallet: this.serialize(result.sourceWallet),
 
-      destinationWallet:
-        this.serialize(
-          result.destinationWallet,
-        ),
+      destinationWallet: this.serialize(result.destinationWallet),
 
-      originalTransaction:
-        this.serialize(
-          result.originalTransaction,
-        ),
+      originalTransaction: this.serialize(result.originalTransaction),
 
-      reversalTransaction:
-        this.serialize(
-          result.reversalTransaction,
-        ),
+      reversalTransaction: this.serialize(result.reversalTransaction),
     };
   }
 }

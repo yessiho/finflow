@@ -1,6 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import { useRouter } from 'next/navigation';
 
 import {
   RefreshCw,
@@ -10,50 +12,190 @@ import {
   WalletCards,
   AlertCircle,
   Loader2,
+  ArrowLeftRight,
 } from 'lucide-react';
 
 import { apiFetch } from '@/lib/api';
+
+/* =====================================================
+   TYPES
+===================================================== */
+
+type LedgerAccountType =
+  | 'ASSET'
+  | 'LIABILITY'
+  | 'REVENUE'
+  | 'EXPENSE'
+  | 'EQUITY';
 
 type LedgerAccount = {
   id: number;
   code: string;
   name: string;
-  type:
-    | 'ASSET'
-    | 'LIABILITY'
-    | 'REVENUE'
-    | 'EXPENSE'
-    | 'EQUITY';
+  type: LedgerAccountType;
   currency: string;
   active: boolean;
-  totalDebit: string;
-  totalCredit: string;
-  balance: string;
-  createdAt: string;
-  updatedAt: string;
+  totalDebit: string | number;
+  totalCredit: string | number;
+  balance: string | number;
+  createdAt?: string;
+  updatedAt?: string;
 };
+
+type CurrencyBalance = {
+  currency: string;
+  amount: number;
+};
+
+type ApiError = {
+  message?: string;
+};
+
+type LedgerApiResponse = {
+  accounts?: unknown;
+  data?: unknown;
+  items?: unknown;
+  results?: unknown;
+};
+
+/* =====================================================
+   HELPERS
+===================================================== */
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof (error as ApiError).message === 'string'
+  ) {
+    return (error as ApiError).message ?? fallback;
+  }
+
+  return fallback;
+}
+
+function isLedgerAccountType(value: unknown): value is LedgerAccountType {
+  return (
+    value === 'ASSET' ||
+    value === 'LIABILITY' ||
+    value === 'REVENUE' ||
+    value === 'EXPENSE' ||
+    value === 'EQUITY'
+  );
+}
+
+function isNumberOrString(value: unknown): value is string | number {
+  return typeof value === 'string' || typeof value === 'number';
+}
+
+function isLedgerAccount(value: unknown): value is LedgerAccount {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const account = value as Record<string, unknown>;
+
+  return (
+    typeof account.id === 'number' &&
+    typeof account.code === 'string' &&
+    typeof account.name === 'string' &&
+    isLedgerAccountType(account.type) &&
+    typeof account.currency === 'string' &&
+    typeof account.active === 'boolean' &&
+    isNumberOrString(account.totalDebit) &&
+    isNumberOrString(account.totalCredit) &&
+    isNumberOrString(account.balance)
+  );
+}
+
+function isLedgerAccountArray(value: unknown): value is LedgerAccount[] {
+  return Array.isArray(value) && value.every(isLedgerAccount);
+}
+
+/* =====================================================
+   NORMALIZE API RESPONSE
+
+   Supports:
+
+   [
+     ...
+   ]
+
+   {
+     accounts: [...]
+   }
+
+   {
+     data: [...]
+   }
+
+   {
+     items: [...]
+   }
+
+   {
+     results: [...]
+   }
+===================================================== */
+
+function normalizeLedgerResponse(response: unknown): LedgerAccount[] | null {
+  if (isLedgerAccountArray(response)) {
+    return response;
+  }
+
+  if (typeof response !== 'object' || response === null) {
+    return null;
+  }
+
+  const data = response as LedgerApiResponse;
+
+  const possibleResponses = [
+    data.accounts,
+    data.data,
+    data.items,
+    data.results,
+  ];
+
+  for (const value of possibleResponses) {
+    if (isLedgerAccountArray(value)) {
+      return value;
+    }
+  }
+
+  return null;
+}
 
 function formatAmount(
   amount: string | number,
   currency: string,
-) {
+): string {
   const value = Number(amount);
 
+  if (!Number.isFinite(value)) {
+    return `${currency} ${amount}`;
+  }
+
   try {
-    return new Intl.NumberFormat(
-      'en-US',
-      {
-        style: 'currency',
-        currency,
-        minimumFractionDigits: 2,
-      },
-    ).format(value);
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
   } catch {
-    return `${currency} ${value.toLocaleString()}`;
+    return `${currency} ${value.toLocaleString('en-NG', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
   }
 }
 
-function getTypeClass(type: string) {
+function getTypeClass(type: LedgerAccountType): string {
   switch (type) {
     case 'ASSET':
       return 'ledger-badge asset';
@@ -75,21 +217,80 @@ function getTypeClass(type: string) {
   }
 }
 
+function getCurrencyBalances(
+  accounts: LedgerAccount[],
+  type: LedgerAccountType,
+): CurrencyBalance[] {
+  const balances = new Map<string, number>();
+
+  accounts
+    .filter((account) => account.type === type)
+    .forEach((account) => {
+      const balance = Number(account.balance);
+
+      if (!Number.isFinite(balance)) {
+        return;
+      }
+
+      const currentBalance =
+        balances.get(account.currency) ?? 0;
+
+      balances.set(
+        account.currency,
+        currentBalance + balance,
+      );
+    });
+
+  return Array.from(balances.entries()).map(
+    ([currency, amount]) => ({
+      currency,
+      amount,
+    }),
+  );
+}
+
+/* =====================================================
+   LEDGER PAGE
+===================================================== */
+
 export default function LedgerPage() {
+  const router = useRouter();
+
   const [accounts, setAccounts] =
     useState<LedgerAccount[]>([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [refreshing, setRefreshing] =
-    useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const [error, setError] =
-    useState('');
+  const [error, setError] = useState('');
+
+  const requestInProgress = useRef(false);
+
+  /* =====================================================
+     UNAUTHORIZED HANDLER
+  ===================================================== */
+
+  const handleUnauthorized = useCallback(() => {
+    localStorage.removeItem('access_token');
+
+    localStorage.removeItem('user');
+
+    router.push('/login');
+  }, [router]);
+
+  /* =====================================================
+     LOAD LEDGER ACCOUNTS
+  ===================================================== */
 
   const loadAccounts = useCallback(
     async (isRefresh = false) => {
+      if (requestInProgress.current) {
+        return;
+      }
+
+      requestInProgress.current = true;
+
       try {
         setError('');
 
@@ -99,73 +300,129 @@ export default function LedgerPage() {
           setLoading(true);
         }
 
-        const response =
-          await apiFetch(
-            '/ledger/accounts',
+        const response: unknown = await apiFetch(
+          '/ledger/accounts',
+        );
+
+        const normalizedAccounts =
+          normalizeLedgerResponse(response);
+
+        if (!normalizedAccounts) {
+          console.error(
+            'Unexpected ledger API response:',
+            response,
           );
 
-        setAccounts(
-          Array.isArray(response)
-            ? response
-            : [],
+          throw new Error(
+            'Unexpected response received from the ledger API.',
+          );
+        }
+
+        setAccounts(normalizedAccounts);
+      } catch (caughtError: unknown) {
+        console.error(
+          'Ledger loading error:',
+          caughtError,
         );
-      } catch (error: any) {
-        setError(
-          error.message ||
-            'Unable to load ledger accounts.',
+
+        const message = getErrorMessage(
+          caughtError,
+          'Unable to load ledger accounts.',
         );
+
+        const lowerCaseMessage =
+          message.toLowerCase();
+
+        if (
+          lowerCaseMessage.includes('unauthorized') ||
+          lowerCaseMessage.includes('unauthenticated') ||
+          lowerCaseMessage.includes('401')
+        ) {
+          handleUnauthorized();
+
+          return;
+        }
+
+        setError(message);
       } finally {
         setLoading(false);
+
         setRefreshing(false);
+
+        requestInProgress.current = false;
       }
     },
-    [],
+    [handleUnauthorized],
   );
 
+  /* =====================================================
+     INITIAL LOAD
+
+     Using setTimeout prevents the React ESLint
+     set-state-in-effect warning.
+  ===================================================== */
+
   useEffect(() => {
-    loadAccounts();
+    const timeoutId = window.setTimeout(() => {
+      void loadAccounts();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   }, [loadAccounts]);
 
-  const totalAssets = accounts
-    .filter(
-      (account) =>
-        account.type === 'ASSET',
-    )
-    .reduce(
-      (total, account) =>
-        total +
-        Number(account.balance),
-      0,
-    );
+  /* =====================================================
+     STATISTICS
+  ===================================================== */
 
-  const totalLiabilities = accounts
-    .filter(
-      (account) =>
-        account.type === 'LIABILITY',
-    )
-    .reduce(
-      (total, account) =>
-        total +
-        Number(account.balance),
-      0,
-    );
+  const statistics = useMemo(() => {
+    const activeAccounts = accounts.filter(
+      (account) => account.active,
+    ).length;
 
-  const activeAccounts = accounts.filter(
-    (account) => account.active,
-  ).length;
+    const assetAccounts = accounts.filter(
+      (account) => account.type === 'ASSET',
+    ).length;
 
-  const currencies = [
-    ...new Set(
-      accounts.map(
-        (account) =>
-          account.currency,
+    const liabilityAccounts = accounts.filter(
+      (account) => account.type === 'LIABILITY',
+    ).length;
+
+    const currencies = [
+      ...new Set(
+        accounts
+          .map((account) => account.currency)
+          .filter(Boolean),
       ),
-    ),
-  ];
+    ];
+
+    const assetBalances = getCurrencyBalances(
+      accounts,
+      'ASSET',
+    );
+
+    const liabilityBalances = getCurrencyBalances(
+      accounts,
+      'LIABILITY',
+    );
+
+    return {
+      activeAccounts,
+      assetAccounts,
+      liabilityAccounts,
+      currencies,
+      assetBalances,
+      liabilityBalances,
+    };
+  }, [accounts]);
+
+  /* =====================================================
+     PAGE
+  ===================================================== */
 
   return (
     <div className="ledger-page">
-
       {/* PAGE HEADER */}
 
       <div className="ledger-header">
@@ -173,89 +430,66 @@ export default function LedgerPage() {
           <div className="ledger-title-row">
             <Landmark size={28} />
 
-            <h1>
-              General Ledger
-            </h1>
+            <h1>General Ledger</h1>
           </div>
 
           <p>
-            Monitor financial accounts,
-            balances, and double-entry
-            accounting activity.
+            Monitor financial accounts, balances, and
+            double-entry accounting activity.
           </p>
         </div>
 
         <button
           type="button"
           className="ledger-refresh-button"
-          onClick={() =>
-            loadAccounts(true)
-          }
-          disabled={
-            loading ||
-            refreshing
-          }
+          onClick={() => void loadAccounts(true)}
+          disabled={loading || refreshing}
         >
           {refreshing ? (
-            <Loader2
-              size={18}
-              className="spin"
-            />
+            <Loader2 size={18} className="spin" />
           ) : (
             <RefreshCw size={18} />
           )}
 
-          {refreshing
-            ? 'Refreshing...'
-            : 'Refresh'}
+          {refreshing ? 'Refreshing...' : 'Refresh'}
         </button>
       </div>
 
-      {/* ERROR STATE */}
+      {/* ERROR */}
 
       {error && (
         <div className="ledger-error">
           <AlertCircle size={20} />
 
           <div>
-            <strong>
-              Unable to load ledger
-            </strong>
+            <strong>Unable to load ledger</strong>
 
-            <span>
-              {error}
-            </span>
+            <span>{error}</span>
           </div>
 
           <button
             type="button"
-            onClick={() =>
-              loadAccounts()
-            }
+            onClick={() => void loadAccounts()}
           >
             Try Again
           </button>
         </div>
       )}
 
-      {/* LOADING STATE */}
+      {/* LOADING */}
 
       {loading ? (
         <div className="ledger-loading">
-          <Loader2
-            size={34}
-            className="spin"
-          />
+          <Loader2 size={34} className="spin" />
 
-          <p>
-            Loading ledger accounts...
-          </p>
+          <p>Loading ledger accounts...</p>
         </div>
       ) : (
         <>
-          {/* SUMMARY CARDS */}
+          {/* SUMMARY */}
 
           <div className="ledger-summary-grid">
+            {/* TOTAL ACCOUNTS */}
 
             <div className="ledger-summary-card">
               <div className="summary-icon accounts">
@@ -263,19 +497,17 @@ export default function LedgerPage() {
               </div>
 
               <div>
-                <span>
-                  Total Accounts
-                </span>
+                <span>Total Accounts</span>
 
-                <strong>
-                  {accounts.length}
-                </strong>
+                <strong>{accounts.length}</strong>
 
                 <small>
-                  {activeAccounts} active
+                  {statistics.activeAccounts} active
                 </small>
               </div>
             </div>
+
+            {/* ASSET ACCOUNTS */}
 
             <div className="ledger-summary-card">
               <div className="summary-icon asset">
@@ -283,26 +515,19 @@ export default function LedgerPage() {
               </div>
 
               <div>
-                <span>
-                  Asset Accounts
-                </span>
+                <span>Asset Accounts</span>
 
                 <strong>
-                  {
-                    accounts.filter(
-                      (account) =>
-                        account.type ===
-                        'ASSET',
-                    ).length
-                  }
+                  {statistics.assetAccounts}
                 </strong>
 
                 <small>
-                  {currencies.length}{' '}
-                  currencies supported
+                  Financial assets tracked
                 </small>
               </div>
             </div>
+
+            {/* LIABILITY ACCOUNTS */}
 
             <div className="ledger-summary-card">
               <div className="summary-icon liability">
@@ -310,26 +535,19 @@ export default function LedgerPage() {
               </div>
 
               <div>
-                <span>
-                  Liability Accounts
-                </span>
+                <span>Liability Accounts</span>
 
                 <strong>
-                  {
-                    accounts.filter(
-                      (account) =>
-                        account.type ===
-                        'LIABILITY',
-                    ).length
-                  }
+                  {statistics.liabilityAccounts}
                 </strong>
 
                 <small>
-                  Customer balances
-                  tracked
+                  Customer balances tracked
                 </small>
               </div>
             </div>
+
+            {/* SUPPORTED CURRENCIES */}
 
             <div className="ledger-summary-card">
               <div className="summary-icon currencies">
@@ -337,87 +555,135 @@ export default function LedgerPage() {
               </div>
 
               <div>
-                <span>
-                  Supported Currencies
-                </span>
+                <span>Supported Currencies</span>
 
                 <strong>
-                  {currencies.length}
+                  {statistics.currencies.length}
                 </strong>
 
                 <small>
-                  {currencies.join(', ')}
+                  {statistics.currencies.length > 0
+                    ? statistics.currencies.join(', ')
+                    : 'No currencies yet'}
                 </small>
               </div>
             </div>
-
           </div>
 
-          {/* ACCOUNTING INFORMATION */}
+          {/* FINANCIAL POSITION */}
 
-          <div className="ledger-info-grid">
-
-            <div className="ledger-info-card">
-              <div className="ledger-info-icon asset">
-                <TrendingUp size={22} />
-              </div>
-
+          <section className="ledger-financial-section">
+            <div className="ledger-financial-header">
               <div>
-                <span>
-                  Total Asset Balance
-                </span>
+                <h2>Financial Position</h2>
 
-                <strong>
-                  {totalAssets.toLocaleString()}
-                </strong>
-
-                <small>
-                  Across all currencies
-                </small>
+                <p>
+                  Account balances grouped by currency.
+                  Different currencies are not combined.
+                </p>
               </div>
+
+              <ArrowLeftRight size={22} />
             </div>
 
-            <div className="ledger-info-card">
-              <div className="ledger-info-icon liability">
-                <TrendingDown size={22} />
+            <div className="ledger-info-grid">
+              {/* ASSETS */}
+
+              <div className="ledger-info-card">
+                <div className="ledger-info-icon asset">
+                  <TrendingUp size={22} />
+                </div>
+
+                <div className="ledger-balance-content">
+                  <span>Asset Balances</span>
+
+                  {statistics.assetBalances.length > 0 ? (
+                    <div className="ledger-currency-balances">
+                      {statistics.assetBalances.map(
+                        (item) => (
+                          <div
+                            key={item.currency}
+                            className="ledger-currency-row"
+                          >
+                            <span>{item.currency}</span>
+
+                            <strong>
+                              {formatAmount(
+                                item.amount,
+                                item.currency,
+                              )}
+                            </strong>
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  ) : (
+                    <small>
+                      No asset balances available
+                    </small>
+                  )}
+                </div>
               </div>
 
-              <div>
-                <span>
-                  Total Liability Balance
-                </span>
+              {/* LIABILITIES */}
 
-                <strong>
-                  {totalLiabilities.toLocaleString()}
-                </strong>
+              <div className="ledger-info-card">
+                <div className="ledger-info-icon liability">
+                  <TrendingDown size={22} />
+                </div>
 
-                <small>
-                  Across all currencies
-                </small>
+                <div className="ledger-balance-content">
+                  <span>Liability Balances</span>
+
+                  {statistics.liabilityBalances.length >
+                  0 ? (
+                    <div className="ledger-currency-balances">
+                      {statistics.liabilityBalances.map(
+                        (item) => (
+                          <div
+                            key={item.currency}
+                            className="ledger-currency-row"
+                          >
+                            <span>{item.currency}</span>
+
+                            <strong>
+                              {formatAmount(
+                                item.amount,
+                                item.currency,
+                              )}
+                            </strong>
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  ) : (
+                    <small>
+                      No liability balances available
+                    </small>
+                  )}
+                </div>
               </div>
             </div>
-
-          </div>
+          </section>
 
           {/* LEDGER TABLE */}
 
           <section className="ledger-table-section">
-
             <div className="ledger-table-header">
               <div>
-                <h2>
-                  Ledger Accounts
-                </h2>
+                <h2>Ledger Accounts</h2>
 
                 <p>
-                  Real-time account balances
-                  generated from double-entry
-                  ledger records.
+                  Real-time account balances generated from
+                  double-entry ledger records.
                 </p>
               </div>
 
               <span className="ledger-count">
-                {accounts.length} Accounts
+                {accounts.length}{' '}
+                {accounts.length === 1
+                  ? 'Account'
+                  : 'Accounts'}
               </span>
             </div>
 
@@ -425,38 +691,25 @@ export default function LedgerPage() {
               <div className="ledger-empty">
                 <Landmark size={42} />
 
-                <h3>
-                  No Ledger Accounts
-                </h3>
+                <h3>No Ledger Accounts</h3>
 
                 <p>
-                  Ledger accounts will appear
-                  here once financial
-                  transactions are processed.
+                  Ledger accounts will appear here once
+                  financial transactions are processed.
                 </p>
               </div>
             ) : (
               <div className="ledger-table-wrapper">
-
                 <table className="ledger-table">
-
                   <thead>
                     <tr>
-                      <th>
-                        Account
-                      </th>
+                      <th>Account</th>
 
-                      <th>
-                        Code
-                      </th>
+                      <th>Code</th>
 
-                      <th>
-                        Type
-                      </th>
+                      <th>Type</th>
 
-                      <th>
-                        Currency
-                      </th>
+                      <th>Currency</th>
 
                       <th className="number">
                         Total Debit
@@ -470,116 +723,112 @@ export default function LedgerPage() {
                         Balance
                       </th>
 
-                      <th>
-                        Status
-                      </th>
+                      <th>Status</th>
                     </tr>
                   </thead>
 
                   <tbody>
-                    {accounts.map(
-                      (account) => (
-                        <tr
-                          key={account.id}
-                        >
-                          <td>
-                            <div className="ledger-account-name">
-                              <div className="ledger-account-icon">
-                                <Landmark
-                                  size={18}
-                                />
-                              </div>
+                    {accounts.map((account) => (
+                      <tr key={account.id}>
+                        {/* ACCOUNT */}
 
-                              <div>
-                                <strong>
-                                  {
-                                    account.name
-                                  }
-                                </strong>
-
-                                <span>
-                                  Account ID #
-                                  {account.id}
-                                </span>
-                              </div>
+                        <td>
+                          <div className="ledger-account-name">
+                            <div className="ledger-account-icon">
+                              <Landmark size={18} />
                             </div>
-                          </td>
 
-                          <td>
-                            <code>
-                              {account.code}
-                            </code>
-                          </td>
+                            <div>
+                              <strong>
+                                {account.name}
+                              </strong>
 
-                          <td>
-                            <span
-                              className={getTypeClass(
-                                account.type,
-                              )}
-                            >
-                              {account.type}
-                            </span>
-                          </td>
+                              <span>
+                                Account ID #{account.id}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
 
-                          <td>
-                            <span className="currency-pill">
-                              {
-                                account.currency
-                              }
-                            </span>
-                          </td>
+                        {/* CODE */}
 
-                          <td className="number debit">
-                            {formatAmount(
-                              account.totalDebit,
-                              account.currency,
+                        <td>
+                          <code>{account.code}</code>
+                        </td>
+
+                        {/* TYPE */}
+
+                        <td>
+                          <span
+                            className={getTypeClass(
+                              account.type,
                             )}
-                          </td>
+                          >
+                            {account.type}
+                          </span>
+                        </td>
 
-                          <td className="number credit">
-                            {formatAmount(
-                              account.totalCredit,
-                              account.currency,
-                            )}
-                          </td>
+                        {/* CURRENCY */}
 
-                          <td className="number balance">
-                            {formatAmount(
-                              account.balance,
-                              account.currency,
-                            )}
-                          </td>
+                        <td>
+                          <span className="currency-pill">
+                            {account.currency}
+                          </span>
+                        </td>
 
-                          <td>
-                            <span
-                              className={`ledger-status ${
-                                account.active
-                                  ? 'active'
-                                  : 'inactive'
-                              }`}
-                            >
-                              <span />
+                        {/* DEBIT */}
 
-                              {account.active
-                                ? 'Active'
-                                : 'Inactive'}
-                            </span>
-                          </td>
-                        </tr>
-                      ),
-                    )}
+                        <td className="number debit">
+                          {formatAmount(
+                            account.totalDebit,
+                            account.currency,
+                          )}
+                        </td>
+
+                        {/* CREDIT */}
+
+                        <td className="number credit">
+                          {formatAmount(
+                            account.totalCredit,
+                            account.currency,
+                          )}
+                        </td>
+
+                        {/* BALANCE */}
+
+                        <td className="number balance">
+                          {formatAmount(
+                            account.balance,
+                            account.currency,
+                          )}
+                        </td>
+
+                        {/* STATUS */}
+
+                        <td>
+                          <span
+                            className={`ledger-status ${
+                              account.active
+                                ? 'active'
+                                : 'inactive'
+                            }`}
+                          >
+                            <span />
+
+                            {account.active
+                              ? 'Active'
+                              : 'Inactive'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
-
                 </table>
-
               </div>
             )}
-
           </section>
-
         </>
       )}
-
     </div>
   );
 }

@@ -17,26 +17,17 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
     }),
 
     JwtModule.register({
-      secret:
-        process.env.JWT_SECRET ||
-        'super-secret-key',
+      secret: process.env.JWT_SECRET || 'super-secret-key',
       signOptions: {
         expiresIn: '15m',
       },
     }),
   ],
 
-  controllers: [
-    LedgerController,
-  ],
+  controllers: [LedgerController],
 
-  providers: [
-    LedgerService,
-    JwtAuthGuard,
-  ],
+  providers: [LedgerService, JwtAuthGuard],
 
-  exports: [
-    LedgerService,
-  ],
+  exports: [LedgerService],
 })
 export class LedgerModule {}

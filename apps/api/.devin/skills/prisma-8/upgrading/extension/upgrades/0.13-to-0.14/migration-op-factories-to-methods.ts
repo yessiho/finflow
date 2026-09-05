@@ -62,7 +62,10 @@ function stripFactoriesFromImports(src: string): string {
 }
 
 /** Reads a quoted string or bare identifier/bracket-balanced token starting at offset. */
-function readToken(src: string, offset: number): { value: string; end: number } | null {
+function readToken(
+  src: string,
+  offset: number,
+): { value: string; end: number } | null {
   let i = offset;
   while (i < src.length && src[i] === ' ') i++;
   if (i >= src.length) return null;
@@ -204,7 +207,10 @@ const rewrites: Rewrite[] = [
 
 function applyRewrites(src: string): string {
   // installExtension already takes an object — just prepend `this.`
-  let out = src.replace(/(?<!this\.)(?<!\.)\binstallExtension\(/g, 'this.installExtension(');
+  let out = src.replace(
+    /(?<!this\.)(?<!\.)\binstallExtension\(/g,
+    'this.installExtension(',
+  );
 
   for (const { pattern, rewrite } of rewrites) {
     pattern.lastIndex = 0;

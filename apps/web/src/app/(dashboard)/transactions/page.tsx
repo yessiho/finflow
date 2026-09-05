@@ -1,6 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import {
+  FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+
 import { useRouter } from 'next/navigation';
 
 import {
@@ -32,14 +39,94 @@ interface Transaction {
   createdAt: string;
 }
 
+interface TransactionsMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 interface TransactionsResponse {
   data: Transaction[];
-  meta?: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+  meta?: TransactionsMeta;
+}
+
+interface TransactionFilters {
+  search: string;
+  type: string;
+  status: string;
+}
+
+interface ApiError {
+  message?: string;
+}
+
+const DEFAULT_META: TransactionsMeta = {
+  page: 1,
+  limit: 10,
+  total: 0,
+  totalPages: 1,
+};
+
+function getErrorMessage(
+  error: unknown,
+  fallback: string,
+): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof (error as ApiError).message === 'string'
+  ) {
+    return (error as ApiError).message as string;
+  }
+
+  return fallback;
+}
+
+function isTransaction(value: unknown): value is Transaction {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  return (
+    'id' in value &&
+    'reference' in value &&
+    'amount' in value &&
+    'currency' in value &&
+    'type' in value &&
+    'status' in value &&
+    'createdAt' in value
+  );
+}
+
+function isTransactionsMeta(
+  value: unknown,
+): value is TransactionsMeta {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  return (
+    'page' in value &&
+    'limit' in value &&
+    'total' in value &&
+    'totalPages' in value
+  );
+}
+
+function isTransactionsResponse(
+  value: unknown,
+): value is TransactionsResponse {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  return 'data' in value && Array.isArray(value.data);
 }
 
 export default function TransactionsPage() {
@@ -48,216 +135,302 @@ export default function TransactionsPage() {
   const [transactions, setTransactions] =
     useState<Transaction[]>([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [error, setError] =
-    useState('');
+  const [error, setError] = useState('');
 
-  const [search, setSearch] =
-    useState('');
+  const [search, setSearch] = useState('');
 
-  const [type, setType] =
-    useState('');
+  const [type, setType] = useState('');
 
-  const [status, setStatus] =
-    useState('');
+  const [status, setStatus] = useState('');
 
-  const [page, setPage] =
-    useState(1);
+  const [page, setPage] = useState(1);
 
   const [meta, setMeta] =
-    useState({
-      page: 1,
-      limit: 10,
-      total: 0,
-      totalPages: 1,
-    });
+    useState<TransactionsMeta>(DEFAULT_META);
 
-  async function loadTransactions(
-    selectedPage = page,
-    filters = {
-      search,
-      type,
-      status,
-    },
-  ) {
-    try {
-      setLoading(true);
-      setError('');
+  /*
+   * ==========================================
+   * LOAD TRANSACTIONS
+   * ==========================================
+   */
 
-      const params =
-        new URLSearchParams();
+  const loadTransactions = useCallback(
+    async (
+      selectedPage = 1,
+      filters: TransactionFilters = {
+        search: '',
+        type: '',
+        status: '',
+      },
+    ) => {
+      try {
+        setLoading(true);
 
-      params.set(
-        'page',
-        String(selectedPage),
-      );
+        setError('');
 
-      params.set('limit', '10');
+        const params = new URLSearchParams();
 
-      if (filters.search.trim()) {
-        params.set(
-          'search',
-          filters.search.trim(),
-        );
-      }
+        params.set('page', String(selectedPage));
 
-      if (filters.type) {
-        params.set(
-          'type',
-          filters.type,
-        );
-      }
+        params.set('limit', '10');
 
-      if (filters.status) {
-        params.set(
-          'status',
-          filters.status,
-        );
-      }
+        if (filters.search.trim()) {
+          params.set(
+            'search',
+            filters.search.trim(),
+          );
+        }
 
-      const response =
-        await apiFetch(
+        if (filters.type) {
+          params.set('type', filters.type);
+        }
+
+        if (filters.status) {
+          params.set('status', filters.status);
+        }
+
+        const response: unknown = await apiFetch(
           `/transactions?${params.toString()}`,
         );
 
-      if (Array.isArray(response)) {
-        setTransactions(response);
+        /*
+         * Support direct array response.
+         */
 
-        setMeta({
-          page: 1,
-          limit: response.length,
-          total: response.length,
-          totalPages: 1,
-        });
+        if (Array.isArray(response)) {
+          const validTransactions =
+            response.filter(isTransaction);
 
-        return;
-      }
+          setTransactions(validTransactions);
 
-      const data =
-        response as TransactionsResponse;
+          setMeta({
+            page: 1,
+            limit: validTransactions.length,
+            total: validTransactions.length,
+            totalPages: 1,
+          });
 
-      setTransactions(
-        data.data || [],
-      );
+          return;
+        }
 
-      if (data.meta) {
-        setMeta(data.meta);
-      }
-    } catch (error: any) {
-      console.error(error);
+        /*
+         * Support paginated API response.
+         */
 
-      if (
-        error.message === 'Unauthorized'
-      ) {
-        localStorage.removeItem(
-          'access_token',
+        if (isTransactionsResponse(response)) {
+          const validTransactions =
+            response.data.filter(isTransaction);
+
+          setTransactions(validTransactions);
+
+          if (
+            response.meta &&
+            isTransactionsMeta(response.meta)
+          ) {
+            setMeta(response.meta);
+          } else {
+            setMeta({
+              page: selectedPage,
+              limit:
+                validTransactions.length || 10,
+              total: validTransactions.length,
+              totalPages: 1,
+            });
+          }
+
+          return;
+        }
+
+        /*
+         * Unexpected API response.
+         */
+
+        setTransactions([]);
+
+        setMeta(DEFAULT_META);
+
+        throw new Error(
+          'Unexpected response received from the transactions API.',
+        );
+      } catch (caughtError: unknown) {
+        console.error(caughtError);
+
+        const message = getErrorMessage(
+          caughtError,
+          'Unable to load transactions.',
         );
 
-        localStorage.removeItem(
-          'user',
-        );
+        if (message === 'Unauthorized') {
+          localStorage.removeItem(
+            'access_token',
+          );
 
-        router.push('/login');
+          localStorage.removeItem('user');
 
-        return;
+          router.push('/login');
+
+          return;
+        }
+
+        setError(message);
+      } finally {
+        setLoading(false);
       }
+    },
+    [router],
+  );
 
-      setError(
-        error.message ||
-          'Unable to load transactions',
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
+  /*
+   * ==========================================
+   * INITIAL LOAD
+   *
+   * Schedule the API request asynchronously.
+   * This avoids react-hooks/set-state-in-effect
+   * while preserving the initial data load.
+   * ==========================================
+   */
 
   useEffect(() => {
-    loadTransactions(1);
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      void loadTransactions(1, {
+        search: '',
+        type: '',
+        status: '',
+      });
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [loadTransactions]);
+
+  /*
+   * ==========================================
+   * CURRENT FILTERS
+   * ==========================================
+   */
+
+  const currentFilters =
+    useMemo<TransactionFilters>(
+      () => ({
+        search,
+        type,
+        status,
+      }),
+      [search, type, status],
+    );
+
+  /*
+   * ==========================================
+   * SEARCH
+   * ==========================================
+   */
 
   function handleSearch(
-    event: React.FormEvent,
+    event: FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
 
     setPage(1);
 
-    loadTransactions(
-      1,
-      {
-        search,
-        type,
-        status,
-      },
-    );
+    void loadTransactions(1, {
+      search,
+      type,
+      status,
+    });
   }
 
-  function handleTypeChange(
-    value: string,
-  ) {
+  /*
+   * ==========================================
+   * TYPE FILTER
+   * ==========================================
+   */
+
+  function handleTypeChange(value: string) {
     setType(value);
+
     setPage(1);
 
-    loadTransactions(
-      1,
-      {
-        search,
-        type: value,
-        status,
-      },
-    );
+    void loadTransactions(1, {
+      search,
+      type: value,
+      status,
+    });
   }
 
-  function handleStatusChange(
-    value: string,
-  ) {
+  /*
+   * ==========================================
+   * STATUS FILTER
+   * ==========================================
+   */
+
+  function handleStatusChange(value: string) {
     setStatus(value);
+
     setPage(1);
 
-    loadTransactions(
-      1,
-      {
-        search,
-        type,
-        status: value,
-      },
-    );
+    void loadTransactions(1, {
+      search,
+      type,
+      status: value,
+    });
   }
 
-  function changePage(
-    newPage: number,
-  ) {
+  /*
+   * ==========================================
+   * PAGINATION
+   * ==========================================
+   */
+
+  function changePage(newPage: number) {
     if (
       newPage < 1 ||
-      newPage > meta.totalPages
+      newPage > meta.totalPages ||
+      newPage === page
     ) {
       return;
     }
 
     setPage(newPage);
 
-    loadTransactions(
+    void loadTransactions(
       newPage,
+      currentFilters,
     );
   }
+
+  /*
+   * ==========================================
+   * REFRESH
+   * ==========================================
+   */
+
+  function handleRefresh() {
+    void loadTransactions(
+      page,
+      currentFilters,
+    );
+  }
+
+  /*
+   * ==========================================
+   * FORMAT AMOUNT
+   * ==========================================
+   */
 
   function formatAmount(
     amount: string,
     currency: string,
-  ) {
+  ): string {
     try {
-      return new Intl.NumberFormat(
-        'en-NG',
-        {
-          style: 'currency',
-          currency,
-          minimumFractionDigits: 2,
-        },
-      ).format(
-        Number(amount),
-      );
+      return new Intl.NumberFormat('en-NG', {
+        style: 'currency',
+        currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(Number(amount));
     } catch {
       return `${currency} ${Number(
         amount,
@@ -265,49 +438,58 @@ export default function TransactionsPage() {
     }
   }
 
-  function formatDate(
-    date: string,
-  ) {
-    return new Date(
-      date,
-    ).toLocaleString(
-      'en-NG',
-      {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-      },
-    );
+  /*
+   * ==========================================
+   * FORMAT DATE
+   * ==========================================
+   */
+
+  function formatDate(date: string): string {
+    const parsedDate = new Date(date);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return 'Invalid date';
+    }
+
+    return parsedDate.toLocaleString('en-NG', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
   }
+
+  /*
+   * ==========================================
+   * TRANSACTION ICON
+   * ==========================================
+   */
 
   function getTransactionIcon(
     transactionType: string,
   ) {
     switch (transactionType) {
       case 'DEPOSIT':
-        return (
-          <ArrowDownLeft size={18} />
-        );
+        return <ArrowDownLeft size={18} />;
 
       case 'WITHDRAWAL':
-        return (
-          <ArrowUpRight size={18} />
-        );
+        return <ArrowUpRight size={18} />;
 
       case 'TRANSFER':
-        return (
-          <ArrowLeftRight size={18} />
-        );
+        return <ArrowLeftRight size={18} />;
 
       default:
-        return (
-          <RefreshCcw size={18} />
-        );
+        return <RefreshCcw size={18} />;
     }
   }
 
+  /*
+   * ==========================================
+   * TRANSACTION ICON CLASS
+   * ==========================================
+   */
+
   function getTransactionIconClass(
     transactionType: string,
-  ) {
+  ): string {
     switch (transactionType) {
       case 'DEPOSIT':
         return 'transaction-type-icon deposit';
@@ -323,91 +505,100 @@ export default function TransactionsPage() {
     }
   }
 
+  /*
+   * ==========================================
+   * STATUS CLASS
+   * ==========================================
+   */
+
   function getStatusClass(
     transactionStatus: string,
-  ) {
+  ): string {
     return transactionStatus
       .toLowerCase()
       .replace(/\s/g, '-');
   }
 
-  const completedTransactions =
-    transactions.filter(
-      (transaction) =>
-        transaction.status === 'COMPLETED',
-    ).length;
+  /*
+   * ==========================================
+   * CURRENT PAGE STATISTICS
+   * ==========================================
+   */
 
-  const depositTransactions =
-    transactions.filter(
-      (transaction) =>
-        transaction.type === 'DEPOSIT',
-    ).length;
+  const transactionStats = useMemo(() => {
+    const completedTransactions =
+      transactions.filter(
+        (transaction) =>
+          transaction.status === 'COMPLETED',
+      ).length;
 
-  const transferTransactions =
-    transactions.filter(
-      (transaction) =>
-        transaction.type === 'TRANSFER',
-    ).length;
+    const depositTransactions =
+      transactions.filter(
+        (transaction) =>
+          transaction.type === 'DEPOSIT',
+      ).length;
+
+    const transferTransactions =
+      transactions.filter(
+        (transaction) =>
+          transaction.type === 'TRANSFER',
+      ).length;
+
+    return {
+      completedTransactions,
+      depositTransactions,
+      transferTransactions,
+    };
+  }, [transactions]);
 
   return (
     <div className="transactions-page">
-
-      {/* PAGE HEADER */}
+      {/* ======================================
+          PAGE HEADER
+      ====================================== */}
 
       <section className="transactions-hero">
-
         <div className="transactions-header-content">
-
           <div className="transactions-page-icon">
             <ReceiptText size={24} />
           </div>
 
           <div>
-
             <div className="page-eyebrow">
               Financial Activity
             </div>
 
-            <h1>
-              Transactions
-            </h1>
+            <h1>Transactions</h1>
 
             <p>
-              Monitor, search and manage all
-              financial transactions from one
-              secure location.
+              Monitor, search and manage all financial
+              transactions from one secure location.
             </p>
-
           </div>
-
         </div>
 
         <button
+          type="button"
           className="refresh-button"
-          onClick={() =>
-            loadTransactions(page)
-          }
+          onClick={handleRefresh}
           disabled={loading}
         >
           <RefreshCcw
             size={18}
             className={
-              loading
-                ? 'refresh-spin'
-                : ''
+              loading ? 'refresh-spin' : ''
             }
           />
 
           {loading
             ? 'Refreshing...'
             : 'Refresh'}
-
         </button>
-
       </section>
 
-
-      {/* ERROR */}
+      {/* ======================================
+          ERROR
+      ====================================== */}
 
       {error && (
         <div className="dashboard-error">
@@ -415,115 +606,90 @@ export default function TransactionsPage() {
         </div>
       )}
 
-
-      {/* SUMMARY CARDS */}
+      {/* ======================================
+          SUMMARY CARDS
+      ====================================== */}
 
       <section className="transaction-summary-grid">
-
         <div className="transaction-summary-card">
-
           <div className="summary-icon summary-blue">
             <ReceiptText size={20} />
           </div>
 
           <div>
-            <span>
-              Total Transactions
-            </span>
+            <span>Total Transactions</span>
 
-            <strong>
-              {meta.total}
-            </strong>
+            <strong>{meta.total}</strong>
 
             <small>
               All recorded activity
             </small>
           </div>
-
         </div>
 
-
         <div className="transaction-summary-card">
-
           <div className="summary-icon summary-green">
             <CircleCheck size={20} />
           </div>
 
           <div>
-            <span>
-              Completed
-            </span>
+            <span>Completed</span>
 
             <strong>
-              {completedTransactions}
+              {transactionStats.completedTransactions}
             </strong>
 
             <small>
               Successful transactions
             </small>
           </div>
-
         </div>
 
-
         <div className="transaction-summary-card">
-
           <div className="summary-icon summary-purple">
             <ArrowDownLeft size={20} />
           </div>
 
           <div>
-            <span>
-              Deposits
-            </span>
+            <span>Deposits</span>
 
             <strong>
-              {depositTransactions}
+              {transactionStats.depositTransactions}
             </strong>
 
             <small>
               Incoming transactions
             </small>
           </div>
-
         </div>
 
-
         <div className="transaction-summary-card">
-
           <div className="summary-icon summary-orange">
             <TrendingUp size={20} />
           </div>
 
           <div>
-            <span>
-              Transfers
-            </span>
+            <span>Transfers</span>
 
             <strong>
-              {transferTransactions}
+              {transactionStats.transferTransactions}
             </strong>
 
             <small>
               Wallet movement activity
             </small>
           </div>
-
         </div>
-
       </section>
 
-
-      {/* FILTER PANEL */}
+      {/* ======================================
+          FILTER PANEL
+      ====================================== */}
 
       <section className="transaction-filter-card">
-
         <div className="filter-card-header">
-
           <div>
-            <h2>
-              Transaction Records
-            </h2>
+            <h2>Transaction Records</h2>
 
             <p>
               Search and filter financial activity.
@@ -533,17 +699,15 @@ export default function TransactionsPage() {
           <div className="transaction-count">
             {meta.total} Records
           </div>
-
         </div>
 
-
         <div className="transaction-filters">
+          {/* SEARCH */}
 
           <form
             className="transaction-search"
             onSubmit={handleSearch}
           >
-
             <Search size={19} />
 
             <input
@@ -551,23 +715,19 @@ export default function TransactionsPage() {
               placeholder="Search by transaction reference..."
               value={search}
               onChange={(event) =>
-                setSearch(
-                  event.target.value,
-                )
+                setSearch(event.target.value)
               }
             />
 
             <button type="submit">
               Search
             </button>
-
           </form>
 
+          {/* FILTER CONTROLS */}
 
           <div className="filter-controls">
-
             <div className="filter-select">
-
               <Filter size={17} />
 
               <select
@@ -593,14 +753,10 @@ export default function TransactionsPage() {
                 <option value="TRANSFER">
                   Transfer
                 </option>
-
               </select>
-
             </div>
 
-
             <div className="filter-select">
-
               <CircleCheck size={17} />
 
               <select
@@ -630,111 +786,67 @@ export default function TransactionsPage() {
                 <option value="PENDING">
                   Pending
                 </option>
-
               </select>
-
             </div>
-
           </div>
-
         </div>
-
       </section>
 
-
-      {/* TABLE */}
+      {/* ======================================
+          TRANSACTIONS TABLE
+      ====================================== */}
 
       <section className="transactions-table-card">
-
         {loading ? (
-
           <div className="transactions-loading">
-
             <div className="transactions-loader" />
 
-            <h3>
-              Loading transactions
-            </h3>
+            <h3>Loading transactions</h3>
 
             <p>
               Retrieving your financial activity...
             </p>
-
           </div>
-
         ) : transactions.length === 0 ? (
-
           <div className="empty-state transaction-empty">
-
             <div className="empty-state-icon">
               <ReceiptText size={34} />
             </div>
 
-            <h3>
-              No transactions found
-            </h3>
+            <h3>No transactions found</h3>
 
             <p>
-              Try adjusting your filters or
-              search criteria.
+              Try adjusting your filters or search
+              criteria.
             </p>
-
           </div>
-
         ) : (
-
           <div className="transactions-table-wrapper">
-
             <table className="transactions-table">
-
               <thead>
-
                 <tr>
+                  <th>Transaction</th>
 
-                  <th>
-                    Transaction
-                  </th>
+                  <th>Reference</th>
 
-                  <th>
-                    Reference
-                  </th>
+                  <th>Date & Time</th>
 
-                  <th>
-                    Date & Time
-                  </th>
+                  <th>Amount</th>
 
-                  <th>
-                    Amount
-                  </th>
+                  <th>Status</th>
 
-                  <th>
-                    Status
-                  </th>
-
-                  <th>
-                    Action
-                  </th>
-
+                  <th>Action</th>
                 </tr>
-
               </thead>
 
-
               <tbody>
-
                 {transactions.map(
                   (transaction) => (
-
-                    <tr
-                      key={transaction.id}
-                    >
-
-                      {/* TYPE */}
+                    <tr key={transaction.id}>
+                      {/* TRANSACTION TYPE */}
 
                       <td>
-
                         <div className="transaction-table-type">
-
                           <div
                             className={getTransactionIconClass(
                               transaction.type,
@@ -745,9 +857,7 @@ export default function TransactionsPage() {
                             )}
                           </div>
 
-
                           <div className="transaction-type-details">
-
                             <strong>
                               {transaction.type}
                             </strong>
@@ -756,56 +866,42 @@ export default function TransactionsPage() {
                               Transaction #
                               {transaction.id}
                             </span>
-
                           </div>
-
                         </div>
-
                       </td>
-
 
                       {/* REFERENCE */}
 
                       <td>
-
                         <span className="transaction-reference">
                           {transaction.reference}
                         </span>
-
                       </td>
-
 
                       {/* DATE */}
 
                       <td>
-
                         <span className="transaction-date">
                           {formatDate(
                             transaction.createdAt,
                           )}
                         </span>
-
                       </td>
-
 
                       {/* AMOUNT */}
 
                       <td>
-
                         <strong className="transaction-amount-value">
                           {formatAmount(
                             transaction.amount,
                             transaction.currency,
                           )}
                         </strong>
-
                       </td>
-
 
                       {/* STATUS */}
 
                       <td>
-
                         <span
                           className={`transaction-status ${getStatusClass(
                             transaction.status,
@@ -813,15 +909,13 @@ export default function TransactionsPage() {
                         >
                           {transaction.status}
                         </span>
-
                       </td>
-
 
                       {/* ACTION */}
 
                       <td>
-
                         <button
+                          type="button"
                           className="view-transaction-button"
                           onClick={() =>
                             router.push(
@@ -829,40 +923,30 @@ export default function TransactionsPage() {
                             )
                           }
                         >
-
                           <Eye size={16} />
 
                           View
-
                         </button>
-
                       </td>
-
                     </tr>
-
                   ),
                 )}
-
               </tbody>
-
             </table>
-
           </div>
-
         )}
-
       </section>
 
-
-      {/* PAGINATION */}
+      {/* ======================================
+          PAGINATION
+      ====================================== */}
 
       {!loading &&
         transactions.length > 0 &&
         meta.totalPages > 1 && (
-
           <div className="pagination">
-
             <button
+              type="button"
               onClick={() =>
                 changePage(page - 1)
               }
@@ -872,25 +956,18 @@ export default function TransactionsPage() {
               <ChevronLeft size={18} />
             </button>
 
-
             <div className="pagination-info">
+              <span>Page</span>
 
-              <span>
-                Page
-              </span>
-
-              <strong>
-                {page}
-              </strong>
+              <strong>{page}</strong>
 
               <span>
                 of {meta.totalPages}
               </span>
-
             </div>
 
-
             <button
+              type="button"
               onClick={() =>
                 changePage(page + 1)
               }
@@ -901,11 +978,8 @@ export default function TransactionsPage() {
             >
               <ChevronRight size={18} />
             </button>
-
           </div>
-
         )}
-
     </div>
   );
 }

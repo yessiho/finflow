@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* =====================================================
    FINFLOW DESIGN SYSTEM
@@ -35,21 +35,17 @@
   --info: #2563eb;
   --info-bg: #dbeafe;
 
-  --shadow-sm:
-    0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
 
-  --shadow-md:
-    0 8px 24px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
 
-  --shadow-lg:
-    0 20px 40px rgba(15, 23, 42, 0.12);
+  --shadow-lg: 0 20px 40px rgba(15, 23, 42, 0.12);
 
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 20px;
 }
-
 
 /* =====================================================
    RESET
@@ -68,19 +64,11 @@ html {
 body {
   min-height: 100vh;
 
-  background:
-    linear-gradient(
-      180deg,
-      #f8fafc 0%,
-      #f1f5f9 100%
-    );
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
 
   color: var(--text-primary);
 
-  font-family:
-    Arial,
-    Helvetica,
-    sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
 
   -webkit-font-smoothing: antialiased;
 }
@@ -101,7 +89,6 @@ a {
   color: inherit;
 }
 
-
 /* =====================================================
    APPLICATION LAYOUT
 ===================================================== */
@@ -121,12 +108,7 @@ a {
 
   margin-left: 260px;
 
-  background:
-    linear-gradient(
-      180deg,
-      #f8fafc 0%,
-      #f1f5f9 100%
-    );
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
 .app-content {
@@ -136,12 +118,8 @@ a {
 
   margin: 0 auto;
 
-  padding:
-    36px
-    40px
-    60px;
+  padding: 36px 40px 60px;
 }
-
 
 /* =====================================================
    SIDEBAR
@@ -159,16 +137,9 @@ a {
   display: flex;
   flex-direction: column;
 
-  background:
-    linear-gradient(
-      180deg,
-      #111827 0%,
-      #0f172a 100%
-    );
+  background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
 
-  border-right:
-    1px solid
-    rgba(255, 255, 255, 0.05);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
 
   z-index: 1000;
 
@@ -182,13 +153,9 @@ a {
 
   height: 84px;
 
-  padding:
-    0
-    24px;
+  padding: 0 24px;
 
-  border-bottom:
-    1px solid
-    rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 
   color: white;
 
@@ -208,18 +175,11 @@ a {
 
   border-radius: 12px;
 
-  background:
-    linear-gradient(
-      135deg,
-      #3b82f6,
-      #1d4ed8
-    );
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
 
   color: white;
 
-  box-shadow:
-    0 8px 20px
-    rgba(37, 99, 235, 0.35);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
 }
 
 .sidebar-nav {
@@ -228,9 +188,7 @@ a {
 
   gap: 6px;
 
-  padding:
-    24px
-    14px;
+  padding: 24px 14px;
 }
 
 .nav-item {
@@ -241,9 +199,7 @@ a {
 
   gap: 13px;
 
-  padding:
-    13px
-    14px;
+  padding: 13px 14px;
 
   border-radius: 10px;
 
@@ -263,37 +219,25 @@ a {
 }
 
 .nav-item:hover {
-  background:
-    rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.06);
 
   color: white;
 }
 
 .nav-item.active {
-  background:
-    linear-gradient(
-      135deg,
-      #3b82f6,
-      #2563eb
-    );
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
 
   color: white;
 
-  box-shadow:
-    0 8px 20px
-    rgba(37, 99, 235, 0.25);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
 }
 
 .sidebar-bottom {
   margin-top: auto;
 
-  padding:
-    18px
-    14px;
+  padding: 18px 14px;
 
-  border-top:
-    1px solid
-    rgba(255, 255, 255, 0.06);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .logout-button {
@@ -303,12 +247,10 @@ a {
 }
 
 .logout-button:hover {
-  background:
-    rgba(239, 68, 68, 0.1);
+  background: rgba(239, 68, 68, 0.1);
 
   color: #fecaca;
 }
-
 
 /* =====================================================
    PAGE HEADERS
@@ -348,7 +290,6 @@ a {
   gap: 12px;
 }
 
-
 /* =====================================================
    BUTTONS
 ===================================================== */
@@ -362,29 +303,20 @@ a {
 
   min-height: 42px;
 
-  padding:
-    0
-    18px;
+  padding: 0 18px;
 
   border: none;
 
   border-radius: 9px;
 
-  background:
-    linear-gradient(
-      135deg,
-      #3b82f6,
-      #2563eb
-    );
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
 
   color: white;
 
   font-size: 14px;
   font-weight: 600;
 
-  box-shadow:
-    0 6px 16px
-    rgba(37, 99, 235, 0.2);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.2);
 
   transition:
     transform 0.2s ease,
@@ -394,9 +326,7 @@ a {
 .primary-button:hover {
   transform: translateY(-1px);
 
-  box-shadow:
-    0 10px 24px
-    rgba(37, 99, 235, 0.28);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.28);
 }
 
 .secondary-button {
@@ -408,13 +338,9 @@ a {
 
   min-height: 42px;
 
-  padding:
-    0
-    18px;
+  padding: 0 18px;
 
-  border:
-    1px solid
-    var(--border);
+  border: 1px solid var(--border);
 
   border-radius: 9px;
 
@@ -450,7 +376,6 @@ a {
 .text-button:hover {
   color: var(--primary-dark);
 }
-
 
 /* =====================================================
    DASHBOARD
@@ -491,13 +416,9 @@ a {
 
   gap: 8px;
 
-  padding:
-    11px
-    16px;
+  padding: 11px 16px;
 
-  border:
-    1px solid
-    var(--border);
+  border: 1px solid var(--border);
 
   border-radius: 9px;
 
@@ -509,7 +430,6 @@ a {
   font-weight: 600;
 }
 
-
 /* =====================================================
    OVERVIEW CARDS
 ===================================================== */
@@ -517,8 +437,7 @@ a {
 .overview-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 
   gap: 20px;
 
@@ -530,9 +449,7 @@ a {
 
   padding: 24px;
 
-  border:
-    1px solid
-    var(--border);
+  border: 1px solid var(--border);
 
   border-radius: var(--radius-lg);
 
@@ -591,18 +508,13 @@ a {
 
   border: none;
 
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #1e40af
-    );
+  background: linear-gradient(135deg, #2563eb, #1e40af);
 
   overflow: hidden;
 }
 
 .primary-card::after {
-  content: "";
+  content: '';
 
   position: absolute;
 
@@ -614,14 +526,12 @@ a {
 
   border-radius: 50%;
 
-  background:
-    rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .primary-card span,
 .primary-card p {
-  color:
-    rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .primary-card h2 {
@@ -638,10 +548,8 @@ a {
 
   border-radius: 14px;
 
-  background:
-    rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.15);
 }
-
 
 /* =====================================================
    DASHBOARD SECTIONS
@@ -674,7 +582,6 @@ a {
   font-size: 13px;
 }
 
-
 /* =====================================================
    WALLET CARDS
 ===================================================== */
@@ -682,8 +589,7 @@ a {
 .wallet-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 
   gap: 20px;
 }
@@ -693,9 +599,7 @@ a {
 
   min-height: 190px;
 
-  border:
-    1px solid
-    var(--border);
+  border: 1px solid var(--border);
 
   border-radius: var(--radius-lg);
 
@@ -763,7 +667,6 @@ a {
   font-size: 12px;
 }
 
-
 /* =====================================================
    STATUS BADGES
 ===================================================== */
@@ -774,9 +677,7 @@ a {
   display: inline-flex;
   align-items: center;
 
-  padding:
-    5px
-    9px;
+  padding: 5px 9px;
 
   border-radius: 999px;
 
@@ -805,7 +706,6 @@ a {
   color: #dc2626;
 }
 
-
 /* =====================================================
    TRANSACTIONS
 ===================================================== */
@@ -813,9 +713,7 @@ a {
 .transactions-card {
   overflow: hidden;
 
-  border:
-    1px solid
-    var(--border);
+  border: 1px solid var(--border);
 
   border-radius: var(--radius-lg);
 
@@ -830,16 +728,11 @@ a {
 
   gap: 16px;
 
-  padding:
-    18px
-    22px;
+  padding: 18px 22px;
 
-  border-bottom:
-    1px solid
-    var(--border-light);
+  border-bottom: 1px solid var(--border-light);
 
-  transition:
-    background 0.2s ease;
+  transition: background 0.2s ease;
 }
 
 .transaction-row:last-child {
@@ -918,7 +811,6 @@ a {
   font-size: 14px;
 }
 
-
 /* =====================================================
    TABLES
 ===================================================== */
@@ -926,9 +818,7 @@ a {
 .data-table-container {
   overflow-x: auto;
 
-  border:
-    1px solid
-    var(--border);
+  border: 1px solid var(--border);
 
   border-radius: var(--radius-lg);
 
@@ -944,15 +834,11 @@ a {
 }
 
 .data-table th {
-  padding:
-    16px
-    20px;
+  padding: 16px 20px;
 
   background: #f8fafc;
 
-  border-bottom:
-    1px solid
-    var(--border);
+  border-bottom: 1px solid var(--border);
 
   text-align: left;
 
@@ -967,13 +853,9 @@ a {
 }
 
 .data-table td {
-  padding:
-    18px
-    20px;
+  padding: 18px 20px;
 
-  border-bottom:
-    1px solid
-    var(--border-light);
+  border-bottom: 1px solid var(--border-light);
 
   color: var(--text-primary);
 
@@ -987,7 +869,6 @@ a {
 .data-table tbody tr:hover {
   background: #f8fafc;
 }
-
 
 /* =====================================================
    EMPTY STATES
@@ -1007,9 +888,7 @@ a {
 
   padding: 40px;
 
-  border:
-    1px dashed
-    #cbd5e1;
+  border: 1px dashed #cbd5e1;
 
   border-radius: var(--radius-lg);
 
@@ -1037,7 +916,6 @@ a {
   font-size: 14px;
 }
 
-
 /* =====================================================
    LOGIN PAGE
 ===================================================== */
@@ -1055,17 +933,11 @@ a {
 
   overflow: hidden;
 
-  background:
-    linear-gradient(
-      135deg,
-      #0f172a 0%,
-      #172554 45%,
-      #1d4ed8 100%
-    );
+  background: linear-gradient(135deg, #0f172a 0%, #172554 45%, #1d4ed8 100%);
 }
 
 .login-page::before {
-  content: "";
+  content: '';
 
   position: absolute;
 
@@ -1077,14 +949,13 @@ a {
 
   border-radius: 50%;
 
-  background:
-    rgba(59, 130, 246, 0.25);
+  background: rgba(59, 130, 246, 0.25);
 
   filter: blur(80px);
 }
 
 .login-page::after {
-  content: "";
+  content: '';
 
   position: absolute;
 
@@ -1096,8 +967,7 @@ a {
 
   border-radius: 50%;
 
-  background:
-    rgba(147, 197, 253, 0.18);
+  background: rgba(147, 197, 253, 0.18);
 
   filter: blur(90px);
 }
@@ -1124,11 +994,8 @@ a {
 
   background: white;
 
-  box-shadow:
-    0 30px 80px
-    rgba(0, 0, 0, 0.35);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
 }
-
 
 /* LOGIN BRAND SIDE */
 
@@ -1143,18 +1010,13 @@ a {
 
   color: white;
 
-  background:
-    linear-gradient(
-      135deg,
-      #1d4ed8,
-      #172554
-    );
+  background: linear-gradient(135deg, #1d4ed8, #172554);
 
   overflow: hidden;
 }
 
 .login-brand::after {
-  content: "";
+  content: '';
 
   position: absolute;
 
@@ -1166,8 +1028,7 @@ a {
   right: -120px;
   bottom: -120px;
 
-  background:
-    rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .login-logo {
@@ -1190,8 +1051,7 @@ a {
 
   border-radius: 13px;
 
-  background:
-    rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .login-brand-content {
@@ -1214,8 +1074,7 @@ a {
 
   margin-top: 20px;
 
-  color:
-    rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.75);
 
   font-size: 16px;
   line-height: 1.7;
@@ -1236,19 +1095,15 @@ a {
 
   gap: 12px;
 
-  color:
-    rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.9);
 
   font-size: 14px;
 }
 
-
 /* LOGIN FORM */
 
 .login-card {
-  padding:
-    60px
-    52px;
+  padding: 60px 52px;
 
   display: flex;
   flex-direction: column;
@@ -1312,15 +1167,9 @@ a {
 
   height: 48px;
 
-  padding:
-    0
-    14px
-    0
-    44px;
+  padding: 0 14px 0 44px;
 
-  border:
-    1px solid
-    var(--border);
+  border: 1px solid var(--border);
 
   border-radius: 10px;
 
@@ -1339,9 +1188,7 @@ a {
 
   border-color: var(--primary);
 
-  box-shadow:
-    0 0 0 4px
-    rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
 .login-submit {
@@ -1355,20 +1202,13 @@ a {
 
   border-radius: 10px;
 
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #1d4ed8
-    );
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
 
   color: white;
 
   font-weight: 600;
 
-  box-shadow:
-    0 10px 24px
-    rgba(37, 99, 235, 0.25);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.25);
 
   transition:
     transform 0.2s ease,
@@ -1378,9 +1218,7 @@ a {
 .login-submit:hover {
   transform: translateY(-1px);
 
-  box-shadow:
-    0 14px 28px
-    rgba(37, 99, 235, 0.35);
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.35);
 }
 
 .login-demo {
@@ -1392,16 +1230,13 @@ a {
 
   background: #f8fafc;
 
-  border:
-    1px solid
-    var(--border-light);
+  border: 1px solid var(--border-light);
 
   color: var(--text-secondary);
 
   font-size: 12px;
   line-height: 1.7;
 }
-
 
 /* =====================================================
    ALERTS
@@ -1411,9 +1246,7 @@ a {
 .error-message {
   margin-bottom: 20px;
 
-  padding:
-    14px
-    16px;
+  padding: 14px 16px;
 
   border-radius: 10px;
 
@@ -1423,7 +1256,6 @@ a {
 
   font-size: 14px;
 }
-
 
 /* =====================================================
    LOADING
@@ -1441,27 +1273,21 @@ a {
   font-size: 14px;
 }
 
-
 /* =====================================================
    RESPONSIVE
 ===================================================== */
 
 @media (max-width: 1200px) {
-
   .overview-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .overview-card:first-child {
     grid-column: span 2;
   }
-
 }
 
-
 @media (max-width: 900px) {
-
   .sidebar {
     width: 220px;
   }
@@ -1471,10 +1297,7 @@ a {
   }
 
   .app-content {
-    padding:
-      28px
-      24px
-      50px;
+    padding: 28px 24px 50px;
   }
 
   .login-container {
@@ -1486,12 +1309,9 @@ a {
   .login-brand {
     display: none;
   }
-
 }
 
-
 @media (max-width: 768px) {
-
   .sidebar {
     display: none;
   }
@@ -1501,10 +1321,7 @@ a {
   }
 
   .app-content {
-    padding:
-      22px
-      16px
-      40px;
+    padding: 22px 16px 40px;
   }
 
   .dashboard-top,
@@ -1525,8 +1342,7 @@ a {
   }
 
   .transaction-row {
-    padding:
-      16px;
+    padding: 16px;
   }
 
   .login-page {
@@ -1534,16 +1350,11 @@ a {
   }
 
   .login-card {
-    padding:
-      40px
-      28px;
+    padding: 40px 28px;
   }
-
 }
 
-
 @media (max-width: 480px) {
-
   .page-title,
   .dashboard-top h1 {
     font-size: 26px;
@@ -1556,7 +1367,6 @@ a {
   .transaction-info span {
     max-width: 140px;
   }
-
 }
 
 /* =========================================================
@@ -1573,15 +1383,8 @@ a {
   align-items: center;
   justify-content: center;
 
-  background:
-    linear-gradient(
-      135deg,
-      #07162f 0%,
-      #102653 45%,
-      #1d4ed8 100%
-    );
+  background: linear-gradient(135deg, #07162f 0%, #102653 45%, #1d4ed8 100%);
 }
-
 
 /* =========================================================
    LOGIN BACKGROUND
@@ -1608,12 +1411,11 @@ a {
   top: -180px;
   right: -120px;
 
-  background:
-    radial-gradient(
-      circle,
-      rgba(96, 165, 250, 0.55),
-      transparent 70%
-    );
+  background: radial-gradient(
+    circle,
+    rgba(96, 165, 250, 0.55),
+    transparent 70%
+  );
 }
 
 .login-orb-two {
@@ -1623,12 +1425,7 @@ a {
   bottom: -180px;
   left: -150px;
 
-  background:
-    radial-gradient(
-      circle,
-      rgba(37, 99, 235, 0.45),
-      transparent 70%
-    );
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.45), transparent 70%);
 }
 
 .login-grid-pattern {
@@ -1638,19 +1435,11 @@ a {
   opacity: 0.08;
 
   background-image:
-    linear-gradient(
-      rgba(255, 255, 255, 0.15) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.15) 1px,
-      transparent 1px
-    );
+    linear-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.15) 1px, transparent 1px);
 
   background-size: 50px 50px;
 }
-
 
 /* =========================================================
    LOGIN WRAPPER
@@ -1673,29 +1462,22 @@ a {
 
   background: #ffffff;
 
-  box-shadow:
-    0 30px 80px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
 
-  animation:
-    login-enter 0.6s ease-out;
+  animation: login-enter 0.6s ease-out;
 }
 
 @keyframes login-enter {
   from {
     opacity: 0;
-    transform:
-      translateY(20px)
-      scale(0.98);
+    transform: translateY(20px) scale(0.98);
   }
 
   to {
     opacity: 1;
-    transform:
-      translateY(0)
-      scale(1);
+    transform: translateY(0) scale(1);
   }
 }
-
 
 /* =========================================================
    BRAND PANEL
@@ -1712,12 +1494,7 @@ a {
 
   color: white;
 
-  background:
-    linear-gradient(
-      145deg,
-      #0f2f72,
-      #1d4ed8
-    );
+  background: linear-gradient(145deg, #0f2f72, #1d4ed8);
 
   overflow: hidden;
 }
@@ -1735,8 +1512,7 @@ a {
   top: -180px;
   right: -230px;
 
-  background:
-    rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .login-brand-panel::after {
@@ -1752,8 +1528,7 @@ a {
   bottom: -160px;
   left: -120px;
 
-  border:
-    70px solid rgba(255, 255, 255, 0.04);
+  border: 70px solid rgba(255, 255, 255, 0.04);
 }
 
 .login-brand-content {
@@ -1771,11 +1546,9 @@ a {
 
   border-radius: 16px;
 
-  background:
-    rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.15);
 
-  backdrop-filter:
-    blur(12px);
+  backdrop-filter: blur(12px);
 
   margin-bottom: 18px;
 }
@@ -1813,10 +1586,8 @@ a {
   font-size: 15px;
   line-height: 1.8;
 
-  color:
-    rgba(255, 255, 255, 0.78);
+  color: rgba(255, 255, 255, 0.78);
 }
-
 
 /* =========================================================
    LOGIN FEATURES
@@ -1850,8 +1621,7 @@ a {
 
   border-radius: 10px;
 
-  background:
-    rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .login-feature div:last-child {
@@ -1869,8 +1639,7 @@ a {
   font-size: 12px;
   line-height: 1.5;
 
-  color:
-    rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .login-brand-footer {
@@ -1879,10 +1648,8 @@ a {
 
   font-size: 12px;
 
-  color:
-    rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.55);
 }
-
 
 /* =========================================================
    LOGIN FORM PANEL
@@ -1895,15 +1662,13 @@ a {
 
   padding: 56px;
 
-  background:
-    #ffffff;
+  background: #ffffff;
 }
 
 .login-form-container {
   width: 100%;
   max-width: 390px;
 }
-
 
 /* =========================================================
    MOBILE BRAND
@@ -1912,7 +1677,6 @@ a {
 .login-mobile-brand {
   display: none;
 }
-
 
 /* =========================================================
    LOGIN HEADING
@@ -1959,7 +1723,6 @@ a {
   color: #64748b;
 }
 
-
 /* =========================================================
    LOGIN ERROR
 ========================================================= */
@@ -1971,18 +1734,14 @@ a {
 
   border-radius: 10px;
 
-  border:
-    1px solid #fecaca;
+  border: 1px solid #fecaca;
 
-  background:
-    #fef2f2;
+  background: #fef2f2;
 
-  color:
-    #b91c1c;
+  color: #b91c1c;
 
   font-size: 13px;
 }
-
 
 /* =========================================================
    LOGIN FORM
@@ -2033,18 +1792,15 @@ a {
   width: 100%;
   height: 52px;
 
-  padding:
-    0 48px 0 48px;
+  padding: 0 48px 0 48px;
 
-  border:
-    1px solid #dbe2ea;
+  border: 1px solid #dbe2ea;
 
   border-radius: 11px;
 
   outline: none;
 
-  background:
-    #f8fafc;
+  background: #f8fafc;
 
   color: #0f172a;
 
@@ -2065,10 +1821,8 @@ a {
 
   border-color: #2563eb;
 
-  box-shadow:
-    0 0 0 4px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
-
 
 /* =========================================================
    PASSWORD TOGGLE
@@ -2107,7 +1861,6 @@ a {
   color: #2563eb;
 }
 
-
 /* =========================================================
    LOGIN BUTTON
 ========================================================= */
@@ -2128,12 +1881,7 @@ a {
 
   border-radius: 11px;
 
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #1d4ed8
-    );
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
 
   color: white;
 
@@ -2142,8 +1890,7 @@ a {
 
   cursor: pointer;
 
-  box-shadow:
-    0 10px 20px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.25);
 
   transition:
     transform 0.2s ease,
@@ -2152,16 +1899,13 @@ a {
 }
 
 .login-submit-button:hover:not(:disabled) {
-  transform:
-    translateY(-1px);
+  transform: translateY(-1px);
 
-  box-shadow:
-    0 14px 28px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.35);
 }
 
 .login-submit-button:active:not(:disabled) {
-  transform:
-    translateY(0);
+  transform: translateY(0);
 }
 
 .login-submit-button:disabled {
@@ -2171,8 +1915,7 @@ a {
 }
 
 .login-spinner {
-  animation:
-    login-spin 0.8s linear infinite;
+  animation: login-spin 0.8s linear infinite;
 }
 
 @keyframes login-spin {
@@ -2180,7 +1923,6 @@ a {
     transform: rotate(360deg);
   }
 }
-
 
 /* =========================================================
    DEMO ACCOUNT
@@ -2191,17 +1933,11 @@ a {
 
   padding: 18px;
 
-  border:
-    1px solid #dbeafe;
+  border: 1px solid #dbeafe;
 
   border-radius: 12px;
 
-  background:
-    linear-gradient(
-      135deg,
-      #f8fbff,
-      #eff6ff
-    );
+  background: linear-gradient(135deg, #f8fbff, #eff6ff);
 }
 
 .demo-account-header {
@@ -2246,7 +1982,6 @@ a {
   word-break: break-word;
 }
 
-
 /* =========================================================
    SECURITY TEXT
 ========================================================= */
@@ -2265,16 +2000,13 @@ a {
   color: #94a3b8;
 }
 
-
 /* =========================================================
    TABLET RESPONSIVE
 ========================================================= */
 
 @media (max-width: 900px) {
-
   .login-wrapper {
-    width:
-      min(600px, calc(100% - 32px));
+    width: min(600px, calc(100% - 32px));
 
     grid-template-columns: 1fr;
 
@@ -2315,22 +2047,15 @@ a {
 
     color: white;
 
-    background:
-      linear-gradient(
-        135deg,
-        #2563eb,
-        #1d4ed8
-      );
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
   }
 }
-
 
 /* =========================================================
    MOBILE RESPONSIVE
 ========================================================= */
 
 @media (max-width: 600px) {
-
   .login-page {
     align-items: flex-start;
 
@@ -2372,10 +2097,8 @@ a {
 
   padding: 36px;
 
-  background:
-    #f8fafc;
+  background: #f8fafc;
 }
-
 
 /* =========================================================
    DASHBOARD LOADING
@@ -2389,8 +2112,7 @@ a {
   align-items: center;
   justify-content: center;
 
-  background:
-    #f8fafc;
+  background: #f8fafc;
 }
 
 .dashboard-loading-content {
@@ -2413,15 +2135,9 @@ a {
 
   color: white;
 
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #1d4ed8
-    );
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
 
-  box-shadow:
-    0 12px 25px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 12px 25px rgba(37, 99, 235, 0.2);
 }
 
 .dashboard-loader-spinner {
@@ -2430,14 +2146,11 @@ a {
 
   border-radius: 50%;
 
-  border:
-    3px solid #dbeafe;
+  border: 3px solid #dbeafe;
 
-  border-top-color:
-    #2563eb;
+  border-top-color: #2563eb;
 
-  animation:
-    dashboard-spin 0.8s linear infinite;
+  animation: dashboard-spin 0.8s linear infinite;
 }
 
 .dashboard-loading-content p {
@@ -2445,8 +2158,7 @@ a {
 
   font-size: 14px;
 
-  color:
-    #64748b;
+  color: #64748b;
 }
 
 @keyframes dashboard-spin {
@@ -2454,7 +2166,6 @@ a {
     transform: rotate(360deg);
   }
 }
-
 
 /* =========================================================
    DASHBOARD HEADER
@@ -2488,11 +2199,9 @@ a {
 
   border-radius: 999px;
 
-  background:
-    #eff6ff;
+  background: #eff6ff;
 
-  color:
-    #2563eb;
+  color: #2563eb;
 
   font-size: 12px;
   font-weight: 600;
@@ -2506,11 +2215,9 @@ a {
 
   font-weight: 700;
 
-  letter-spacing:
-    -0.8px;
+  letter-spacing: -0.8px;
 
-  color:
-    #0f172a;
+  color: #0f172a;
 }
 
 .dashboard-header p {
@@ -2519,10 +2226,8 @@ a {
   font-size: 14px;
   line-height: 1.6;
 
-  color:
-    #64748b;
+  color: #64748b;
 }
-
 
 /* =========================================================
    REFRESH BUTTON
@@ -2538,38 +2243,30 @@ a {
 
   gap: 8px;
 
-  padding:
-    0 16px;
+  padding: 0 16px;
 
-  border:
-    1px solid #dbe2ea;
+  border: 1px solid #dbe2ea;
 
   border-radius: 10px;
 
-  background:
-    #ffffff;
+  background: #ffffff;
 
-  color:
-    #334155;
+  color: #334155;
 
   font-size: 13px;
   font-weight: 600;
 
   cursor: pointer;
 
-  transition:
-    all 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .dashboard-refresh-button:hover:not(:disabled) {
-  border-color:
-    #2563eb;
+  border-color: #2563eb;
 
-  color:
-    #2563eb;
+  color: #2563eb;
 
-  box-shadow:
-    0 5px 15px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 5px 15px rgba(15, 23, 42, 0.06);
 }
 
 .dashboard-refresh-button:disabled {
@@ -2578,10 +2275,8 @@ a {
 }
 
 .refresh-icon.spinning {
-  animation:
-    dashboard-spin 0.8s linear infinite;
+  animation: dashboard-spin 0.8s linear infinite;
 }
-
 
 /* =========================================================
    ERROR
@@ -2597,20 +2292,16 @@ a {
 
   padding: 16px 18px;
 
-  border:
-    1px solid #fecaca;
+  border: 1px solid #fecaca;
 
   border-radius: 12px;
 
-  background:
-    #fef2f2;
+  background: #fef2f2;
 
-  color:
-    #b91c1c;
+  color: #b91c1c;
 
   font-size: 13px;
 }
-
 
 /* =========================================================
    OVERVIEW GRID
@@ -2619,14 +2310,12 @@ a {
 .dashboard-overview-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 
   gap: 20px;
 
   margin-bottom: 42px;
 }
-
 
 /* =========================================================
    STAT CARD
@@ -2643,16 +2332,13 @@ a {
 
   padding: 24px;
 
-  border:
-    1px solid #e2e8f0;
+  border: 1px solid #e2e8f0;
 
   border-radius: 16px;
 
-  background:
-    #ffffff;
+  background: #ffffff;
 
-  box-shadow:
-    0 4px 16px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
 
   overflow: hidden;
 
@@ -2662,11 +2348,9 @@ a {
 }
 
 .dashboard-stat-card:hover {
-  transform:
-    translateY(-3px);
+  transform: translateY(-3px);
 
-  box-shadow:
-    0 12px 30px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
 .dashboard-stat-primary {
@@ -2674,15 +2358,9 @@ a {
 
   color: white;
 
-  background:
-    linear-gradient(
-      135deg,
-      #1e40af,
-      #2563eb
-    );
+  background: linear-gradient(135deg, #1e40af, #2563eb);
 
-  box-shadow:
-    0 15px 35px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 15px 35px rgba(37, 99, 235, 0.2);
 }
 
 .dashboard-stat-primary::after {
@@ -2698,8 +2376,7 @@ a {
   right: -80px;
   top: -90px;
 
-  background:
-    rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .dashboard-stat-top {
@@ -2721,35 +2398,27 @@ a {
 
   border-radius: 13px;
 
-  color:
-    #2563eb;
+  color: #2563eb;
 
-  background:
-    #eff6ff;
+  background: #eff6ff;
 }
 
 .dashboard-stat-primary .dashboard-stat-icon {
-  color:
-    white;
+  color: white;
 
-  background:
-    rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .dashboard-stat-icon.neutral {
-  color:
-    #0f766e;
+  color: #0f766e;
 
-  background:
-    #f0fdfa;
+  background: #f0fdfa;
 }
 
 .dashboard-stat-icon.purple {
-  color:
-    #7c3aed;
+  color: #7c3aed;
 
-  background:
-    #f5f3ff;
+  background: #f5f3ff;
 }
 
 .dashboard-stat-trend {
@@ -2758,19 +2427,16 @@ a {
 
   gap: 5px;
 
-  padding:
-    6px 9px;
+  padding: 6px 9px;
 
   border-radius: 999px;
 
   font-size: 11px;
   font-weight: 600;
 
-  color:
-    #dbeafe;
+  color: #dbeafe;
 
-  background:
-    rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .dashboard-stat-content {
@@ -2788,14 +2454,11 @@ a {
   font-size: 13px;
   font-weight: 500;
 
-  color:
-    #64748b;
+  color: #64748b;
 }
 
-.dashboard-stat-primary
-.dashboard-stat-content > span {
-  color:
-    rgba(255, 255, 255, 0.75);
+.dashboard-stat-primary .dashboard-stat-content > span {
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .dashboard-stat-content h2 {
@@ -2806,17 +2469,13 @@ a {
 
   font-weight: 700;
 
-  color:
-    #0f172a;
+  color: #0f172a;
 
-  letter-spacing:
-    -0.5px;
+  letter-spacing: -0.5px;
 }
 
-.dashboard-stat-primary
-.dashboard-stat-content h2 {
-  color:
-    white;
+.dashboard-stat-primary .dashboard-stat-content h2 {
+  color: white;
 }
 
 .dashboard-stat-content p {
@@ -2824,16 +2483,12 @@ a {
 
   font-size: 12px;
 
-  color:
-    #94a3b8;
+  color: #94a3b8;
 }
 
-.dashboard-stat-primary
-.dashboard-stat-content p {
-  color:
-    rgba(255, 255, 255, 0.65);
+.dashboard-stat-primary .dashboard-stat-content p {
+  color: rgba(255, 255, 255, 0.65);
 }
-
 
 /* =========================================================
    DASHBOARD SECTION
@@ -2864,13 +2519,11 @@ a {
   font-size: 11px;
   font-weight: 700;
 
-  color:
-    #2563eb;
+  color: #2563eb;
 
   text-transform: uppercase;
 
-  letter-spacing:
-    0.8px;
+  letter-spacing: 0.8px;
 }
 
 .dashboard-section-header h2 {
@@ -2879,8 +2532,7 @@ a {
   font-size: 22px;
   font-weight: 700;
 
-  color:
-    #0f172a;
+  color: #0f172a;
 }
 
 .dashboard-section-header p {
@@ -2888,8 +2540,7 @@ a {
 
   font-size: 13px;
 
-  color:
-    #64748b;
+  color: #64748b;
 }
 
 .dashboard-view-button {
@@ -2904,26 +2555,21 @@ a {
 
   border-radius: 8px;
 
-  background:
-    transparent;
+  background: transparent;
 
-  color:
-    #2563eb;
+  color: #2563eb;
 
   font-size: 13px;
   font-weight: 600;
 
   cursor: pointer;
 
-  transition:
-    background 0.2s ease;
+  transition: background 0.2s ease;
 }
 
 .dashboard-view-button:hover {
-  background:
-    #eff6ff;
+  background: #eff6ff;
 }
-
 
 /* =========================================================
    WALLET GRID
@@ -2932,12 +2578,10 @@ a {
 .dashboard-wallet-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 
   gap: 18px;
 }
-
 
 /* =========================================================
    WALLET CARD
@@ -2946,16 +2590,13 @@ a {
 .dashboard-wallet-card {
   padding: 22px;
 
-  border:
-    1px solid #e2e8f0;
+  border: 1px solid #e2e8f0;
 
   border-radius: 16px;
 
-  background:
-    #ffffff;
+  background: #ffffff;
 
-  box-shadow:
-    0 4px 16px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
 
   transition:
     transform 0.2s ease,
@@ -2964,14 +2605,11 @@ a {
 }
 
 .dashboard-wallet-card:hover {
-  transform:
-    translateY(-3px);
+  transform: translateY(-3px);
 
-  border-color:
-    #bfdbfe;
+  border-color: #bfdbfe;
 
-  box-shadow:
-    0 14px 30px rgba(15, 23, 42, 0.07);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.07);
 }
 
 .dashboard-wallet-card-top {
@@ -2990,11 +2628,9 @@ a {
 
   border-radius: 12px;
 
-  color:
-    #2563eb;
+  color: #2563eb;
 
-  background:
-    #eff6ff;
+  background: #eff6ff;
 }
 
 .dashboard-wallet-status {
@@ -3003,8 +2639,7 @@ a {
 
   gap: 5px;
 
-  padding:
-    6px 9px;
+  padding: 6px 9px;
 
   border-radius: 999px;
 
@@ -3015,19 +2650,15 @@ a {
 }
 
 .dashboard-wallet-status.active {
-  color:
-    #047857;
+  color: #047857;
 
-  background:
-    #ecfdf5;
+  background: #ecfdf5;
 }
 
 .dashboard-wallet-status.inactive {
-  color:
-    #b45309;
+  color: #b45309;
 
-  background:
-    #fffbeb;
+  background: #fffbeb;
 }
 
 .status-dot {
@@ -3036,39 +2667,32 @@ a {
 
   border-radius: 50%;
 
-  background:
-    currentColor;
+  background: currentColor;
 }
 
 .dashboard-wallet-divider {
   height: 1px;
 
-  margin:
-    20px 0;
+  margin: 20px 0;
 
-  background:
-    #eef2f7;
+  background: #eef2f7;
 }
 
 .dashboard-wallet-currency {
   font-size: 13px;
 
-  color:
-    #64748b;
+  color: #64748b;
 }
 
 .dashboard-wallet-content h3 {
-  margin:
-    8px 0 20px;
+  margin: 8px 0 20px;
 
   font-size: 23px;
   font-weight: 700;
 
-  color:
-    #0f172a;
+  color: #0f172a;
 
-  letter-spacing:
-    -0.3px;
+  letter-spacing: -0.3px;
 }
 
 .dashboard-wallet-footer {
@@ -3078,38 +2702,31 @@ a {
 
   padding-top: 15px;
 
-  border-top:
-    1px solid #f1f5f9;
+  border-top: 1px solid #f1f5f9;
 
   font-size: 11px;
 
-  color:
-    #94a3b8;
+  color: #94a3b8;
 }
 
 .dashboard-wallet-footer strong {
-  color:
-    #475569;
+  color: #475569;
 }
-
 
 /* =========================================================
    TRANSACTIONS CARD
 ========================================================= */
 
 .dashboard-transactions-card {
-  border:
-    1px solid #e2e8f0;
+  border: 1px solid #e2e8f0;
 
   border-radius: 16px;
 
-  background:
-    #ffffff;
+  background: #ffffff;
 
   overflow: hidden;
 
-  box-shadow:
-    0 4px 16px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
 }
 
 .dashboard-transaction-list {
@@ -3129,14 +2746,11 @@ a {
 
   gap: 18px;
 
-  padding:
-    18px 22px;
+  padding: 18px 22px;
 
-  border-bottom:
-    1px solid #eef2f7;
+  border-bottom: 1px solid #eef2f7;
 
-  transition:
-    background 0.2s ease;
+  transition: background 0.2s ease;
 }
 
 .dashboard-transaction-row:last-child {
@@ -3144,10 +2758,8 @@ a {
 }
 
 .dashboard-transaction-row:hover {
-  background:
-    #fafcff;
+  background: #fafcff;
 }
-
 
 /* =========================================================
    TRANSACTION ICON
@@ -3165,29 +2777,22 @@ a {
 }
 
 .dashboard-transaction-icon.deposit {
-  color:
-    #059669;
+  color: #059669;
 
-  background:
-    #ecfdf5;
+  background: #ecfdf5;
 }
 
 .dashboard-transaction-icon.withdrawal {
-  color:
-    #dc2626;
+  color: #dc2626;
 
-  background:
-    #fef2f2;
+  background: #fef2f2;
 }
 
 .dashboard-transaction-icon.transfer {
-  color:
-    #2563eb;
+  color: #2563eb;
 
-  background:
-    #eff6ff;
+  background: #eff6ff;
 }
-
 
 /* =========================================================
    TRANSACTION INFO
@@ -3206,8 +2811,7 @@ a {
   font-size: 13px;
   font-weight: 700;
 
-  color:
-    #1e293b;
+  color: #1e293b;
 }
 
 .dashboard-transaction-info span {
@@ -3219,8 +2823,7 @@ a {
 
   font-size: 11px;
 
-  color:
-    #94a3b8;
+  color: #94a3b8;
 }
 
 .dashboard-transaction-date {
@@ -3231,8 +2834,7 @@ a {
 
   font-size: 11px;
 
-  color:
-    #94a3b8;
+  color: #94a3b8;
 }
 
 .dashboard-transaction-amount {
@@ -3246,13 +2848,11 @@ a {
 .dashboard-transaction-amount strong {
   font-size: 13px;
 
-  color:
-    #0f172a;
+  color: #0f172a;
 }
 
 .dashboard-transaction-status {
-  padding:
-    5px 9px;
+  padding: 5px 9px;
 
   border-radius: 999px;
 
@@ -3264,29 +2864,22 @@ a {
 
 .dashboard-transaction-status.completed,
 .dashboard-transaction-status.successful {
-  color:
-    #047857;
+  color: #047857;
 
-  background:
-    #ecfdf5;
+  background: #ecfdf5;
 }
 
 .dashboard-transaction-status.pending {
-  color:
-    #b45309;
+  color: #b45309;
 
-  background:
-    #fffbeb;
+  background: #fffbeb;
 }
 
 .dashboard-transaction-status.failed {
-  color:
-    #dc2626;
+  color: #dc2626;
 
-  background:
-    #fef2f2;
+  background: #fef2f2;
 }
-
 
 /* =========================================================
    EMPTY STATE
@@ -3304,13 +2897,11 @@ a {
 
   padding: 40px;
 
-  border:
-    1px dashed #cbd5e1;
+  border: 1px dashed #cbd5e1;
 
   border-radius: 16px;
 
-  background:
-    #ffffff;
+  background: #ffffff;
 }
 
 .dashboard-empty-icon {
@@ -3325,41 +2916,34 @@ a {
 
   border-radius: 18px;
 
-  color:
-    #2563eb;
+  color: #2563eb;
 
-  background:
-    #eff6ff;
+  background: #eff6ff;
 }
 
 .dashboard-empty-state h3 {
-  margin:
-    0 0 7px;
+  margin: 0 0 7px;
 
   font-size: 16px;
 
-  color:
-    #1e293b;
+  color: #1e293b;
 }
 
 .dashboard-empty-state p {
   max-width: 320px;
 
-  margin:
-    0 0 18px;
+  margin: 0 0 18px;
 
   font-size: 13px;
   line-height: 1.6;
 
-  color:
-    #64748b;
+  color: #64748b;
 }
 
 .dashboard-empty-state button {
   height: 40px;
 
-  padding:
-    0 16px;
+  padding: 0 16px;
 
   border: none;
 
@@ -3367,8 +2951,7 @@ a {
 
   color: white;
 
-  background:
-    #2563eb;
+  background: #2563eb;
 
   font-size: 13px;
   font-weight: 600;
@@ -3376,25 +2959,21 @@ a {
   cursor: pointer;
 }
 
-
 /* =========================================================
    TABLET RESPONSIVE
 ========================================================= */
 
 @media (max-width: 1024px) {
-
   .dashboard-page {
     padding: 28px;
   }
 
   .dashboard-overview-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .dashboard-stat-primary {
-    grid-column:
-      span 2;
+    grid-column: span 2;
   }
 
   .dashboard-transaction-row {
@@ -3409,13 +2988,11 @@ a {
   }
 }
 
-
 /* =========================================================
    MOBILE RESPONSIVE
 ========================================================= */
 
 @media (max-width: 700px) {
-
   .dashboard-page {
     padding: 22px 16px;
   }
@@ -3429,13 +3006,11 @@ a {
   }
 
   .dashboard-overview-grid {
-    grid-template-columns:
-      1fr;
+    grid-template-columns: 1fr;
   }
 
   .dashboard-stat-primary {
-    grid-column:
-      auto;
+    grid-column: auto;
   }
 
   .dashboard-section-header {
@@ -3449,8 +3024,7 @@ a {
   }
 
   .dashboard-wallet-grid {
-    grid-template-columns:
-      1fr;
+    grid-template-columns: 1fr;
   }
 
   .dashboard-transaction-row {
@@ -3460,13 +3034,11 @@ a {
 
     gap: 14px;
 
-    padding:
-      18px;
+    padding: 18px;
   }
 
   .dashboard-transaction-amount {
-    grid-column:
-      2;
+    grid-column: 2;
 
     align-items: flex-start;
   }
@@ -3486,7 +3058,6 @@ a {
   padding: 8px 0 40px;
 }
 
-
 /* =========================================================
    WALLET PAGE HEADER
 ========================================================= */
@@ -3501,29 +3072,24 @@ a {
 
   margin-bottom: 26px;
 
-  background:
-    linear-gradient(
-      135deg,
-      rgba(37, 99, 235, 0.08),
-      rgba(255, 255, 255, 0.95)
-    );
+  background: linear-gradient(
+    135deg,
+    rgba(37, 99, 235, 0.08),
+    rgba(255, 255, 255, 0.95)
+  );
 
   border: 1px solid rgba(37, 99, 235, 0.12);
 
   border-radius: 20px;
 
-  box-shadow:
-    0 10px 30px
-    rgba(15, 23, 42, 0.05);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
 }
-
 
 .wallets-header-content {
   display: flex;
   align-items: center;
   gap: 18px;
 }
-
 
 .wallets-header-icon {
   width: 56px;
@@ -3537,20 +3103,12 @@ a {
 
   color: white;
 
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #1d4ed8
-    );
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
 
   border-radius: 16px;
 
-  box-shadow:
-    0 10px 22px
-    rgba(37, 99, 235, 0.25);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.25);
 }
-
 
 .page-eyebrow {
   font-size: 11px;
@@ -3566,7 +3124,6 @@ a {
   margin-bottom: 5px;
 }
 
-
 .wallets-page-header h1 {
   margin: 0;
 
@@ -3578,7 +3135,6 @@ a {
 
   color: #0f172a;
 }
-
 
 .wallets-page-header p {
   margin: 7px 0 0;
@@ -3592,7 +3148,6 @@ a {
   color: #64748b;
 }
 
-
 .wallets-header-actions {
   display: flex;
   align-items: center;
@@ -3600,7 +3155,6 @@ a {
 
   flex-shrink: 0;
 }
-
 
 /* =========================================================
    BUTTONS
@@ -3634,55 +3188,33 @@ a {
     border-color 0.2s ease;
 }
 
-
 .wallet-primary-button {
   color: white;
 
   border: none;
 
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #1d4ed8
-    );
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
 
-  box-shadow:
-    0 8px 18px
-    rgba(37, 99, 235, 0.22);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
 }
-
 
 .wallet-primary-button:hover:not(:disabled) {
   transform: translateY(-1px);
 
-  background:
-    linear-gradient(
-      135deg,
-      #1d4ed8,
-      #1e40af
-    );
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
 
-  box-shadow:
-    0 12px 24px
-    rgba(37, 99, 235, 0.3);
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.3);
 }
-
 
 .wallet-secondary-button {
   color: #334155;
 
   background: white;
 
-  border:
-    1px solid
-    #dbe3ef;
+  border: 1px solid #dbe3ef;
 
-  box-shadow:
-    0 4px 12px
-    rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
 }
-
 
 .wallet-secondary-button:hover:not(:disabled) {
   color: #2563eb;
@@ -3694,7 +3226,6 @@ a {
   transform: translateY(-1px);
 }
 
-
 .wallet-primary-button:disabled,
 .wallet-secondary-button:disabled {
   opacity: 0.65;
@@ -3704,20 +3235,15 @@ a {
   transform: none;
 }
 
-
 .spin {
-  animation:
-    wallet-spin
-    0.8s linear infinite;
+  animation: wallet-spin 0.8s linear infinite;
 }
-
 
 @keyframes wallet-spin {
   to {
     transform: rotate(360deg);
   }
 }
-
 
 /* =========================================================
    ALERTS
@@ -3740,7 +3266,6 @@ a {
   font-weight: 500;
 }
 
-
 .wallet-alert button {
   display: flex;
   align-items: center;
@@ -3758,38 +3283,29 @@ a {
   border-radius: 8px;
 }
 
-
 .wallet-alert-error {
   color: #b91c1c;
 
   background: #fef2f2;
 
-  border:
-    1px solid
-    #fecaca;
+  border: 1px solid #fecaca;
 }
-
 
 .wallet-alert-error button {
   color: #dc2626;
 }
-
 
 .wallet-alert-success {
   color: #166534;
 
   background: #f0fdf4;
 
-  border:
-    1px solid
-    #bbf7d0;
+  border: 1px solid #bbf7d0;
 }
-
 
 .wallet-alert-success button {
   color: #16a34a;
 }
-
 
 /* =========================================================
    WALLET SUMMARY GRID
@@ -3798,14 +3314,12 @@ a {
 .wallet-summary-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 
   gap: 18px;
 
   margin-bottom: 30px;
 }
-
 
 .wallet-summary-card {
   position: relative;
@@ -3822,15 +3336,11 @@ a {
 
   background: white;
 
-  border:
-    1px solid
-    #e2e8f0;
+  border: 1px solid #e2e8f0;
 
   border-radius: 18px;
 
-  box-shadow:
-    0 8px 25px
-    rgba(15, 23, 42, 0.045);
+  box-shadow: 0 8px 25px rgba(15, 23, 42, 0.045);
 
   transition:
     transform 0.25s ease,
@@ -3838,35 +3348,23 @@ a {
     border-color 0.25s ease;
 }
 
-
 .wallet-summary-card:hover {
   transform: translateY(-3px);
 
   border-color: #cbd5e1;
 
-  box-shadow:
-    0 16px 32px
-    rgba(15, 23, 42, 0.08);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
 }
-
 
 .wallet-summary-primary {
   color: white;
 
   border: none;
 
-  background:
-    linear-gradient(
-      135deg,
-      #1d4ed8,
-      #2563eb
-    );
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
 
-  box-shadow:
-    0 14px 30px
-    rgba(37, 99, 235, 0.22);
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.22);
 }
-
 
 .wallet-summary-primary::after {
   content: '';
@@ -3881,10 +3379,8 @@ a {
 
   border-radius: 50%;
 
-  background:
-    rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08);
 }
-
 
 .wallet-summary-icon {
   position: relative;
@@ -3903,20 +3399,14 @@ a {
 
   border-radius: 14px;
 
-  background:
-    rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.18);
 }
 
-
-.wallet-summary-card:not(
-  .wallet-summary-primary
-)
-.wallet-summary-icon {
+.wallet-summary-card:not(.wallet-summary-primary) .wallet-summary-icon {
   color: #2563eb;
 
   background: #eff6ff;
 }
-
 
 .wallet-summary-icon.summary-blue {
   color: #2563eb !important;
@@ -3924,20 +3414,17 @@ a {
   background: #eff6ff !important;
 }
 
-
 .wallet-summary-icon.summary-green {
   color: #059669 !important;
 
   background: #ecfdf5 !important;
 }
 
-
 .wallet-summary-icon.summary-purple {
   color: #7c3aed !important;
 
   background: #f5f3ff !important;
 }
-
 
 .wallet-summary-content {
   position: relative;
@@ -3947,7 +3434,6 @@ a {
   flex-direction: column;
 }
 
-
 .wallet-summary-content span {
   font-size: 12px;
 
@@ -3956,15 +3442,10 @@ a {
   color: #64748b;
 }
 
-
-.wallet-summary-primary
-.wallet-summary-content span,
-.wallet-summary-primary
-.wallet-summary-content small {
-  color:
-    rgba(255, 255, 255, 0.72);
+.wallet-summary-primary .wallet-summary-content span,
+.wallet-summary-primary .wallet-summary-content small {
+  color: rgba(255, 255, 255, 0.72);
 }
-
 
 .wallet-summary-content strong {
   margin-top: 6px;
@@ -3978,12 +3459,9 @@ a {
   color: #0f172a;
 }
 
-
-.wallet-summary-primary
-.wallet-summary-content strong {
+.wallet-summary-primary .wallet-summary-content strong {
   color: white;
 }
-
 
 .wallet-summary-content small {
   margin-top: 5px;
@@ -3992,7 +3470,6 @@ a {
 
   color: #94a3b8;
 }
-
 
 /* =========================================================
    WALLET CONTENT SECTION
@@ -4003,17 +3480,12 @@ a {
 
   background: white;
 
-  border:
-    1px solid
-    #e2e8f0;
+  border: 1px solid #e2e8f0;
 
   border-radius: 20px;
 
-  box-shadow:
-    0 8px 30px
-    rgba(15, 23, 42, 0.04);
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.04);
 }
-
 
 .wallets-section-header {
   display: flex;
@@ -4026,11 +3498,8 @@ a {
 
   padding-bottom: 22px;
 
-  border-bottom:
-    1px solid
-    #edf1f6;
+  border-bottom: 1px solid #edf1f6;
 }
-
 
 .wallets-section-header h2 {
   margin: 0;
@@ -4042,7 +3511,6 @@ a {
   color: #0f172a;
 }
 
-
 .wallets-section-header p {
   margin: 6px 0 0;
 
@@ -4050,7 +3518,6 @@ a {
 
   color: #64748b;
 }
-
 
 .wallet-count-badge {
   display: inline-flex;
@@ -4065,9 +3532,7 @@ a {
 
   background: #eff6ff;
 
-  border:
-    1px solid
-    #dbeafe;
+  border: 1px solid #dbeafe;
 
   border-radius: 999px;
 
@@ -4078,7 +3543,6 @@ a {
   white-space: nowrap;
 }
 
-
 /* =========================================================
    WALLET GRID
 ========================================================= */
@@ -4086,12 +3550,10 @@ a {
 .fin-wallet-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 
   gap: 20px;
 }
-
 
 /* =========================================================
    WALLET CARD
@@ -4102,16 +3564,9 @@ a {
 
   padding: 22px;
 
-  background:
-    linear-gradient(
-      180deg,
-      #ffffff,
-      #fbfdff
-    );
+  background: linear-gradient(180deg, #ffffff, #fbfdff);
 
-  border:
-    1px solid
-    #e2e8f0;
+  border: 1px solid #e2e8f0;
 
   border-radius: 18px;
 
@@ -4122,7 +3577,6 @@ a {
     box-shadow 0.25s ease,
     border-color 0.25s ease;
 }
-
 
 .fin-wallet-card::before {
   content: '';
@@ -4135,35 +3589,24 @@ a {
 
   width: 4px;
 
-  background:
-    linear-gradient(
-      180deg,
-      #2563eb,
-      #60a5fa
-    );
+  background: linear-gradient(180deg, #2563eb, #60a5fa);
 
   opacity: 0;
 
-  transition:
-    opacity 0.25s ease;
+  transition: opacity 0.25s ease;
 }
-
 
 .fin-wallet-card:hover {
   transform: translateY(-4px);
 
   border-color: #bfdbfe;
 
-  box-shadow:
-    0 18px 38px
-    rgba(15, 23, 42, 0.08);
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
 }
-
 
 .fin-wallet-card:hover::before {
   opacity: 1;
 }
-
 
 /* =========================================================
    WALLET CARD TOP
@@ -4177,14 +3620,12 @@ a {
   gap: 16px;
 }
 
-
 .fin-wallet-identity {
   display: flex;
   align-items: center;
 
   gap: 12px;
 }
-
 
 .fin-wallet-currency-icon {
   width: 46px;
@@ -4203,62 +3644,37 @@ a {
   font-weight: 700;
 }
 
-
 /* NGN */
 
 .currency-ngn {
   color: #047857;
 
-  background:
-    linear-gradient(
-      135deg,
-      #d1fae5,
-      #ecfdf5
-    );
+  background: linear-gradient(135deg, #d1fae5, #ecfdf5);
 }
-
 
 /* USD */
 
 .currency-usd {
   color: #2563eb;
 
-  background:
-    linear-gradient(
-      135deg,
-      #dbeafe,
-      #eff6ff
-    );
+  background: linear-gradient(135deg, #dbeafe, #eff6ff);
 }
-
 
 /* GBP */
 
 .currency-gbp {
   color: #7c3aed;
 
-  background:
-    linear-gradient(
-      135deg,
-      #ede9fe,
-      #f5f3ff
-    );
+  background: linear-gradient(135deg, #ede9fe, #f5f3ff);
 }
-
 
 /* EUR */
 
 .currency-eur {
   color: #b45309;
 
-  background:
-    linear-gradient(
-      135deg,
-      #fef3c7,
-      #fffbeb
-    );
+  background: linear-gradient(135deg, #fef3c7, #fffbeb);
 }
-
 
 .fin-wallet-identity h3 {
   margin: 0;
@@ -4270,7 +3686,6 @@ a {
   color: #0f172a;
 }
 
-
 .fin-wallet-identity span {
   display: block;
 
@@ -4280,7 +3695,6 @@ a {
 
   color: #64748b;
 }
-
 
 /* =========================================================
    WALLET STATUS
@@ -4305,39 +3719,29 @@ a {
   text-transform: uppercase;
 }
 
-
 .fin-wallet-status.active {
   color: #047857;
 
   background: #ecfdf5;
 
-  border:
-    1px solid
-    #bbf7d0;
+  border: 1px solid #bbf7d0;
 }
-
 
 .fin-wallet-status.inactive {
   color: #b45309;
 
   background: #fffbeb;
 
-  border:
-    1px solid
-    #fde68a;
+  border: 1px solid #fde68a;
 }
-
 
 .fin-wallet-status.suspended {
   color: #b91c1c;
 
   background: #fef2f2;
 
-  border:
-    1px solid
-    #fecaca;
+  border: 1px solid #fecaca;
 }
-
 
 .status-dot {
   width: 6px;
@@ -4348,7 +3752,6 @@ a {
   background: currentColor;
 }
 
-
 /* =========================================================
    WALLET BALANCE
 ========================================================= */
@@ -4356,7 +3759,6 @@ a {
 .fin-wallet-balance {
   margin-top: 28px;
 }
-
 
 .fin-wallet-balance span {
   display: block;
@@ -4374,7 +3776,6 @@ a {
   color: #94a3b8;
 }
 
-
 .fin-wallet-balance h2 {
   margin: 0;
 
@@ -4389,7 +3790,6 @@ a {
   word-break: break-word;
 }
 
-
 /* =========================================================
    WALLET META
 ========================================================= */
@@ -4397,14 +3797,12 @@ a {
 .fin-wallet-meta {
   display: grid;
 
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 
   gap: 12px;
 
   margin-top: 24px;
 }
-
 
 .fin-wallet-meta-item {
   display: flex;
@@ -4419,7 +3817,6 @@ a {
   border-radius: 10px;
 }
 
-
 .fin-wallet-meta-item span {
   font-size: 10px;
 
@@ -4430,7 +3827,6 @@ a {
   color: #94a3b8;
 }
 
-
 .fin-wallet-meta-item strong {
   font-size: 12px;
 
@@ -4438,7 +3834,6 @@ a {
 
   color: #334155;
 }
-
 
 /* =========================================================
    WALLET DIVIDER
@@ -4452,7 +3847,6 @@ a {
   background: #edf1f6;
 }
 
-
 /* =========================================================
    WALLET ACTIONS
 ========================================================= */
@@ -4460,12 +3854,10 @@ a {
 .fin-wallet-actions {
   display: grid;
 
-  grid-template-columns:
-    repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 
   gap: 6px;
 }
-
 
 .fin-wallet-action {
   display: flex;
@@ -4501,7 +3893,6 @@ a {
     transform 0.2s ease;
 }
 
-
 .fin-wallet-action:hover {
   color: #2563eb;
 
@@ -4510,11 +3901,9 @@ a {
   transform: translateY(-1px);
 }
 
-
 .fin-wallet-action svg {
   stroke-width: 1.8;
 }
-
 
 /* =========================================================
    LOADING STATE
@@ -4531,25 +3920,18 @@ a {
   text-align: center;
 }
 
-
 .wallet-loading-spinner {
   width: 42px;
   height: 42px;
 
   border-radius: 50%;
 
-  border:
-    3px solid
-    #dbeafe;
+  border: 3px solid #dbeafe;
 
-  border-top-color:
-    #2563eb;
+  border-top-color: #2563eb;
 
-  animation:
-    wallet-spin
-    0.8s linear infinite;
+  animation: wallet-spin 0.8s linear infinite;
 }
-
 
 .wallets-loading-state h3 {
   margin: 18px 0 7px;
@@ -4559,7 +3941,6 @@ a {
   color: #1e293b;
 }
 
-
 .wallets-loading-state p {
   margin: 0;
 
@@ -4567,7 +3948,6 @@ a {
 
   color: #64748b;
 }
-
 
 /* =========================================================
    EMPTY STATE
@@ -4588,7 +3968,6 @@ a {
   text-align: center;
 }
 
-
 .empty-wallet-icon {
   width: 76px;
   height: 76px;
@@ -4606,7 +3985,6 @@ a {
   border-radius: 22px;
 }
 
-
 .wallets-empty-state h3 {
   margin: 0;
 
@@ -4616,7 +3994,6 @@ a {
 
   color: #0f172a;
 }
-
 
 .wallets-empty-state p {
   margin: 10px 0 22px;
@@ -4629,7 +4006,6 @@ a {
 
   color: #64748b;
 }
-
 
 /* =========================================================
    WALLET MODAL OVERLAY
@@ -4648,17 +4024,12 @@ a {
 
   padding: 20px;
 
-  background:
-    rgba(15, 23, 42, 0.58);
+  background: rgba(15, 23, 42, 0.58);
 
-  backdrop-filter:
-    blur(7px);
+  backdrop-filter: blur(7px);
 
-  animation:
-    wallet-overlay-in
-    0.2s ease;
+  animation: wallet-overlay-in 0.2s ease;
 }
-
 
 @keyframes wallet-overlay-in {
   from {
@@ -4669,7 +4040,6 @@ a {
     opacity: 1;
   }
 }
-
 
 /* =========================================================
    WALLET MODAL
@@ -4688,34 +4058,24 @@ a {
 
   border-radius: 22px;
 
-  box-shadow:
-    0 30px 70px
-    rgba(15, 23, 42, 0.28);
+  box-shadow: 0 30px 70px rgba(15, 23, 42, 0.28);
 
-  animation:
-    wallet-modal-in
-    0.25s ease;
+  animation: wallet-modal-in 0.25s ease;
 }
-
 
 @keyframes wallet-modal-in {
   from {
     opacity: 0;
 
-    transform:
-      translateY(16px)
-      scale(0.98);
+    transform: translateY(16px) scale(0.98);
   }
 
   to {
     opacity: 1;
 
-    transform:
-      translateY(0)
-      scale(1);
+    transform: translateY(0) scale(1);
   }
 }
-
 
 /* =========================================================
    MODAL HEADER
@@ -4730,11 +4090,8 @@ a {
 
   padding: 26px 28px 22px;
 
-  border-bottom:
-    1px solid
-    #edf1f6;
+  border-bottom: 1px solid #edf1f6;
 }
-
 
 .modal-eyebrow {
   display: block;
@@ -4752,7 +4109,6 @@ a {
   color: #2563eb;
 }
 
-
 .wallet-modal-header h2 {
   margin: 0;
 
@@ -4763,7 +4119,6 @@ a {
   color: #0f172a;
 }
 
-
 .wallet-modal-header p {
   margin: 8px 0 0;
 
@@ -4773,7 +4128,6 @@ a {
 
   color: #64748b;
 }
-
 
 .wallet-modal-close {
   width: 38px;
@@ -4800,13 +4154,11 @@ a {
     background 0.2s ease;
 }
 
-
 .wallet-modal-close:hover:not(:disabled) {
   color: #dc2626;
 
   background: #fef2f2;
 }
-
 
 /* =========================================================
    SELECTED WALLET
@@ -4815,8 +4167,7 @@ a {
 .modal-selected-wallet {
   display: grid;
 
-  grid-template-columns:
-    auto 1fr auto;
+  grid-template-columns: auto 1fr auto;
 
   align-items: center;
 
@@ -4828,13 +4179,10 @@ a {
 
   background: #f8fafc;
 
-  border:
-    1px solid
-    #e2e8f0;
+  border: 1px solid #e2e8f0;
 
   border-radius: 14px;
 }
-
 
 .modal-wallet-icon {
   width: 44px;
@@ -4851,7 +4199,6 @@ a {
   font-weight: 700;
 }
 
-
 .modal-selected-wallet span,
 .modal-wallet-balance span {
   display: block;
@@ -4865,7 +4212,6 @@ a {
   color: #94a3b8;
 }
 
-
 .modal-selected-wallet strong,
 .modal-wallet-balance strong {
   display: block;
@@ -4877,11 +4223,9 @@ a {
   color: #1e293b;
 }
 
-
 .modal-wallet-balance {
   text-align: right;
 }
-
 
 /* =========================================================
    MODAL BODY
@@ -4891,14 +4235,12 @@ a {
   padding: 24px 28px;
 }
 
-
 .wallet-form-group {
   display: flex;
   flex-direction: column;
 
   gap: 8px;
 }
-
 
 .wallet-form-group label {
   font-size: 12px;
@@ -4908,23 +4250,19 @@ a {
   color: #334155;
 }
 
-
 .wallet-form-group select,
 .wallet-form-group input {
   width: 100%;
 
   height: 48px;
 
-  padding:
-    0 14px;
+  padding: 0 14px;
 
   color: #1e293b;
 
   background: white;
 
-  border:
-    1px solid
-    #dbe3ef;
+  border: 1px solid #dbe3ef;
 
   border-radius: 10px;
 
@@ -4939,16 +4277,12 @@ a {
     box-shadow 0.2s ease;
 }
 
-
 .wallet-form-group select:focus,
 .wallet-form-group input:focus {
   border-color: #2563eb;
 
-  box-shadow:
-    0 0 0 4px
-    rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
-
 
 .wallet-form-group small {
   font-size: 11px;
@@ -4958,11 +4292,9 @@ a {
   color: #94a3b8;
 }
 
-
 .wallet-form-warning {
   color: #b45309 !important;
 }
-
 
 /* =========================================================
    AMOUNT INPUT
@@ -4974,7 +4306,6 @@ a {
   display: flex;
   align-items: center;
 }
-
 
 .wallet-amount-input span {
   position: absolute;
@@ -4990,7 +4321,6 @@ a {
   color: #64748b;
 }
 
-
 .wallet-amount-input input {
   padding-left: 42px;
 
@@ -4998,7 +4328,6 @@ a {
 
   font-weight: 600;
 }
-
 
 /* =========================================================
    MODAL ALERTS
@@ -5016,28 +4345,21 @@ a {
   line-height: 1.5;
 }
 
-
 .wallet-modal-alert.error {
   color: #b91c1c;
 
   background: #fef2f2;
 
-  border:
-    1px solid
-    #fecaca;
+  border: 1px solid #fecaca;
 }
-
 
 .wallet-modal-alert.success {
   color: #166534;
 
   background: #f0fdf4;
 
-  border:
-    1px solid
-    #bbf7d0;
+  border: 1px solid #bbf7d0;
 }
-
 
 /* =========================================================
    MODAL FOOTER
@@ -5051,69 +4373,51 @@ a {
 
   padding: 20px 28px 26px;
 
-  border-top:
-    1px solid
-    #edf1f6;
+  border-top: 1px solid #edf1f6;
 }
-
 
 /* =========================================================
    TABLET RESPONSIVENESS
 ========================================================= */
 
 @media (max-width: 1200px) {
-
   .wallet-summary-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
 
   .fin-wallet-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
 }
-
 
 /* =========================================================
    MOBILE / TABLET RESPONSIVENESS
 ========================================================= */
 
 @media (max-width: 900px) {
-
   .wallets-page-header {
     flex-direction: column;
 
     align-items: flex-start;
   }
 
-
   .wallets-header-actions {
     width: 100%;
   }
-
 
   .wallets-header-actions button {
     flex: 1;
   }
 
-
   .fin-wallet-grid {
-    grid-template-columns:
-      1fr;
+    grid-template-columns: 1fr;
   }
-
 }
 
-
 @media (max-width: 640px) {
-
   .wallets-page {
     padding-bottom: 20px;
   }
-
 
   .wallets-page-header {
     padding: 22px 18px;
@@ -5121,11 +4425,9 @@ a {
     border-radius: 16px;
   }
 
-
   .wallets-header-content {
     align-items: flex-start;
   }
-
 
   .wallets-header-icon {
     width: 48px;
@@ -5134,24 +4436,19 @@ a {
     border-radius: 14px;
   }
 
-
   .wallets-page-header h1 {
     font-size: 23px;
   }
-
 
   .wallets-page-header p {
     font-size: 13px;
   }
 
-
   .wallet-summary-grid {
-    grid-template-columns:
-      1fr;
+    grid-template-columns: 1fr;
 
     gap: 14px;
   }
-
 
   .wallets-content-section {
     padding: 20px 16px;
@@ -5159,98 +4456,73 @@ a {
     border-radius: 16px;
   }
 
-
   .wallets-section-header {
     align-items: flex-start;
 
     flex-direction: column;
   }
 
-
   .wallet-count-badge {
     align-self: flex-start;
   }
-
 
   .fin-wallet-card {
     padding: 18px;
   }
 
-
   .fin-wallet-balance h2 {
     font-size: 22px;
   }
 
-
   .modal-selected-wallet {
-    grid-template-columns:
-      auto 1fr;
+    grid-template-columns: auto 1fr;
 
-    margin:
-      18px 18px 0;
+    margin: 18px 18px 0;
   }
 
-
   .modal-wallet-balance {
-    grid-column:
-      1 / -1;
+    grid-column: 1 / -1;
 
     text-align: left;
 
     padding-top: 12px;
 
-    border-top:
-      1px solid
-      #e2e8f0;
+    border-top: 1px solid #e2e8f0;
   }
-
 
   .wallet-modal-header {
-    padding:
-      22px 20px 18px;
+    padding: 22px 20px 18px;
   }
-
 
   .wallet-modal-body {
-    padding:
-      20px;
+    padding: 20px;
   }
 
-
   .wallet-modal-footer {
-    padding:
-      18px 20px 22px;
+    padding: 18px 20px 22px;
 
     flex-direction: column-reverse;
   }
 
-
   .wallet-modal-footer button {
     width: 100%;
   }
-
 }
 
-
 @media (max-width: 480px) {
-
   .wallets-header-actions {
     flex-direction: column;
   }
-
 
   .wallets-header-actions button {
     width: 100%;
   }
 
-
   .fin-wallet-actions {
-    grid-template-columns:
-      repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr);
 
     gap: 8px;
   }
-
 
   .fin-wallet-action {
     flex-direction: row;
@@ -5258,16 +4530,13 @@ a {
     min-height: 44px;
   }
 
-
   .wallet-summary-card {
     min-height: 110px;
   }
 
-
   .wallet-summary-content strong {
     font-size: 20px;
   }
-
 }
 /* =========================================================
    WALLET DETAILS PAGE
@@ -5399,11 +4668,7 @@ a {
   align-items: center;
   justify-content: center;
   font-size: 30px;
-  background: linear-gradient(
-    135deg,
-    #eff6ff,
-    #dbeafe
-  );
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
   border: 1px solid #bfdbfe;
 }
 
@@ -5499,13 +4764,7 @@ a {
 ========================================================= */
 
 .wallet-detail-balance-card {
-  background:
-    linear-gradient(
-      135deg,
-      #173b8f 0%,
-      #2563eb 55%,
-      #1d4ed8 100%
-    );
+  background: linear-gradient(135deg, #173b8f 0%, #2563eb 55%, #1d4ed8 100%);
   border-radius: 20px;
   padding: 30px;
   color: white;
@@ -5514,8 +4773,7 @@ a {
   gap: 32px;
   position: relative;
   overflow: hidden;
-  box-shadow:
-    0 18px 45px rgba(37, 99, 235, 0.22);
+  box-shadow: 0 18px 45px rgba(37, 99, 235, 0.22);
 }
 
 .wallet-detail-balance-card::before {
@@ -5595,8 +4853,7 @@ a {
 
 .wallet-detail-stats-grid {
   display: grid;
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
   margin-top: 22px;
 }
@@ -5609,8 +4866,7 @@ a {
   display: flex;
   align-items: center;
   gap: 14px;
-  box-shadow:
-    0 6px 18px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
 }
 
 .wallet-detail-stat-icon {
@@ -5686,8 +4942,7 @@ a {
 
 .wallet-detail-actions-grid {
   display: grid;
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
 }
 
@@ -5707,8 +4962,7 @@ a {
 .wallet-detail-action-card:hover {
   transform: translateY(-3px);
   border-color: #93c5fd;
-  box-shadow:
-    0 14px 30px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
 }
 
 .wallet-detail-action-icon {
@@ -5761,8 +5015,7 @@ a {
   border: 1px solid #e2e8f0;
   border-radius: 18px;
   overflow: hidden;
-  box-shadow:
-    0 8px 24px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
 }
 
 .wallet-detail-history-header {
@@ -5974,8 +5227,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  background:
-    rgba(15, 23, 42, 0.55);
+  background: rgba(15, 23, 42, 0.55);
   backdrop-filter: blur(6px);
 }
 
@@ -5987,24 +5239,19 @@ a {
   background: #ffffff;
   border-radius: 20px;
   padding: 26px;
-  box-shadow:
-    0 25px 70px rgba(15, 23, 42, 0.25);
-  animation:
-    wallet-detail-modal-enter
-    0.2s ease;
+  box-shadow: 0 25px 70px rgba(15, 23, 42, 0.25);
+  animation: wallet-detail-modal-enter 0.2s ease;
 }
 
 @keyframes wallet-detail-modal-enter {
   from {
     opacity: 0;
-    transform: translateY(12px)
-      scale(0.98);
+    transform: translateY(12px) scale(0.98);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0)
-      scale(1);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -6119,9 +5366,7 @@ a {
 .wallet-detail-form-field input:focus,
 .wallet-detail-form-field select:focus {
   border-color: #2563eb;
-  box-shadow:
-    0 0 0 3px
-    rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .wallet-detail-input-wrapper {
@@ -6271,8 +5516,7 @@ a {
 
   .wallet-detail-stats-grid,
   .wallet-detail-actions-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -6367,7 +5611,6 @@ a {
   padding: 32px;
 }
 
-
 /* =========================================================
    HERO / PAGE HEADER
 ========================================================= */
@@ -6382,18 +5625,16 @@ a {
 
   margin-bottom: 28px;
 
-  background:
-    linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.96),
-      rgba(248, 250, 255, 0.96)
-    );
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.96),
+    rgba(248, 250, 255, 0.96)
+  );
 
   border: 1px solid var(--border-color);
   border-radius: 18px;
 
-  box-shadow:
-    0 10px 30px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
 }
 
 .transactions-header-content {
@@ -6414,16 +5655,9 @@ a {
 
   color: #ffffff;
 
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #1d4ed8
-    );
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
 
-  box-shadow:
-    0 8px 20px
-    rgba(37, 99, 235, 0.25);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
 }
 
 .page-eyebrow {
@@ -6455,7 +5689,6 @@ a {
   color: #64748b;
 }
 
-
 /* =========================================================
    TRANSACTION SUMMARY
 ========================================================= */
@@ -6463,8 +5696,7 @@ a {
 .transaction-summary-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 
   gap: 18px;
 
@@ -6483,9 +5715,7 @@ a {
   border: 1px solid #e2e8f0;
   border-radius: 16px;
 
-  box-shadow:
-    0 4px 15px
-    rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
 
   transition:
     transform 0.2s ease,
@@ -6495,9 +5725,7 @@ a {
 .transaction-summary-card:hover {
   transform: translateY(-3px);
 
-  box-shadow:
-    0 12px 25px
-    rgba(15, 23, 42, 0.08);
+  box-shadow: 0 12px 25px rgba(15, 23, 42, 0.08);
 }
 
 .summary-icon {
@@ -6562,7 +5790,6 @@ a {
   color: #94a3b8;
 }
 
-
 /* =========================================================
    FILTER CARD
 ========================================================= */
@@ -6577,9 +5804,7 @@ a {
   border: 1px solid #e2e8f0;
   border-radius: 18px;
 
-  box-shadow:
-    0 6px 20px
-    rgba(15, 23, 42, 0.04);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04);
 }
 
 .filter-card-header {
@@ -6620,7 +5845,6 @@ a {
   color: #2563eb;
   background: #eff6ff;
 }
-
 
 /* =========================================================
    FILTERS
@@ -6665,9 +5889,7 @@ a {
 
   background: #ffffff;
 
-  box-shadow:
-    0 0 0 4px
-    rgba(37, 99, 235, 0.08);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
 }
 
 .transaction-search input {
@@ -6701,12 +5923,7 @@ a {
 
   color: #ffffff;
 
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #1d4ed8
-    );
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
 
   transition:
     opacity 0.2s ease,
@@ -6716,7 +5933,6 @@ a {
 .transaction-search button:hover {
   opacity: 0.92;
 }
-
 
 /* =========================================================
    FILTER SELECTS
@@ -6763,7 +5979,6 @@ a {
   cursor: pointer;
 }
 
-
 /* =========================================================
    TABLE CARD
 ========================================================= */
@@ -6776,9 +5991,7 @@ a {
   border: 1px solid #e2e8f0;
   border-radius: 18px;
 
-  box-shadow:
-    0 6px 20px
-    rgba(15, 23, 42, 0.04);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04);
 }
 
 .transactions-table-wrapper {
@@ -6828,8 +6041,7 @@ a {
 }
 
 .transactions-table tbody tr {
-  transition:
-    background 0.2s ease;
+  transition: background 0.2s ease;
 }
 
 .transactions-table tbody tr:hover {
@@ -6839,7 +6051,6 @@ a {
 .transactions-table tbody tr:last-child td {
   border-bottom: none;
 }
-
 
 /* =========================================================
    TRANSACTION TYPE
@@ -6900,7 +6111,6 @@ a {
   color: #94a3b8;
 }
 
-
 /* =========================================================
    REFERENCE / DATE / AMOUNT
 ========================================================= */
@@ -6915,9 +6125,7 @@ a {
   text-overflow: ellipsis;
   white-space: nowrap;
 
-  font-family:
-    var(--font-geist-mono),
-    monospace;
+  font-family: var(--font-geist-mono), monospace;
 
   font-size: 11px;
 
@@ -6936,7 +6144,6 @@ a {
 
   color: #172033;
 }
-
 
 /* =========================================================
    STATUS BADGES
@@ -6978,7 +6185,6 @@ a {
   background: #f3e8ff;
 }
 
-
 /* =========================================================
    VIEW BUTTON
 ========================================================= */
@@ -7002,8 +6208,7 @@ a {
   color: #2563eb;
   background: #ffffff;
 
-  transition:
-    all 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .view-transaction-button:hover {
@@ -7012,11 +6217,8 @@ a {
   color: #ffffff;
   background: #2563eb;
 
-  box-shadow:
-    0 5px 12px
-    rgba(37, 99, 235, 0.18);
+  box-shadow: 0 5px 12px rgba(37, 99, 235, 0.18);
 }
-
 
 /* =========================================================
    LOADING STATE
@@ -7043,8 +6245,7 @@ a {
   border-top-color: #2563eb;
   border-radius: 50%;
 
-  animation:
-    transaction-spin 0.8s linear infinite;
+  animation: transaction-spin 0.8s linear infinite;
 }
 
 .transactions-loading h3 {
@@ -7060,7 +6261,6 @@ a {
 
   font-size: 13px;
 }
-
 
 /* =========================================================
    EMPTY STATE
@@ -7085,7 +6285,6 @@ a {
   color: #2563eb;
   background: #eff6ff;
 }
-
 
 /* =========================================================
    PAGINATION
@@ -7117,8 +6316,7 @@ a {
   color: #475569;
   background: #ffffff;
 
-  transition:
-    all 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .pagination button:hover:not(:disabled) {
@@ -7158,14 +6356,12 @@ a {
   background: #eff6ff;
 }
 
-
 /* =========================================================
    ANIMATIONS
 ========================================================= */
 
 .refresh-spin {
-  animation:
-    transaction-spin 0.8s linear infinite;
+  animation: transaction-spin 0.8s linear infinite;
 }
 
 @keyframes transaction-spin {
@@ -7178,16 +6374,13 @@ a {
   }
 }
 
-
 /* =========================================================
    RESPONSIVE
 ========================================================= */
 
 @media (max-width: 1200px) {
-
   .transaction-summary-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .transaction-filters {
@@ -7210,12 +6403,9 @@ a {
   .filter-select select {
     width: 100%;
   }
-
 }
 
-
 @media (max-width: 768px) {
-
   .transactions-page {
     padding: 20px 16px;
   }
@@ -7259,12 +6449,9 @@ a {
   .filter-select {
     width: 100%;
   }
-
 }
 
-
 @media (max-width: 480px) {
-
   .transactions-page {
     padding: 16px 12px;
   }
@@ -7289,7 +6476,6 @@ a {
   .transaction-search button {
     padding: 0 14px;
   }
-
 }
 /* =========================================================
    TRANSACTION DETAILS PAGE
@@ -7302,7 +6488,6 @@ a {
   padding: 32px;
   animation: pageFadeIn 0.3s ease;
 }
-
 
 /* =========================================================
    PAGE HEADER
@@ -7330,7 +6515,6 @@ a {
   color: #667085;
 }
 
-
 /* =========================================================
    BACK BUTTON
 ========================================================= */
@@ -7357,7 +6541,6 @@ a {
   color: #2563eb;
 }
 
-
 /* =========================================================
    REVERSE BUTTON
 ========================================================= */
@@ -7383,8 +6566,7 @@ a {
 
   cursor: pointer;
 
-  box-shadow:
-    0 6px 14px rgba(220, 38, 38, 0.18);
+  box-shadow: 0 6px 14px rgba(220, 38, 38, 0.18);
 
   transition:
     transform 0.2s ease,
@@ -7396,10 +6578,8 @@ a {
   background: #b91c1c;
   transform: translateY(-1px);
 
-  box-shadow:
-    0 10px 20px rgba(220, 38, 38, 0.24);
+  box-shadow: 0 10px 20px rgba(220, 38, 38, 0.24);
 }
-
 
 /* =========================================================
    SUCCESS MESSAGE
@@ -7438,7 +6618,6 @@ a {
   align-items: center;
 }
 
-
 /* =========================================================
    ERROR MESSAGE
 ========================================================= */
@@ -7476,7 +6655,6 @@ a {
   align-items: center;
 }
 
-
 /* =========================================================
    TRANSACTION SUMMARY CARD
 ========================================================= */
@@ -7492,15 +6670,9 @@ a {
   border: 1px solid #e4e7ec;
   border-radius: 18px;
 
-  background:
-    linear-gradient(
-      135deg,
-      #ffffff 0%,
-      #f8faff 100%
-    );
+  background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
 
-  box-shadow:
-    0 8px 24px rgba(16, 24, 40, 0.06);
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
 }
 
 .transaction-summary-icon {
@@ -7515,17 +6687,11 @@ a {
 
   border-radius: 16px;
 
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #1d4ed8
-    );
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
 
   color: #ffffff;
 
-  box-shadow:
-    0 10px 22px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.2);
 }
 
 .transaction-summary-content {
@@ -7571,7 +6737,6 @@ a {
   word-break: break-all;
 }
 
-
 /* =========================================================
    TRANSACTION DETAILS GRID
 ========================================================= */
@@ -7579,14 +6744,12 @@ a {
 .transaction-details-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 
   gap: 24px;
 
   margin-bottom: 24px;
 }
-
 
 /* =========================================================
    STANDARD TRANSACTION CARD
@@ -7600,8 +6763,7 @@ a {
 
   padding: 24px;
 
-  box-shadow:
-    0 4px 16px rgba(16, 24, 40, 0.04);
+  box-shadow: 0 4px 16px rgba(16, 24, 40, 0.04);
 
   transition:
     transform 0.2s ease,
@@ -7609,10 +6771,8 @@ a {
 }
 
 .transaction-card:hover {
-  box-shadow:
-    0 10px 28px rgba(16, 24, 40, 0.07);
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.07);
 }
-
 
 /* =========================================================
    CARD HEADER
@@ -7639,7 +6799,6 @@ a {
   font-size: 16px;
   font-weight: 700;
 }
-
 
 /* =========================================================
    INFORMATION LIST
@@ -7693,7 +6852,6 @@ a {
   white-space: nowrap;
 }
 
-
 /* =========================================================
    STATUS BADGES
 ========================================================= */
@@ -7724,14 +6882,12 @@ a {
   font-size: 10px;
 }
 
-
 /* COMPLETED */
 
 .status-completed {
   background: #dcfae6;
   color: #067647;
 }
-
 
 /* REVERSED */
 
@@ -7740,14 +6896,12 @@ a {
   color: #92400e;
 }
 
-
 /* FAILED */
 
 .status-failed {
   background: #fee4e2;
   color: #b42318;
 }
-
 
 /* PENDING */
 
@@ -7756,14 +6910,12 @@ a {
   color: #b54708;
 }
 
-
 /* PROCESSING */
 
 .status-processing {
   background: #e0edff;
   color: #175cd3;
 }
-
 
 /* =========================================================
    WALLET MOVEMENT
@@ -7821,7 +6973,6 @@ a {
   color: #2563eb;
 }
 
-
 /* =========================================================
    REVERSED INFORMATION
 ========================================================= */
@@ -7858,7 +7009,6 @@ a {
   color: #a16207;
 }
 
-
 /* =========================================================
    LOADING STATE
 ========================================================= */
@@ -7889,7 +7039,6 @@ a {
     transform: rotate(360deg);
   }
 }
-
 
 /* =========================================================
    ERROR PAGE
@@ -7930,7 +7079,6 @@ a {
   line-height: 1.6;
 }
 
-
 /* =========================================================
    SECONDARY BUTTON
 ========================================================= */
@@ -7966,7 +7114,6 @@ a {
   border-color: #98a2b3;
 }
 
-
 /* =========================================================
    MODAL OVERLAY
 ========================================================= */
@@ -7984,14 +7131,11 @@ a {
 
   padding: 20px;
 
-  background:
-    rgba(15, 23, 42, 0.55);
+  background: rgba(15, 23, 42, 0.55);
 
-  backdrop-filter:
-    blur(4px);
+  backdrop-filter: blur(4px);
 
-  animation:
-    modalFadeIn 0.2s ease;
+  animation: modalFadeIn 0.2s ease;
 }
 
 @keyframes modalFadeIn {
@@ -8003,7 +7147,6 @@ a {
     opacity: 1;
   }
 }
-
 
 /* =========================================================
    REVERSAL MODAL
@@ -8021,26 +7164,20 @@ a {
 
   background: #ffffff;
 
-  box-shadow:
-    0 30px 70px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.25);
 
-  animation:
-    modalSlideUp 0.25s ease;
+  animation: modalSlideUp 0.25s ease;
 }
 
 @keyframes modalSlideUp {
   from {
     opacity: 0;
-    transform:
-      translateY(16px)
-      scale(0.98);
+    transform: translateY(16px) scale(0.98);
   }
 
   to {
     opacity: 1;
-    transform:
-      translateY(0)
-      scale(1);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -8106,7 +7243,6 @@ a {
   line-height: 1.6;
 }
 
-
 /* =========================================================
    REVERSAL WARNING
 ========================================================= */
@@ -8133,7 +7269,6 @@ a {
   line-height: 1.5;
 }
 
-
 /* =========================================================
    REVERSAL AMOUNT
 ========================================================= */
@@ -8154,7 +7289,6 @@ a {
   font-size: 25px;
   font-weight: 700;
 }
-
 
 /* =========================================================
    MODAL ACTIONS
@@ -8220,13 +7354,11 @@ a {
   cursor: not-allowed;
 }
 
-
 /* =========================================================
    TABLET RESPONSIVE
 ========================================================= */
 
 @media (max-width: 900px) {
-
   .transaction-details-page {
     padding: 24px;
   }
@@ -8238,16 +7370,13 @@ a {
   .transaction-summary-card {
     padding: 22px;
   }
-
 }
-
 
 /* =========================================================
    MOBILE RESPONSIVE
 ========================================================= */
 
 @media (max-width: 640px) {
-
   .transaction-details-page {
     padding: 18px;
   }
@@ -8321,7 +7450,6 @@ a {
   .modal-confirm-reversal {
     width: 100%;
   }
-
 }
 /* =========================================================
    LEDGER PAGE
@@ -8407,9 +7535,7 @@ a {
 
   transform: translateY(-1px);
 
-  box-shadow:
-    0 8px 18px
-    rgba(37, 99, 235, 0.08);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.08);
 }
 
 .ledger-refresh-button:disabled {
@@ -8519,9 +7645,7 @@ a {
   border: 1px solid #e4e7ec;
   border-radius: 16px;
 
-  box-shadow:
-    0 4px 14px
-    rgba(16, 24, 40, 0.04);
+  box-shadow: 0 4px 14px rgba(16, 24, 40, 0.04);
 
   transition:
     transform 0.2s ease,
@@ -8534,9 +7658,7 @@ a {
 
   border-color: #d0d5dd;
 
-  box-shadow:
-    0 14px 28px
-    rgba(16, 24, 40, 0.08);
+  box-shadow: 0 14px 28px rgba(16, 24, 40, 0.08);
 }
 
 .ledger-summary-card > div:last-child {
@@ -8627,19 +7749,12 @@ a {
 
   padding: 22px 24px;
 
-  background:
-    linear-gradient(
-      135deg,
-      #ffffff 0%,
-      #f8fbff 100%
-    );
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
 
   border: 1px solid #e4e7ec;
   border-radius: 16px;
 
-  box-shadow:
-    0 4px 14px
-    rgba(16, 24, 40, 0.04);
+  box-shadow: 0 4px 14px rgba(16, 24, 40, 0.04);
 }
 
 .ledger-info-icon {
@@ -8706,9 +7821,7 @@ a {
   border: 1px solid #e4e7ec;
   border-radius: 18px;
 
-  box-shadow:
-    0 6px 20px
-    rgba(16, 24, 40, 0.05);
+  box-shadow: 0 6px 20px rgba(16, 24, 40, 0.05);
 }
 
 .ledger-table-header {
@@ -8879,9 +7992,7 @@ a {
 
   color: #475467;
 
-  font-family:
-    var(--font-geist-mono),
-    monospace;
+  font-family: var(--font-geist-mono), monospace;
 
   font-size: 11px;
   font-weight: 600;
@@ -9083,8 +8194,7 @@ a {
 
 @media (max-width: 1200px) {
   .ledger-summary-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -9202,16 +8312,9 @@ a {
 
   color: #ffffff;
 
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #1d4ed8
-    );
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
 
-  box-shadow:
-    0 10px 25px
-    rgba(37, 99, 235, 0.22);
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.22);
 }
 
 .audit-eyebrow {
@@ -9275,9 +8378,7 @@ a {
   background: #f8fafc;
   border-color: #2563eb;
 
-  box-shadow:
-    0 8px 20px
-    rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
 
   transform: translateY(-1px);
 }
@@ -9287,7 +8388,6 @@ a {
   cursor: not-allowed;
 }
 
-
 /* =========================================================
    STATISTICS
 ========================================================= */
@@ -9295,8 +8395,7 @@ a {
 .audit-stats-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 
   gap: 18px;
 
@@ -9311,9 +8410,7 @@ a {
 
   background: #ffffff;
 
-  box-shadow:
-    0 4px 16px
-    rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
 
   transition:
     transform 0.2s ease,
@@ -9326,9 +8423,7 @@ a {
 
   border-color: #cbd5e1;
 
-  box-shadow:
-    0 14px 30px
-    rgba(15, 23, 42, 0.08);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
 }
 
 .audit-stat-content {
@@ -9398,7 +8493,6 @@ a {
   background: #f5f3ff;
 }
 
-
 /* =========================================================
    AUDIT CARD
 ========================================================= */
@@ -9411,9 +8505,7 @@ a {
 
   background: #ffffff;
 
-  box-shadow:
-    0 8px 24px
-    rgba(15, 23, 42, 0.05);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
 }
 
 .audit-card-header {
@@ -9425,8 +8517,7 @@ a {
 
   gap: 24px;
 
-  border-bottom:
-    1px solid #edf1f5;
+  border-bottom: 1px solid #edf1f5;
 }
 
 .audit-card-header h2 {
@@ -9445,7 +8536,6 @@ a {
 
   color: #64748b;
 }
-
 
 /* =========================================================
    SEARCH & FILTERS
@@ -9484,9 +8574,7 @@ a {
 .audit-search:focus-within {
   border-color: #2563eb;
 
-  box-shadow:
-    0 0 0 3px
-    rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .audit-search input {
@@ -9538,7 +8626,6 @@ a {
   cursor: pointer;
 }
 
-
 /* =========================================================
    TABLE
 ========================================================= */
@@ -9570,15 +8657,13 @@ a {
 
   color: #64748b;
 
-  border-bottom:
-    1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .audit-table td {
   padding: 17px 24px;
 
-  border-bottom:
-    1px solid #edf1f5;
+  border-bottom: 1px solid #edf1f5;
 
   font-size: 13px;
 
@@ -9586,8 +8671,7 @@ a {
 }
 
 .audit-table tbody tr {
-  transition:
-    background 0.2s ease;
+  transition: background 0.2s ease;
 }
 
 .audit-table tbody tr:hover {
@@ -9601,7 +8685,6 @@ a {
 .audit-table-action {
   text-align: right !important;
 }
-
 
 /* =========================================================
    ACTION BADGES
@@ -9646,7 +8729,6 @@ a {
   background: #f1f5f9;
 }
 
-
 /* =========================================================
    ENTITY
 ========================================================= */
@@ -9670,7 +8752,6 @@ a {
 
   color: #94a3b8;
 }
-
 
 /* =========================================================
    USER
@@ -9705,7 +8786,6 @@ a {
   color: #475569;
 }
 
-
 /* =========================================================
    DATE
 ========================================================= */
@@ -9717,7 +8797,6 @@ a {
 
   white-space: nowrap;
 }
-
 
 /* =========================================================
    VIEW BUTTON
@@ -9751,7 +8830,6 @@ a {
   transform: translateY(-1px);
 }
 
-
 /* =========================================================
    LOADING
 ========================================================= */
@@ -9778,7 +8856,6 @@ a {
 
   font-size: 14px;
 }
-
 
 /* =========================================================
    ERROR
@@ -9815,7 +8892,6 @@ a {
 
   color: #b91c1c;
 }
-
 
 /* =========================================================
    EMPTY STATE
@@ -9866,7 +8942,6 @@ a {
   color: #64748b;
 }
 
-
 /* =========================================================
    PAGINATION
 ========================================================= */
@@ -9880,8 +8955,7 @@ a {
 
   gap: 20px;
 
-  border-top:
-    1px solid #edf1f5;
+  border-top: 1px solid #edf1f5;
 }
 
 .audit-pagination p {
@@ -9944,7 +9018,6 @@ a {
   color: #475569;
 }
 
-
 /* =========================================================
    MODAL OVERLAY
 ========================================================= */
@@ -9962,16 +9035,12 @@ a {
 
   padding: 24px;
 
-  background:
-    rgba(15, 23, 42, 0.55);
+  background: rgba(15, 23, 42, 0.55);
 
-  backdrop-filter:
-    blur(5px);
+  backdrop-filter: blur(5px);
 
-  animation:
-    auditFadeIn 0.2s ease;
+  animation: auditFadeIn 0.2s ease;
 }
-
 
 /* =========================================================
    MODAL
@@ -9988,12 +9057,9 @@ a {
 
   background: #ffffff;
 
-  box-shadow:
-    0 30px 80px
-    rgba(15, 23, 42, 0.35);
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.35);
 
-  animation:
-    auditModalIn 0.25s ease;
+  animation: auditModalIn 0.25s ease;
 }
 
 .audit-modal-header {
@@ -10003,8 +9069,7 @@ a {
   align-items: flex-start;
   justify-content: space-between;
 
-  border-bottom:
-    1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .audit-modal-header p {
@@ -10058,7 +9123,6 @@ a {
   transform: rotate(90deg);
 }
 
-
 /* =========================================================
    MODAL BODY
 ========================================================= */
@@ -10070,8 +9134,7 @@ a {
 .audit-details-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 
   gap: 16px;
 }
@@ -10114,7 +9177,6 @@ a {
   grid-column: 1 / -1;
 }
 
-
 /* =========================================================
    METADATA
 ========================================================= */
@@ -10124,8 +9186,7 @@ a {
 
   padding-top: 24px;
 
-  border-top:
-    1px solid #e2e8f0;
+  border-top: 1px solid #e2e8f0;
 }
 
 .audit-metadata-header h3 {
@@ -10156,17 +9217,13 @@ a {
 
   background: #0f172a;
 
-  box-shadow:
-    inset 0 0 0 1px
-    rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .audit-code-block pre {
   margin: 0;
 
-  font-family:
-    'Courier New',
-    monospace;
+  font-family: 'Courier New', monospace;
 
   font-size: 12px;
   line-height: 1.7;
@@ -10177,14 +9234,12 @@ a {
   word-break: break-word;
 }
 
-
 /* =========================================================
    ANIMATIONS
 ========================================================= */
 
 .spin {
-  animation:
-    auditSpin 0.8s linear infinite;
+  animation: auditSpin 0.8s linear infinite;
 }
 
 @keyframes auditSpin {
@@ -10206,19 +9261,14 @@ a {
 @keyframes auditModalIn {
   from {
     opacity: 0;
-    transform:
-      translateY(20px)
-      scale(0.98);
+    transform: translateY(20px) scale(0.98);
   }
 
   to {
     opacity: 1;
-    transform:
-      translateY(0)
-      scale(1);
+    transform: translateY(0) scale(1);
   }
 }
-
 
 /* =========================================================
    RESPONSIVE
@@ -10226,8 +9276,7 @@ a {
 
 @media (max-width: 1100px) {
   .audit-stats-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .audit-card-header {
@@ -10308,8 +9357,7 @@ a {
     max-width: 100%;
     max-height: 92vh;
 
-    border-radius:
-      22px 22px 0 0;
+    border-radius: 22px 22px 0 0;
   }
 
   .audit-modal-header,
@@ -10324,7 +9372,8 @@ a {
   .audit-detail-item.full-width {
     grid-column: auto;
   }
-}@import "tailwindcss";
+}
+@import 'tailwindcss';
 
 /* =====================================================
    FINFLOW DESIGN SYSTEM
@@ -10361,21 +9410,17 @@ a {
   --info: #2563eb;
   --info-bg: #dbeafe;
 
-  --shadow-sm:
-    0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
 
-  --shadow-md:
-    0 8px 24px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
 
-  --shadow-lg:
-    0 20px 40px rgba(15, 23, 42, 0.12);
+  --shadow-lg: 0 20px 40px rgba(15, 23, 42, 0.12);
 
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 20px;
 }
-
 
 /* =====================================================
    RESET
@@ -10394,19 +9439,11 @@ html {
 body {
   min-height: 100vh;
 
-  background:
-    linear-gradient(
-      180deg,
-      #f8fafc 0%,
-      #f1f5f9 100%
-    );
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
 
   color: var(--text-primary);
 
-  font-family:
-    Arial,
-    Helvetica,
-    sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
 
   -webkit-font-smoothing: antialiased;
 }
@@ -10427,7 +9464,6 @@ a {
   color: inherit;
 }
 
-
 /* =====================================================
    APPLICATION LAYOUT
 ===================================================== */
@@ -10447,12 +9483,7 @@ a {
 
   margin-left: 260px;
 
-  background:
-    linear-gradient(
-      180deg,
-      #f8fafc 0%,
-      #f1f5f9 100%
-    );
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
 .app-content {
@@ -10462,12 +9493,8 @@ a {
 
   margin: 0 auto;
 
-  padding:
-    36px
-    40px
-    60px;
+  padding: 36px 40px 60px;
 }
-
 
 /* =====================================================
    SIDEBAR
@@ -10485,16 +9512,9 @@ a {
   display: flex;
   flex-direction: column;
 
-  background:
-    linear-gradient(
-      180deg,
-      #111827 0%,
-      #0f172a 100%
-    );
+  background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
 
-  border-right:
-    1px solid
-    rgba(255, 255, 255, 0.05);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
 
   z-index: 1000;
 
@@ -10508,13 +9528,9 @@ a {
 
   height: 84px;
 
-  padding:
-    0
-    24px;
+  padding: 0 24px;
 
-  border-bottom:
-    1px solid
-    rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 
   color: white;
 
@@ -10534,18 +9550,11 @@ a {
 
   border-radius: 12px;
 
-  background:
-    linear-gradient(
-      135deg,
-      #3b82f6,
-      #1d4ed8
-    );
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
 
   color: white;
 
-  box-shadow:
-    0 8px 20px
-    rgba(37, 99, 235, 0.35);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
 }
 
 .sidebar-nav {
@@ -10554,9 +9563,7 @@ a {
 
   gap: 6px;
 
-  padding:
-    24px
-    14px;
+  padding: 24px 14px;
 }
 
 .nav-item {
@@ -10567,9 +9574,7 @@ a {
 
   gap: 13px;
 
-  padding:
-    13px
-    14px;
+  padding: 13px 14px;
 
   border-radius: 10px;
 
@@ -10589,37 +9594,25 @@ a {
 }
 
 .nav-item:hover {
-  background:
-    rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.06);
 
   color: white;
 }
 
 .nav-item.active {
-  background:
-    linear-gradient(
-      135deg,
-      #3b82f6,
-      #2563eb
-    );
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
 
   color: white;
 
-  box-shadow:
-    0 8px 20px
-    rgba(37, 99, 235, 0.25);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
 }
 
 .sidebar-bottom {
   margin-top: auto;
 
-  padding:
-    18px
-    14px;
+  padding: 18px 14px;
 
-  border-top:
-    1px solid
-    rgba(255, 255, 255, 0.06);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .logout-button {
@@ -10629,12 +9622,10 @@ a {
 }
 
 .logout-button:hover {
-  background:
-    rgba(239, 68, 68, 0.1);
+  background: rgba(239, 68, 68, 0.1);
 
   color: #fecaca;
 }
-
 
 /* =====================================================
    PAGE HEADERS
@@ -10674,7 +9665,6 @@ a {
   gap: 12px;
 }
 
-
 /* =====================================================
    BUTTONS
 ===================================================== */
@@ -10688,29 +9678,20 @@ a {
 
   min-height: 42px;
 
-  padding:
-    0
-    18px;
+  padding: 0 18px;
 
   border: none;
 
   border-radius: 9px;
 
-  background:
-    linear-gradient(
-      135deg,
-      #3b82f6,
-      #2563eb
-    );
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
 
   color: white;
 
   font-size: 14px;
   font-weight: 600;
 
-  box-shadow:
-    0 6px 16px
-    rgba(37, 99, 235, 0.2);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.2);
 
   transition:
     transform 0.2s ease,
@@ -10720,9 +9701,7 @@ a {
 .primary-button:hover {
   transform: translateY(-1px);
 
-  box-shadow:
-    0 10px 24px
-    rgba(37, 99, 235, 0.28);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.28);
 }
 
 .secondary-button {
@@ -10734,13 +9713,9 @@ a {
 
   min-height: 42px;
 
-  padding:
-    0
-    18px;
+  padding: 0 18px;
 
-  border:
-    1px solid
-    var(--border);
+  border: 1px solid var(--border);
 
   border-radius: 9px;
 
@@ -10777,8 +9752,6 @@ a {
   color: var(--primary-dark);
 }
 
-
-
 /* =========================================================
    PAGE-SPECIFIC UI
    LOGIN → DASHBOARD → WALLETS → TRANSACTIONS → LEDGER → AUDIT
@@ -10798,15 +9771,8 @@ a {
   align-items: center;
   justify-content: center;
 
-  background:
-    linear-gradient(
-      135deg,
-      #07162f 0%,
-      #102653 45%,
-      #1d4ed8 100%
-    );
+  background: linear-gradient(135deg, #07162f 0%, #102653 45%, #1d4ed8 100%);
 }
-
 
 /* =========================================================
    LOGIN BACKGROUND
@@ -10833,12 +9799,11 @@ a {
   top: -180px;
   right: -120px;
 
-  background:
-    radial-gradient(
-      circle,
-      rgba(96, 165, 250, 0.55),
-      transparent 70%
-    );
+  background: radial-gradient(
+    circle,
+    rgba(96, 165, 250, 0.55),
+    transparent 70%
+  );
 }
 
 .login-orb-two {
@@ -10848,12 +9813,7 @@ a {
   bottom: -180px;
   left: -150px;
 
-  background:
-    radial-gradient(
-      circle,
-      rgba(37, 99, 235, 0.45),
-      transparent 70%
-    );
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.45), transparent 70%);
 }
 
 .login-grid-pattern {
@@ -10863,19 +9823,11 @@ a {
   opacity: 0.08;
 
   background-image:
-    linear-gradient(
-      rgba(255, 255, 255, 0.15) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.15) 1px,
-      transparent 1px
-    );
+    linear-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.15) 1px, transparent 1px);
 
   background-size: 50px 50px;
 }
-
 
 /* =========================================================
    LOGIN WRAPPER
@@ -10898,29 +9850,22 @@ a {
 
   background: #ffffff;
 
-  box-shadow:
-    0 30px 80px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
 
-  animation:
-    login-enter 0.6s ease-out;
+  animation: login-enter 0.6s ease-out;
 }
 
 @keyframes login-enter {
   from {
     opacity: 0;
-    transform:
-      translateY(20px)
-      scale(0.98);
+    transform: translateY(20px) scale(0.98);
   }
 
   to {
     opacity: 1;
-    transform:
-      translateY(0)
-      scale(1);
+    transform: translateY(0) scale(1);
   }
 }
-
 
 /* =========================================================
    BRAND PANEL
@@ -10937,12 +9882,7 @@ a {
 
   color: white;
 
-  background:
-    linear-gradient(
-      145deg,
-      #0f2f72,
-      #1d4ed8
-    );
+  background: linear-gradient(145deg, #0f2f72, #1d4ed8);
 
   overflow: hidden;
 }
@@ -10960,8 +9900,7 @@ a {
   top: -180px;
   right: -230px;
 
-  background:
-    rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .login-brand-panel::after {
@@ -10977,8 +9916,7 @@ a {
   bottom: -160px;
   left: -120px;
 
-  border:
-    70px solid rgba(255, 255, 255, 0.04);
+  border: 70px solid rgba(255, 255, 255, 0.04);
 }
 
 .login-brand-content {
@@ -10996,11 +9934,9 @@ a {
 
   border-radius: 16px;
 
-  background:
-    rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.15);
 
-  backdrop-filter:
-    blur(12px);
+  backdrop-filter: blur(12px);
 
   margin-bottom: 18px;
 }
@@ -11038,10 +9974,8 @@ a {
   font-size: 15px;
   line-height: 1.8;
 
-  color:
-    rgba(255, 255, 255, 0.78);
+  color: rgba(255, 255, 255, 0.78);
 }
-
 
 /* =========================================================
    LOGIN FEATURES
@@ -11075,8 +10009,7 @@ a {
 
   border-radius: 10px;
 
-  background:
-    rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .login-feature div:last-child {
@@ -11094,8 +10027,7 @@ a {
   font-size: 12px;
   line-height: 1.5;
 
-  color:
-    rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .login-brand-footer {
@@ -11104,10 +10036,8 @@ a {
 
   font-size: 12px;
 
-  color:
-    rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.55);
 }
-
 
 /* =========================================================
    LOGIN FORM PANEL
@@ -11120,15 +10050,13 @@ a {
 
   padding: 56px;
 
-  background:
-    #ffffff;
+  background: #ffffff;
 }
 
 .login-form-container {
   width: 100%;
   max-width: 390px;
 }
-
 
 /* =========================================================
    MOBILE BRAND
@@ -11137,7 +10065,6 @@ a {
 .login-mobile-brand {
   display: none;
 }
-
 
 /* =========================================================
    LOGIN HEADING
@@ -11184,7 +10111,6 @@ a {
   color: #64748b;
 }
 
-
 /* =========================================================
    LOGIN ERROR
 ========================================================= */
@@ -11196,18 +10122,14 @@ a {
 
   border-radius: 10px;
 
-  border:
-    1px solid #fecaca;
+  border: 1px solid #fecaca;
 
-  background:
-    #fef2f2;
+  background: #fef2f2;
 
-  color:
-    #b91c1c;
+  color: #b91c1c;
 
   font-size: 13px;
 }
-
 
 /* =========================================================
    LOGIN FORM
@@ -11258,18 +10180,15 @@ a {
   width: 100%;
   height: 52px;
 
-  padding:
-    0 48px 0 48px;
+  padding: 0 48px 0 48px;
 
-  border:
-    1px solid #dbe2ea;
+  border: 1px solid #dbe2ea;
 
   border-radius: 11px;
 
   outline: none;
 
-  background:
-    #f8fafc;
+  background: #f8fafc;
 
   color: #0f172a;
 
@@ -11290,10 +10209,8 @@ a {
 
   border-color: #2563eb;
 
-  box-shadow:
-    0 0 0 4px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
-
 
 /* =========================================================
    PASSWORD TOGGLE
@@ -11332,7 +10249,6 @@ a {
   color: #2563eb;
 }
 
-
 /* =========================================================
    LOGIN BUTTON
 ========================================================= */
@@ -11353,12 +10269,7 @@ a {
 
   border-radius: 11px;
 
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #1d4ed8
-    );
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
 
   color: white;
 
@@ -11367,8 +10278,7 @@ a {
 
   cursor: pointer;
 
-  box-shadow:
-    0 10px 20px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.25);
 
   transition:
     transform 0.2s ease,
@@ -11377,16 +10287,13 @@ a {
 }
 
 .login-submit-button:hover:not(:disabled) {
-  transform:
-    translateY(-1px);
+  transform: translateY(-1px);
 
-  box-shadow:
-    0 14px 28px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.35);
 }
 
 .login-submit-button:active:not(:disabled) {
-  transform:
-    translateY(0);
+  transform: translateY(0);
 }
 
 .login-submit-button:disabled {
@@ -11396,8 +10303,7 @@ a {
 }
 
 .login-spinner {
-  animation:
-    login-spin 0.8s linear infinite;
+  animation: login-spin 0.8s linear infinite;
 }
 
 @keyframes login-spin {
@@ -11405,7 +10311,6 @@ a {
     transform: rotate(360deg);
   }
 }
-
 
 /* =========================================================
    DEMO ACCOUNT
@@ -11416,17 +10321,11 @@ a {
 
   padding: 18px;
 
-  border:
-    1px solid #dbeafe;
+  border: 1px solid #dbeafe;
 
   border-radius: 12px;
 
-  background:
-    linear-gradient(
-      135deg,
-      #f8fbff,
-      #eff6ff
-    );
+  background: linear-gradient(135deg, #f8fbff, #eff6ff);
 }
 
 .demo-account-header {
@@ -11471,7 +10370,6 @@ a {
   word-break: break-word;
 }
 
-
 /* =========================================================
    SECURITY TEXT
 ========================================================= */
@@ -11490,16 +10388,13 @@ a {
   color: #94a3b8;
 }
 
-
 /* =========================================================
    TABLET RESPONSIVE
 ========================================================= */
 
 @media (max-width: 900px) {
-
   .login-wrapper {
-    width:
-      min(600px, calc(100% - 32px));
+    width: min(600px, calc(100% - 32px));
 
     grid-template-columns: 1fr;
 
@@ -11540,22 +10435,15 @@ a {
 
     color: white;
 
-    background:
-      linear-gradient(
-        135deg,
-        #2563eb,
-        #1d4ed8
-      );
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
   }
 }
-
 
 /* =========================================================
    MOBILE RESPONSIVE
 ========================================================= */
 
 @media (max-width: 600px) {
-
   .login-page {
     align-items: flex-start;
 
@@ -11597,10 +10485,8 @@ a {
 
   padding: 36px;
 
-  background:
-    #f8fafc;
+  background: #f8fafc;
 }
-
 
 /* =========================================================
    DASHBOARD LOADING
@@ -11614,8 +10500,7 @@ a {
   align-items: center;
   justify-content: center;
 
-  background:
-    #f8fafc;
+  background: #f8fafc;
 }
 
 .dashboard-loading-content {
@@ -11638,15 +10523,9 @@ a {
 
   color: white;
 
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #1d4ed8
-    );
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
 
-  box-shadow:
-    0 12px 25px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 12px 25px rgba(37, 99, 235, 0.2);
 }
 
 .dashboard-loader-spinner {
@@ -11655,14 +10534,11 @@ a {
 
   border-radius: 50%;
 
-  border:
-    3px solid #dbeafe;
+  border: 3px solid #dbeafe;
 
-  border-top-color:
-    #2563eb;
+  border-top-color: #2563eb;
 
-  animation:
-    dashboard-spin 0.8s linear infinite;
+  animation: dashboard-spin 0.8s linear infinite;
 }
 
 .dashboard-loading-content p {
@@ -11670,8 +10546,7 @@ a {
 
   font-size: 14px;
 
-  color:
-    #64748b;
+  color: #64748b;
 }
 
 @keyframes dashboard-spin {
@@ -11679,7 +10554,6 @@ a {
     transform: rotate(360deg);
   }
 }
-
 
 /* =========================================================
    DASHBOARD HEADER
@@ -11713,11 +10587,9 @@ a {
 
   border-radius: 999px;
 
-  background:
-    #eff6ff;
+  background: #eff6ff;
 
-  color:
-    #2563eb;
+  color: #2563eb;
 
   font-size: 12px;
   font-weight: 600;
@@ -11731,11 +10603,9 @@ a {
 
   font-weight: 700;
 
-  letter-spacing:
-    -0.8px;
+  letter-spacing: -0.8px;
 
-  color:
-    #0f172a;
+  color: #0f172a;
 }
 
 .dashboard-header p {
@@ -11744,10 +10614,8 @@ a {
   font-size: 14px;
   line-height: 1.6;
 
-  color:
-    #64748b;
+  color: #64748b;
 }
-
 
 /* =========================================================
    REFRESH BUTTON
@@ -11763,38 +10631,30 @@ a {
 
   gap: 8px;
 
-  padding:
-    0 16px;
+  padding: 0 16px;
 
-  border:
-    1px solid #dbe2ea;
+  border: 1px solid #dbe2ea;
 
   border-radius: 10px;
 
-  background:
-    #ffffff;
+  background: #ffffff;
 
-  color:
-    #334155;
+  color: #334155;
 
   font-size: 13px;
   font-weight: 600;
 
   cursor: pointer;
 
-  transition:
-    all 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .dashboard-refresh-button:hover:not(:disabled) {
-  border-color:
-    #2563eb;
+  border-color: #2563eb;
 
-  color:
-    #2563eb;
+  color: #2563eb;
 
-  box-shadow:
-    0 5px 15px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 5px 15px rgba(15, 23, 42, 0.06);
 }
 
 .dashboard-refresh-button:disabled {
@@ -11803,10 +10663,8 @@ a {
 }
 
 .refresh-icon.spinning {
-  animation:
-    dashboard-spin 0.8s linear infinite;
+  animation: dashboard-spin 0.8s linear infinite;
 }
-
 
 /* =========================================================
    ERROR
@@ -11822,20 +10680,16 @@ a {
 
   padding: 16px 18px;
 
-  border:
-    1px solid #fecaca;
+  border: 1px solid #fecaca;
 
   border-radius: 12px;
 
-  background:
-    #fef2f2;
+  background: #fef2f2;
 
-  color:
-    #b91c1c;
+  color: #b91c1c;
 
   font-size: 13px;
 }
-
 
 /* =========================================================
    OVERVIEW GRID
@@ -11844,14 +10698,12 @@ a {
 .dashboard-overview-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 
   gap: 20px;
 
   margin-bottom: 42px;
 }
-
 
 /* =========================================================
    STAT CARD
@@ -11868,16 +10720,13 @@ a {
 
   padding: 24px;
 
-  border:
-    1px solid #e2e8f0;
+  border: 1px solid #e2e8f0;
 
   border-radius: 16px;
 
-  background:
-    #ffffff;
+  background: #ffffff;
 
-  box-shadow:
-    0 4px 16px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
 
   overflow: hidden;
 
@@ -11887,11 +10736,9 @@ a {
 }
 
 .dashboard-stat-card:hover {
-  transform:
-    translateY(-3px);
+  transform: translateY(-3px);
 
-  box-shadow:
-    0 12px 30px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
 .dashboard-stat-primary {
@@ -11899,15 +10746,9 @@ a {
 
   color: white;
 
-  background:
-    linear-gradient(
-      135deg,
-      #1e40af,
-      #2563eb
-    );
+  background: linear-gradient(135deg, #1e40af, #2563eb);
 
-  box-shadow:
-    0 15px 35px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 15px 35px rgba(37, 99, 235, 0.2);
 }
 
 .dashboard-stat-primary::after {
@@ -11923,8 +10764,7 @@ a {
   right: -80px;
   top: -90px;
 
-  background:
-    rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .dashboard-stat-top {
@@ -11946,35 +10786,27 @@ a {
 
   border-radius: 13px;
 
-  color:
-    #2563eb;
+  color: #2563eb;
 
-  background:
-    #eff6ff;
+  background: #eff6ff;
 }
 
 .dashboard-stat-primary .dashboard-stat-icon {
-  color:
-    white;
+  color: white;
 
-  background:
-    rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .dashboard-stat-icon.neutral {
-  color:
-    #0f766e;
+  color: #0f766e;
 
-  background:
-    #f0fdfa;
+  background: #f0fdfa;
 }
 
 .dashboard-stat-icon.purple {
-  color:
-    #7c3aed;
+  color: #7c3aed;
 
-  background:
-    #f5f3ff;
+  background: #f5f3ff;
 }
 
 .dashboard-stat-trend {
@@ -11983,19 +10815,16 @@ a {
 
   gap: 5px;
 
-  padding:
-    6px 9px;
+  padding: 6px 9px;
 
   border-radius: 999px;
 
   font-size: 11px;
   font-weight: 600;
 
-  color:
-    #dbeafe;
+  color: #dbeafe;
 
-  background:
-    rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .dashboard-stat-content {
@@ -12013,14 +10842,11 @@ a {
   font-size: 13px;
   font-weight: 500;
 
-  color:
-    #64748b;
+  color: #64748b;
 }
 
-.dashboard-stat-primary
-.dashboard-stat-content > span {
-  color:
-    rgba(255, 255, 255, 0.75);
+.dashboard-stat-primary .dashboard-stat-content > span {
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .dashboard-stat-content h2 {
@@ -12031,17 +10857,13 @@ a {
 
   font-weight: 700;
 
-  color:
-    #0f172a;
+  color: #0f172a;
 
-  letter-spacing:
-    -0.5px;
+  letter-spacing: -0.5px;
 }
 
-.dashboard-stat-primary
-.dashboard-stat-content h2 {
-  color:
-    white;
+.dashboard-stat-primary .dashboard-stat-content h2 {
+  color: white;
 }
 
 .dashboard-stat-content p {
@@ -12049,16 +10871,12 @@ a {
 
   font-size: 12px;
 
-  color:
-    #94a3b8;
+  color: #94a3b8;
 }
 
-.dashboard-stat-primary
-.dashboard-stat-content p {
-  color:
-    rgba(255, 255, 255, 0.65);
+.dashboard-stat-primary .dashboard-stat-content p {
+  color: rgba(255, 255, 255, 0.65);
 }
-
 
 /* =========================================================
    DASHBOARD SECTION
@@ -12089,13 +10907,11 @@ a {
   font-size: 11px;
   font-weight: 700;
 
-  color:
-    #2563eb;
+  color: #2563eb;
 
   text-transform: uppercase;
 
-  letter-spacing:
-    0.8px;
+  letter-spacing: 0.8px;
 }
 
 .dashboard-section-header h2 {
@@ -12104,8 +10920,7 @@ a {
   font-size: 22px;
   font-weight: 700;
 
-  color:
-    #0f172a;
+  color: #0f172a;
 }
 
 .dashboard-section-header p {
@@ -12113,8 +10928,7 @@ a {
 
   font-size: 13px;
 
-  color:
-    #64748b;
+  color: #64748b;
 }
 
 .dashboard-view-button {
@@ -12129,26 +10943,21 @@ a {
 
   border-radius: 8px;
 
-  background:
-    transparent;
+  background: transparent;
 
-  color:
-    #2563eb;
+  color: #2563eb;
 
   font-size: 13px;
   font-weight: 600;
 
   cursor: pointer;
 
-  transition:
-    background 0.2s ease;
+  transition: background 0.2s ease;
 }
 
 .dashboard-view-button:hover {
-  background:
-    #eff6ff;
+  background: #eff6ff;
 }
-
 
 /* =========================================================
    WALLET GRID
@@ -12157,12 +10966,10 @@ a {
 .dashboard-wallet-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 
   gap: 18px;
 }
-
 
 /* =========================================================
    WALLET CARD
@@ -12171,16 +10978,13 @@ a {
 .dashboard-wallet-card {
   padding: 22px;
 
-  border:
-    1px solid #e2e8f0;
+  border: 1px solid #e2e8f0;
 
   border-radius: 16px;
 
-  background:
-    #ffffff;
+  background: #ffffff;
 
-  box-shadow:
-    0 4px 16px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
 
   transition:
     transform 0.2s ease,
@@ -12189,14 +10993,11 @@ a {
 }
 
 .dashboard-wallet-card:hover {
-  transform:
-    translateY(-3px);
+  transform: translateY(-3px);
 
-  border-color:
-    #bfdbfe;
+  border-color: #bfdbfe;
 
-  box-shadow:
-    0 14px 30px rgba(15, 23, 42, 0.07);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.07);
 }
 
 .dashboard-wallet-card-top {
@@ -12215,11 +11016,9 @@ a {
 
   border-radius: 12px;
 
-  color:
-    #2563eb;
+  color: #2563eb;
 
-  background:
-    #eff6ff;
+  background: #eff6ff;
 }
 
 .dashboard-wallet-status {
@@ -12228,8 +11027,7 @@ a {
 
   gap: 5px;
 
-  padding:
-    6px 9px;
+  padding: 6px 9px;
 
   border-radius: 999px;
 
@@ -12240,19 +11038,15 @@ a {
 }
 
 .dashboard-wallet-status.active {
-  color:
-    #047857;
+  color: #047857;
 
-  background:
-    #ecfdf5;
+  background: #ecfdf5;
 }
 
 .dashboard-wallet-status.inactive {
-  color:
-    #b45309;
+  color: #b45309;
 
-  background:
-    #fffbeb;
+  background: #fffbeb;
 }
 
 .status-dot {
@@ -12261,39 +11055,32 @@ a {
 
   border-radius: 50%;
 
-  background:
-    currentColor;
+  background: currentColor;
 }
 
 .dashboard-wallet-divider {
   height: 1px;
 
-  margin:
-    20px 0;
+  margin: 20px 0;
 
-  background:
-    #eef2f7;
+  background: #eef2f7;
 }
 
 .dashboard-wallet-currency {
   font-size: 13px;
 
-  color:
-    #64748b;
+  color: #64748b;
 }
 
 .dashboard-wallet-content h3 {
-  margin:
-    8px 0 20px;
+  margin: 8px 0 20px;
 
   font-size: 23px;
   font-weight: 700;
 
-  color:
-    #0f172a;
+  color: #0f172a;
 
-  letter-spacing:
-    -0.3px;
+  letter-spacing: -0.3px;
 }
 
 .dashboard-wallet-footer {
@@ -12303,38 +11090,31 @@ a {
 
   padding-top: 15px;
 
-  border-top:
-    1px solid #f1f5f9;
+  border-top: 1px solid #f1f5f9;
 
   font-size: 11px;
 
-  color:
-    #94a3b8;
+  color: #94a3b8;
 }
 
 .dashboard-wallet-footer strong {
-  color:
-    #475569;
+  color: #475569;
 }
-
 
 /* =========================================================
    TRANSACTIONS CARD
 ========================================================= */
 
 .dashboard-transactions-card {
-  border:
-    1px solid #e2e8f0;
+  border: 1px solid #e2e8f0;
 
   border-radius: 16px;
 
-  background:
-    #ffffff;
+  background: #ffffff;
 
   overflow: hidden;
 
-  box-shadow:
-    0 4px 16px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
 }
 
 .dashboard-transaction-list {
@@ -12354,14 +11134,11 @@ a {
 
   gap: 18px;
 
-  padding:
-    18px 22px;
+  padding: 18px 22px;
 
-  border-bottom:
-    1px solid #eef2f7;
+  border-bottom: 1px solid #eef2f7;
 
-  transition:
-    background 0.2s ease;
+  transition: background 0.2s ease;
 }
 
 .dashboard-transaction-row:last-child {
@@ -12369,10 +11146,8 @@ a {
 }
 
 .dashboard-transaction-row:hover {
-  background:
-    #fafcff;
+  background: #fafcff;
 }
-
 
 /* =========================================================
    TRANSACTION ICON
@@ -12390,29 +11165,22 @@ a {
 }
 
 .dashboard-transaction-icon.deposit {
-  color:
-    #059669;
+  color: #059669;
 
-  background:
-    #ecfdf5;
+  background: #ecfdf5;
 }
 
 .dashboard-transaction-icon.withdrawal {
-  color:
-    #dc2626;
+  color: #dc2626;
 
-  background:
-    #fef2f2;
+  background: #fef2f2;
 }
 
 .dashboard-transaction-icon.transfer {
-  color:
-    #2563eb;
+  color: #2563eb;
 
-  background:
-    #eff6ff;
+  background: #eff6ff;
 }
-
 
 /* =========================================================
    TRANSACTION INFO
@@ -12431,8 +11199,7 @@ a {
   font-size: 13px;
   font-weight: 700;
 
-  color:
-    #1e293b;
+  color: #1e293b;
 }
 
 .dashboard-transaction-info span {
@@ -12444,8 +11211,7 @@ a {
 
   font-size: 11px;
 
-  color:
-    #94a3b8;
+  color: #94a3b8;
 }
 
 .dashboard-transaction-date {
@@ -12456,8 +11222,7 @@ a {
 
   font-size: 11px;
 
-  color:
-    #94a3b8;
+  color: #94a3b8;
 }
 
 .dashboard-transaction-amount {
@@ -12471,13 +11236,11 @@ a {
 .dashboard-transaction-amount strong {
   font-size: 13px;
 
-  color:
-    #0f172a;
+  color: #0f172a;
 }
 
 .dashboard-transaction-status {
-  padding:
-    5px 9px;
+  padding: 5px 9px;
 
   border-radius: 999px;
 
@@ -12489,29 +11252,22 @@ a {
 
 .dashboard-transaction-status.completed,
 .dashboard-transaction-status.successful {
-  color:
-    #047857;
+  color: #047857;
 
-  background:
-    #ecfdf5;
+  background: #ecfdf5;
 }
 
 .dashboard-transaction-status.pending {
-  color:
-    #b45309;
+  color: #b45309;
 
-  background:
-    #fffbeb;
+  background: #fffbeb;
 }
 
 .dashboard-transaction-status.failed {
-  color:
-    #dc2626;
+  color: #dc2626;
 
-  background:
-    #fef2f2;
+  background: #fef2f2;
 }
-
 
 /* =========================================================
    EMPTY STATE
@@ -12529,13 +11285,11 @@ a {
 
   padding: 40px;
 
-  border:
-    1px dashed #cbd5e1;
+  border: 1px dashed #cbd5e1;
 
   border-radius: 16px;
 
-  background:
-    #ffffff;
+  background: #ffffff;
 }
 
 .dashboard-empty-icon {
@@ -12550,41 +11304,34 @@ a {
 
   border-radius: 18px;
 
-  color:
-    #2563eb;
+  color: #2563eb;
 
-  background:
-    #eff6ff;
+  background: #eff6ff;
 }
 
 .dashboard-empty-state h3 {
-  margin:
-    0 0 7px;
+  margin: 0 0 7px;
 
   font-size: 16px;
 
-  color:
-    #1e293b;
+  color: #1e293b;
 }
 
 .dashboard-empty-state p {
   max-width: 320px;
 
-  margin:
-    0 0 18px;
+  margin: 0 0 18px;
 
   font-size: 13px;
   line-height: 1.6;
 
-  color:
-    #64748b;
+  color: #64748b;
 }
 
 .dashboard-empty-state button {
   height: 40px;
 
-  padding:
-    0 16px;
+  padding: 0 16px;
 
   border: none;
 
@@ -12592,8 +11339,7 @@ a {
 
   color: white;
 
-  background:
-    #2563eb;
+  background: #2563eb;
 
   font-size: 13px;
   font-weight: 600;
@@ -12601,25 +11347,21 @@ a {
   cursor: pointer;
 }
 
-
 /* =========================================================
    TABLET RESPONSIVE
 ========================================================= */
 
 @media (max-width: 1024px) {
-
   .dashboard-page {
     padding: 28px;
   }
 
   .dashboard-overview-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .dashboard-stat-primary {
-    grid-column:
-      span 2;
+    grid-column: span 2;
   }
 
   .dashboard-transaction-row {
@@ -12634,13 +11376,11 @@ a {
   }
 }
 
-
 /* =========================================================
    MOBILE RESPONSIVE
 ========================================================= */
 
 @media (max-width: 700px) {
-
   .dashboard-page {
     padding: 22px 16px;
   }
@@ -12654,13 +11394,11 @@ a {
   }
 
   .dashboard-overview-grid {
-    grid-template-columns:
-      1fr;
+    grid-template-columns: 1fr;
   }
 
   .dashboard-stat-primary {
-    grid-column:
-      auto;
+    grid-column: auto;
   }
 
   .dashboard-section-header {
@@ -12674,8 +11412,7 @@ a {
   }
 
   .dashboard-wallet-grid {
-    grid-template-columns:
-      1fr;
+    grid-template-columns: 1fr;
   }
 
   .dashboard-transaction-row {
@@ -12685,13 +11422,11 @@ a {
 
     gap: 14px;
 
-    padding:
-      18px;
+    padding: 18px;
   }
 
   .dashboard-transaction-amount {
-    grid-column:
-      2;
+    grid-column: 2;
 
     align-items: flex-start;
   }
@@ -12711,7 +11446,6 @@ a {
   padding: 8px 0 40px;
 }
 
-
 /* =========================================================
    WALLET PAGE HEADER
 ========================================================= */
@@ -12726,29 +11460,24 @@ a {
 
   margin-bottom: 26px;
 
-  background:
-    linear-gradient(
-      135deg,
-      rgba(37, 99, 235, 0.08),
-      rgba(255, 255, 255, 0.95)
-    );
+  background: linear-gradient(
+    135deg,
+    rgba(37, 99, 235, 0.08),
+    rgba(255, 255, 255, 0.95)
+  );
 
   border: 1px solid rgba(37, 99, 235, 0.12);
 
   border-radius: 20px;
 
-  box-shadow:
-    0 10px 30px
-    rgba(15, 23, 42, 0.05);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
 }
-
 
 .wallets-header-content {
   display: flex;
   align-items: center;
   gap: 18px;
 }
-
 
 .wallets-header-icon {
   width: 56px;
@@ -12762,20 +11491,12 @@ a {
 
   color: white;
 
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #1d4ed8
-    );
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
 
   border-radius: 16px;
 
-  box-shadow:
-    0 10px 22px
-    rgba(37, 99, 235, 0.25);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.25);
 }
-
 
 .page-eyebrow {
   font-size: 11px;
@@ -12791,7 +11512,6 @@ a {
   margin-bottom: 5px;
 }
 
-
 .wallets-page-header h1 {
   margin: 0;
 
@@ -12803,7 +11523,6 @@ a {
 
   color: #0f172a;
 }
-
 
 .wallets-page-header p {
   margin: 7px 0 0;
@@ -12817,7 +11536,6 @@ a {
   color: #64748b;
 }
 
-
 .wallets-header-actions {
   display: flex;
   align-items: center;
@@ -12825,7 +11543,6 @@ a {
 
   flex-shrink: 0;
 }
-
 
 /* =========================================================
    BUTTONS
@@ -12859,55 +11576,33 @@ a {
     border-color 0.2s ease;
 }
 
-
 .wallet-primary-button {
   color: white;
 
   border: none;
 
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #1d4ed8
-    );
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
 
-  box-shadow:
-    0 8px 18px
-    rgba(37, 99, 235, 0.22);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
 }
-
 
 .wallet-primary-button:hover:not(:disabled) {
   transform: translateY(-1px);
 
-  background:
-    linear-gradient(
-      135deg,
-      #1d4ed8,
-      #1e40af
-    );
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
 
-  box-shadow:
-    0 12px 24px
-    rgba(37, 99, 235, 0.3);
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.3);
 }
-
 
 .wallet-secondary-button {
   color: #334155;
 
   background: white;
 
-  border:
-    1px solid
-    #dbe3ef;
+  border: 1px solid #dbe3ef;
 
-  box-shadow:
-    0 4px 12px
-    rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
 }
-
 
 .wallet-secondary-button:hover:not(:disabled) {
   color: #2563eb;
@@ -12919,7 +11614,6 @@ a {
   transform: translateY(-1px);
 }
 
-
 .wallet-primary-button:disabled,
 .wallet-secondary-button:disabled {
   opacity: 0.65;
@@ -12929,20 +11623,15 @@ a {
   transform: none;
 }
 
-
 .spin {
-  animation:
-    wallet-spin
-    0.8s linear infinite;
+  animation: wallet-spin 0.8s linear infinite;
 }
-
 
 @keyframes wallet-spin {
   to {
     transform: rotate(360deg);
   }
 }
-
 
 /* =========================================================
    ALERTS
@@ -12965,7 +11654,6 @@ a {
   font-weight: 500;
 }
 
-
 .wallet-alert button {
   display: flex;
   align-items: center;
@@ -12983,38 +11671,29 @@ a {
   border-radius: 8px;
 }
 
-
 .wallet-alert-error {
   color: #b91c1c;
 
   background: #fef2f2;
 
-  border:
-    1px solid
-    #fecaca;
+  border: 1px solid #fecaca;
 }
-
 
 .wallet-alert-error button {
   color: #dc2626;
 }
-
 
 .wallet-alert-success {
   color: #166534;
 
   background: #f0fdf4;
 
-  border:
-    1px solid
-    #bbf7d0;
+  border: 1px solid #bbf7d0;
 }
-
 
 .wallet-alert-success button {
   color: #16a34a;
 }
-
 
 /* =========================================================
    WALLET SUMMARY GRID
@@ -13023,14 +11702,12 @@ a {
 .wallet-summary-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 
   gap: 18px;
 
   margin-bottom: 30px;
 }
-
 
 .wallet-summary-card {
   position: relative;
@@ -13047,15 +11724,11 @@ a {
 
   background: white;
 
-  border:
-    1px solid
-    #e2e8f0;
+  border: 1px solid #e2e8f0;
 
   border-radius: 18px;
 
-  box-shadow:
-    0 8px 25px
-    rgba(15, 23, 42, 0.045);
+  box-shadow: 0 8px 25px rgba(15, 23, 42, 0.045);
 
   transition:
     transform 0.25s ease,
@@ -13063,35 +11736,23 @@ a {
     border-color 0.25s ease;
 }
 
-
 .wallet-summary-card:hover {
   transform: translateY(-3px);
 
   border-color: #cbd5e1;
 
-  box-shadow:
-    0 16px 32px
-    rgba(15, 23, 42, 0.08);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
 }
-
 
 .wallet-summary-primary {
   color: white;
 
   border: none;
 
-  background:
-    linear-gradient(
-      135deg,
-      #1d4ed8,
-      #2563eb
-    );
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
 
-  box-shadow:
-    0 14px 30px
-    rgba(37, 99, 235, 0.22);
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.22);
 }
-
 
 .wallet-summary-primary::after {
   content: '';
@@ -13106,10 +11767,8 @@ a {
 
   border-radius: 50%;
 
-  background:
-    rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08);
 }
-
 
 .wallet-summary-icon {
   position: relative;
@@ -13128,20 +11787,14 @@ a {
 
   border-radius: 14px;
 
-  background:
-    rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.18);
 }
 
-
-.wallet-summary-card:not(
-  .wallet-summary-primary
-)
-.wallet-summary-icon {
+.wallet-summary-card:not(.wallet-summary-primary) .wallet-summary-icon {
   color: #2563eb;
 
   background: #eff6ff;
 }
-
 
 .wallet-summary-icon.summary-blue {
   color: #2563eb !important;
@@ -13149,20 +11802,17 @@ a {
   background: #eff6ff !important;
 }
 
-
 .wallet-summary-icon.summary-green {
   color: #059669 !important;
 
   background: #ecfdf5 !important;
 }
 
-
 .wallet-summary-icon.summary-purple {
   color: #7c3aed !important;
 
   background: #f5f3ff !important;
 }
-
 
 .wallet-summary-content {
   position: relative;
@@ -13172,7 +11822,6 @@ a {
   flex-direction: column;
 }
 
-
 .wallet-summary-content span {
   font-size: 12px;
 
@@ -13181,15 +11830,10 @@ a {
   color: #64748b;
 }
 
-
-.wallet-summary-primary
-.wallet-summary-content span,
-.wallet-summary-primary
-.wallet-summary-content small {
-  color:
-    rgba(255, 255, 255, 0.72);
+.wallet-summary-primary .wallet-summary-content span,
+.wallet-summary-primary .wallet-summary-content small {
+  color: rgba(255, 255, 255, 0.72);
 }
-
 
 .wallet-summary-content strong {
   margin-top: 6px;
@@ -13203,12 +11847,9 @@ a {
   color: #0f172a;
 }
 
-
-.wallet-summary-primary
-.wallet-summary-content strong {
+.wallet-summary-primary .wallet-summary-content strong {
   color: white;
 }
-
 
 .wallet-summary-content small {
   margin-top: 5px;
@@ -13217,7 +11858,6 @@ a {
 
   color: #94a3b8;
 }
-
 
 /* =========================================================
    WALLET CONTENT SECTION
@@ -13228,17 +11868,12 @@ a {
 
   background: white;
 
-  border:
-    1px solid
-    #e2e8f0;
+  border: 1px solid #e2e8f0;
 
   border-radius: 20px;
 
-  box-shadow:
-    0 8px 30px
-    rgba(15, 23, 42, 0.04);
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.04);
 }
-
 
 .wallets-section-header {
   display: flex;
@@ -13251,11 +11886,8 @@ a {
 
   padding-bottom: 22px;
 
-  border-bottom:
-    1px solid
-    #edf1f6;
+  border-bottom: 1px solid #edf1f6;
 }
-
 
 .wallets-section-header h2 {
   margin: 0;
@@ -13267,7 +11899,6 @@ a {
   color: #0f172a;
 }
 
-
 .wallets-section-header p {
   margin: 6px 0 0;
 
@@ -13275,7 +11906,6 @@ a {
 
   color: #64748b;
 }
-
 
 .wallet-count-badge {
   display: inline-flex;
@@ -13290,9 +11920,7 @@ a {
 
   background: #eff6ff;
 
-  border:
-    1px solid
-    #dbeafe;
+  border: 1px solid #dbeafe;
 
   border-radius: 999px;
 
@@ -13303,7 +11931,6 @@ a {
   white-space: nowrap;
 }
 
-
 /* =========================================================
    WALLET GRID
 ========================================================= */
@@ -13311,12 +11938,10 @@ a {
 .fin-wallet-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 
   gap: 20px;
 }
-
 
 /* =========================================================
    WALLET CARD
@@ -13327,16 +11952,9 @@ a {
 
   padding: 22px;
 
-  background:
-    linear-gradient(
-      180deg,
-      #ffffff,
-      #fbfdff
-    );
+  background: linear-gradient(180deg, #ffffff, #fbfdff);
 
-  border:
-    1px solid
-    #e2e8f0;
+  border: 1px solid #e2e8f0;
 
   border-radius: 18px;
 
@@ -13347,7 +11965,6 @@ a {
     box-shadow 0.25s ease,
     border-color 0.25s ease;
 }
-
 
 .fin-wallet-card::before {
   content: '';
@@ -13360,35 +11977,24 @@ a {
 
   width: 4px;
 
-  background:
-    linear-gradient(
-      180deg,
-      #2563eb,
-      #60a5fa
-    );
+  background: linear-gradient(180deg, #2563eb, #60a5fa);
 
   opacity: 0;
 
-  transition:
-    opacity 0.25s ease;
+  transition: opacity 0.25s ease;
 }
-
 
 .fin-wallet-card:hover {
   transform: translateY(-4px);
 
   border-color: #bfdbfe;
 
-  box-shadow:
-    0 18px 38px
-    rgba(15, 23, 42, 0.08);
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
 }
-
 
 .fin-wallet-card:hover::before {
   opacity: 1;
 }
-
 
 /* =========================================================
    WALLET CARD TOP
@@ -13402,14 +12008,12 @@ a {
   gap: 16px;
 }
 
-
 .fin-wallet-identity {
   display: flex;
   align-items: center;
 
   gap: 12px;
 }
-
 
 .fin-wallet-currency-icon {
   width: 46px;
@@ -13428,62 +12032,37 @@ a {
   font-weight: 700;
 }
 
-
 /* NGN */
 
 .currency-ngn {
   color: #047857;
 
-  background:
-    linear-gradient(
-      135deg,
-      #d1fae5,
-      #ecfdf5
-    );
+  background: linear-gradient(135deg, #d1fae5, #ecfdf5);
 }
-
 
 /* USD */
 
 .currency-usd {
   color: #2563eb;
 
-  background:
-    linear-gradient(
-      135deg,
-      #dbeafe,
-      #eff6ff
-    );
+  background: linear-gradient(135deg, #dbeafe, #eff6ff);
 }
-
 
 /* GBP */
 
 .currency-gbp {
   color: #7c3aed;
 
-  background:
-    linear-gradient(
-      135deg,
-      #ede9fe,
-      #f5f3ff
-    );
+  background: linear-gradient(135deg, #ede9fe, #f5f3ff);
 }
-
 
 /* EUR */
 
 .currency-eur {
   color: #b45309;
 
-  background:
-    linear-gradient(
-      135deg,
-      #fef3c7,
-      #fffbeb
-    );
+  background: linear-gradient(135deg, #fef3c7, #fffbeb);
 }
-
 
 .fin-wallet-identity h3 {
   margin: 0;
@@ -13495,7 +12074,6 @@ a {
   color: #0f172a;
 }
 
-
 .fin-wallet-identity span {
   display: block;
 
@@ -13505,7 +12083,6 @@ a {
 
   color: #64748b;
 }
-
 
 /* =========================================================
    WALLET STATUS
@@ -13530,39 +12107,29 @@ a {
   text-transform: uppercase;
 }
 
-
 .fin-wallet-status.active {
   color: #047857;
 
   background: #ecfdf5;
 
-  border:
-    1px solid
-    #bbf7d0;
+  border: 1px solid #bbf7d0;
 }
-
 
 .fin-wallet-status.inactive {
   color: #b45309;
 
   background: #fffbeb;
 
-  border:
-    1px solid
-    #fde68a;
+  border: 1px solid #fde68a;
 }
-
 
 .fin-wallet-status.suspended {
   color: #b91c1c;
 
   background: #fef2f2;
 
-  border:
-    1px solid
-    #fecaca;
+  border: 1px solid #fecaca;
 }
-
 
 .status-dot {
   width: 6px;
@@ -13573,7 +12140,6 @@ a {
   background: currentColor;
 }
 
-
 /* =========================================================
    WALLET BALANCE
 ========================================================= */
@@ -13581,7 +12147,6 @@ a {
 .fin-wallet-balance {
   margin-top: 28px;
 }
-
 
 .fin-wallet-balance span {
   display: block;
@@ -13599,7 +12164,6 @@ a {
   color: #94a3b8;
 }
 
-
 .fin-wallet-balance h2 {
   margin: 0;
 
@@ -13614,7 +12178,6 @@ a {
   word-break: break-word;
 }
 
-
 /* =========================================================
    WALLET META
 ========================================================= */
@@ -13622,14 +12185,12 @@ a {
 .fin-wallet-meta {
   display: grid;
 
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 
   gap: 12px;
 
   margin-top: 24px;
 }
-
 
 .fin-wallet-meta-item {
   display: flex;
@@ -13644,7 +12205,6 @@ a {
   border-radius: 10px;
 }
 
-
 .fin-wallet-meta-item span {
   font-size: 10px;
 
@@ -13655,7 +12215,6 @@ a {
   color: #94a3b8;
 }
 
-
 .fin-wallet-meta-item strong {
   font-size: 12px;
 
@@ -13663,7 +12222,6 @@ a {
 
   color: #334155;
 }
-
 
 /* =========================================================
    WALLET DIVIDER
@@ -13677,7 +12235,6 @@ a {
   background: #edf1f6;
 }
 
-
 /* =========================================================
    WALLET ACTIONS
 ========================================================= */
@@ -13685,12 +12242,10 @@ a {
 .fin-wallet-actions {
   display: grid;
 
-  grid-template-columns:
-    repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 
   gap: 6px;
 }
-
 
 .fin-wallet-action {
   display: flex;
@@ -13726,7 +12281,6 @@ a {
     transform 0.2s ease;
 }
 
-
 .fin-wallet-action:hover {
   color: #2563eb;
 
@@ -13735,11 +12289,9 @@ a {
   transform: translateY(-1px);
 }
 
-
 .fin-wallet-action svg {
   stroke-width: 1.8;
 }
-
 
 /* =========================================================
    LOADING STATE
@@ -13756,25 +12308,18 @@ a {
   text-align: center;
 }
 
-
 .wallet-loading-spinner {
   width: 42px;
   height: 42px;
 
   border-radius: 50%;
 
-  border:
-    3px solid
-    #dbeafe;
+  border: 3px solid #dbeafe;
 
-  border-top-color:
-    #2563eb;
+  border-top-color: #2563eb;
 
-  animation:
-    wallet-spin
-    0.8s linear infinite;
+  animation: wallet-spin 0.8s linear infinite;
 }
-
 
 .wallets-loading-state h3 {
   margin: 18px 0 7px;
@@ -13784,7 +12329,6 @@ a {
   color: #1e293b;
 }
 
-
 .wallets-loading-state p {
   margin: 0;
 
@@ -13792,7 +12336,6 @@ a {
 
   color: #64748b;
 }
-
 
 /* =========================================================
    EMPTY STATE
@@ -13813,7 +12356,6 @@ a {
   text-align: center;
 }
 
-
 .empty-wallet-icon {
   width: 76px;
   height: 76px;
@@ -13831,7 +12373,6 @@ a {
   border-radius: 22px;
 }
 
-
 .wallets-empty-state h3 {
   margin: 0;
 
@@ -13841,7 +12382,6 @@ a {
 
   color: #0f172a;
 }
-
 
 .wallets-empty-state p {
   margin: 10px 0 22px;
@@ -13854,7 +12394,6 @@ a {
 
   color: #64748b;
 }
-
 
 /* =========================================================
    WALLET MODAL OVERLAY
@@ -13873,17 +12412,12 @@ a {
 
   padding: 20px;
 
-  background:
-    rgba(15, 23, 42, 0.58);
+  background: rgba(15, 23, 42, 0.58);
 
-  backdrop-filter:
-    blur(7px);
+  backdrop-filter: blur(7px);
 
-  animation:
-    wallet-overlay-in
-    0.2s ease;
+  animation: wallet-overlay-in 0.2s ease;
 }
-
 
 @keyframes wallet-overlay-in {
   from {
@@ -13894,7 +12428,6 @@ a {
     opacity: 1;
   }
 }
-
 
 /* =========================================================
    WALLET MODAL
@@ -13913,34 +12446,24 @@ a {
 
   border-radius: 22px;
 
-  box-shadow:
-    0 30px 70px
-    rgba(15, 23, 42, 0.28);
+  box-shadow: 0 30px 70px rgba(15, 23, 42, 0.28);
 
-  animation:
-    wallet-modal-in
-    0.25s ease;
+  animation: wallet-modal-in 0.25s ease;
 }
-
 
 @keyframes wallet-modal-in {
   from {
     opacity: 0;
 
-    transform:
-      translateY(16px)
-      scale(0.98);
+    transform: translateY(16px) scale(0.98);
   }
 
   to {
     opacity: 1;
 
-    transform:
-      translateY(0)
-      scale(1);
+    transform: translateY(0) scale(1);
   }
 }
-
 
 /* =========================================================
    MODAL HEADER
@@ -13955,11 +12478,8 @@ a {
 
   padding: 26px 28px 22px;
 
-  border-bottom:
-    1px solid
-    #edf1f6;
+  border-bottom: 1px solid #edf1f6;
 }
-
 
 .modal-eyebrow {
   display: block;
@@ -13977,7 +12497,6 @@ a {
   color: #2563eb;
 }
 
-
 .wallet-modal-header h2 {
   margin: 0;
 
@@ -13988,7 +12507,6 @@ a {
   color: #0f172a;
 }
 
-
 .wallet-modal-header p {
   margin: 8px 0 0;
 
@@ -13998,7 +12516,6 @@ a {
 
   color: #64748b;
 }
-
 
 .wallet-modal-close {
   width: 38px;
@@ -14025,13 +12542,11 @@ a {
     background 0.2s ease;
 }
 
-
 .wallet-modal-close:hover:not(:disabled) {
   color: #dc2626;
 
   background: #fef2f2;
 }
-
 
 /* =========================================================
    SELECTED WALLET
@@ -14040,8 +12555,7 @@ a {
 .modal-selected-wallet {
   display: grid;
 
-  grid-template-columns:
-    auto 1fr auto;
+  grid-template-columns: auto 1fr auto;
 
   align-items: center;
 
@@ -14053,13 +12567,10 @@ a {
 
   background: #f8fafc;
 
-  border:
-    1px solid
-    #e2e8f0;
+  border: 1px solid #e2e8f0;
 
   border-radius: 14px;
 }
-
 
 .modal-wallet-icon {
   width: 44px;
@@ -14076,7 +12587,6 @@ a {
   font-weight: 700;
 }
 
-
 .modal-selected-wallet span,
 .modal-wallet-balance span {
   display: block;
@@ -14090,7 +12600,6 @@ a {
   color: #94a3b8;
 }
 
-
 .modal-selected-wallet strong,
 .modal-wallet-balance strong {
   display: block;
@@ -14102,11 +12611,9 @@ a {
   color: #1e293b;
 }
 
-
 .modal-wallet-balance {
   text-align: right;
 }
-
 
 /* =========================================================
    MODAL BODY
@@ -14116,14 +12623,12 @@ a {
   padding: 24px 28px;
 }
 
-
 .wallet-form-group {
   display: flex;
   flex-direction: column;
 
   gap: 8px;
 }
-
 
 .wallet-form-group label {
   font-size: 12px;
@@ -14133,23 +12638,19 @@ a {
   color: #334155;
 }
 
-
 .wallet-form-group select,
 .wallet-form-group input {
   width: 100%;
 
   height: 48px;
 
-  padding:
-    0 14px;
+  padding: 0 14px;
 
   color: #1e293b;
 
   background: white;
 
-  border:
-    1px solid
-    #dbe3ef;
+  border: 1px solid #dbe3ef;
 
   border-radius: 10px;
 
@@ -14164,16 +12665,12 @@ a {
     box-shadow 0.2s ease;
 }
 
-
 .wallet-form-group select:focus,
 .wallet-form-group input:focus {
   border-color: #2563eb;
 
-  box-shadow:
-    0 0 0 4px
-    rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
-
 
 .wallet-form-group small {
   font-size: 11px;
@@ -14183,11 +12680,9 @@ a {
   color: #94a3b8;
 }
 
-
 .wallet-form-warning {
   color: #b45309 !important;
 }
-
 
 /* =========================================================
    AMOUNT INPUT
@@ -14199,7 +12694,6 @@ a {
   display: flex;
   align-items: center;
 }
-
 
 .wallet-amount-input span {
   position: absolute;
@@ -14215,7 +12709,6 @@ a {
   color: #64748b;
 }
 
-
 .wallet-amount-input input {
   padding-left: 42px;
 
@@ -14223,7 +12716,6 @@ a {
 
   font-weight: 600;
 }
-
 
 /* =========================================================
    MODAL ALERTS
@@ -14241,28 +12733,21 @@ a {
   line-height: 1.5;
 }
 
-
 .wallet-modal-alert.error {
   color: #b91c1c;
 
   background: #fef2f2;
 
-  border:
-    1px solid
-    #fecaca;
+  border: 1px solid #fecaca;
 }
-
 
 .wallet-modal-alert.success {
   color: #166534;
 
   background: #f0fdf4;
 
-  border:
-    1px solid
-    #bbf7d0;
+  border: 1px solid #bbf7d0;
 }
-
 
 /* =========================================================
    MODAL FOOTER
@@ -14276,69 +12761,51 @@ a {
 
   padding: 20px 28px 26px;
 
-  border-top:
-    1px solid
-    #edf1f6;
+  border-top: 1px solid #edf1f6;
 }
-
 
 /* =========================================================
    TABLET RESPONSIVENESS
 ========================================================= */
 
 @media (max-width: 1200px) {
-
   .wallet-summary-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
 
   .fin-wallet-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
 }
-
 
 /* =========================================================
    MOBILE / TABLET RESPONSIVENESS
 ========================================================= */
 
 @media (max-width: 900px) {
-
   .wallets-page-header {
     flex-direction: column;
 
     align-items: flex-start;
   }
 
-
   .wallets-header-actions {
     width: 100%;
   }
-
 
   .wallets-header-actions button {
     flex: 1;
   }
 
-
   .fin-wallet-grid {
-    grid-template-columns:
-      1fr;
+    grid-template-columns: 1fr;
   }
-
 }
 
-
 @media (max-width: 640px) {
-
   .wallets-page {
     padding-bottom: 20px;
   }
-
 
   .wallets-page-header {
     padding: 22px 18px;
@@ -14346,11 +12813,9 @@ a {
     border-radius: 16px;
   }
 
-
   .wallets-header-content {
     align-items: flex-start;
   }
-
 
   .wallets-header-icon {
     width: 48px;
@@ -14359,24 +12824,19 @@ a {
     border-radius: 14px;
   }
 
-
   .wallets-page-header h1 {
     font-size: 23px;
   }
-
 
   .wallets-page-header p {
     font-size: 13px;
   }
 
-
   .wallet-summary-grid {
-    grid-template-columns:
-      1fr;
+    grid-template-columns: 1fr;
 
     gap: 14px;
   }
-
 
   .wallets-content-section {
     padding: 20px 16px;
@@ -14384,98 +12844,73 @@ a {
     border-radius: 16px;
   }
 
-
   .wallets-section-header {
     align-items: flex-start;
 
     flex-direction: column;
   }
 
-
   .wallet-count-badge {
     align-self: flex-start;
   }
-
 
   .fin-wallet-card {
     padding: 18px;
   }
 
-
   .fin-wallet-balance h2 {
     font-size: 22px;
   }
 
-
   .modal-selected-wallet {
-    grid-template-columns:
-      auto 1fr;
+    grid-template-columns: auto 1fr;
 
-    margin:
-      18px 18px 0;
+    margin: 18px 18px 0;
   }
 
-
   .modal-wallet-balance {
-    grid-column:
-      1 / -1;
+    grid-column: 1 / -1;
 
     text-align: left;
 
     padding-top: 12px;
 
-    border-top:
-      1px solid
-      #e2e8f0;
+    border-top: 1px solid #e2e8f0;
   }
-
 
   .wallet-modal-header {
-    padding:
-      22px 20px 18px;
+    padding: 22px 20px 18px;
   }
-
 
   .wallet-modal-body {
-    padding:
-      20px;
+    padding: 20px;
   }
 
-
   .wallet-modal-footer {
-    padding:
-      18px 20px 22px;
+    padding: 18px 20px 22px;
 
     flex-direction: column-reverse;
   }
 
-
   .wallet-modal-footer button {
     width: 100%;
   }
-
 }
 
-
 @media (max-width: 480px) {
-
   .wallets-header-actions {
     flex-direction: column;
   }
-
 
   .wallets-header-actions button {
     width: 100%;
   }
 
-
   .fin-wallet-actions {
-    grid-template-columns:
-      repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr);
 
     gap: 8px;
   }
-
 
   .fin-wallet-action {
     flex-direction: row;
@@ -14483,16 +12918,13 @@ a {
     min-height: 44px;
   }
 
-
   .wallet-summary-card {
     min-height: 110px;
   }
 
-
   .wallet-summary-content strong {
     font-size: 20px;
   }
-
 }
 /* =========================================================
    WALLET DETAILS PAGE
@@ -14624,11 +13056,7 @@ a {
   align-items: center;
   justify-content: center;
   font-size: 30px;
-  background: linear-gradient(
-    135deg,
-    #eff6ff,
-    #dbeafe
-  );
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
   border: 1px solid #bfdbfe;
 }
 
@@ -14724,13 +13152,7 @@ a {
 ========================================================= */
 
 .wallet-detail-balance-card {
-  background:
-    linear-gradient(
-      135deg,
-      #173b8f 0%,
-      #2563eb 55%,
-      #1d4ed8 100%
-    );
+  background: linear-gradient(135deg, #173b8f 0%, #2563eb 55%, #1d4ed8 100%);
   border-radius: 20px;
   padding: 30px;
   color: white;
@@ -14739,8 +13161,7 @@ a {
   gap: 32px;
   position: relative;
   overflow: hidden;
-  box-shadow:
-    0 18px 45px rgba(37, 99, 235, 0.22);
+  box-shadow: 0 18px 45px rgba(37, 99, 235, 0.22);
 }
 
 .wallet-detail-balance-card::before {
@@ -14820,8 +13241,7 @@ a {
 
 .wallet-detail-stats-grid {
   display: grid;
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
   margin-top: 22px;
 }
@@ -14834,8 +13254,7 @@ a {
   display: flex;
   align-items: center;
   gap: 14px;
-  box-shadow:
-    0 6px 18px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
 }
 
 .wallet-detail-stat-icon {
@@ -14911,8 +13330,7 @@ a {
 
 .wallet-detail-actions-grid {
   display: grid;
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
 }
 
@@ -14932,8 +13350,7 @@ a {
 .wallet-detail-action-card:hover {
   transform: translateY(-3px);
   border-color: #93c5fd;
-  box-shadow:
-    0 14px 30px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
 }
 
 .wallet-detail-action-icon {
@@ -14986,8 +13403,7 @@ a {
   border: 1px solid #e2e8f0;
   border-radius: 18px;
   overflow: hidden;
-  box-shadow:
-    0 8px 24px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
 }
 
 .wallet-detail-history-header {
@@ -15199,8 +13615,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  background:
-    rgba(15, 23, 42, 0.55);
+  background: rgba(15, 23, 42, 0.55);
   backdrop-filter: blur(6px);
 }
 
@@ -15212,24 +13627,19 @@ a {
   background: #ffffff;
   border-radius: 20px;
   padding: 26px;
-  box-shadow:
-    0 25px 70px rgba(15, 23, 42, 0.25);
-  animation:
-    wallet-detail-modal-enter
-    0.2s ease;
+  box-shadow: 0 25px 70px rgba(15, 23, 42, 0.25);
+  animation: wallet-detail-modal-enter 0.2s ease;
 }
 
 @keyframes wallet-detail-modal-enter {
   from {
     opacity: 0;
-    transform: translateY(12px)
-      scale(0.98);
+    transform: translateY(12px) scale(0.98);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0)
-      scale(1);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -15344,9 +13754,7 @@ a {
 .wallet-detail-form-field input:focus,
 .wallet-detail-form-field select:focus {
   border-color: #2563eb;
-  box-shadow:
-    0 0 0 3px
-    rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .wallet-detail-input-wrapper {
@@ -15496,8 +13904,7 @@ a {
 
   .wallet-detail-stats-grid,
   .wallet-detail-actions-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -15592,7 +13999,6 @@ a {
   padding: 32px;
 }
 
-
 /* =========================================================
    HERO / PAGE HEADER
 ========================================================= */
@@ -15607,18 +14013,16 @@ a {
 
   margin-bottom: 28px;
 
-  background:
-    linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.96),
-      rgba(248, 250, 255, 0.96)
-    );
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.96),
+    rgba(248, 250, 255, 0.96)
+  );
 
   border: 1px solid var(--border-color);
   border-radius: 18px;
 
-  box-shadow:
-    0 10px 30px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
 }
 
 .transactions-header-content {
@@ -15639,16 +14043,9 @@ a {
 
   color: #ffffff;
 
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #1d4ed8
-    );
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
 
-  box-shadow:
-    0 8px 20px
-    rgba(37, 99, 235, 0.25);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
 }
 
 .page-eyebrow {
@@ -15680,7 +14077,6 @@ a {
   color: #64748b;
 }
 
-
 /* =========================================================
    TRANSACTION SUMMARY
 ========================================================= */
@@ -15688,8 +14084,7 @@ a {
 .transaction-summary-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 
   gap: 18px;
 
@@ -15708,9 +14103,7 @@ a {
   border: 1px solid #e2e8f0;
   border-radius: 16px;
 
-  box-shadow:
-    0 4px 15px
-    rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
 
   transition:
     transform 0.2s ease,
@@ -15720,9 +14113,7 @@ a {
 .transaction-summary-card:hover {
   transform: translateY(-3px);
 
-  box-shadow:
-    0 12px 25px
-    rgba(15, 23, 42, 0.08);
+  box-shadow: 0 12px 25px rgba(15, 23, 42, 0.08);
 }
 
 .summary-icon {
@@ -15787,7 +14178,6 @@ a {
   color: #94a3b8;
 }
 
-
 /* =========================================================
    FILTER CARD
 ========================================================= */
@@ -15802,9 +14192,7 @@ a {
   border: 1px solid #e2e8f0;
   border-radius: 18px;
 
-  box-shadow:
-    0 6px 20px
-    rgba(15, 23, 42, 0.04);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04);
 }
 
 .filter-card-header {
@@ -15845,7 +14233,6 @@ a {
   color: #2563eb;
   background: #eff6ff;
 }
-
 
 /* =========================================================
    FILTERS
@@ -15890,9 +14277,7 @@ a {
 
   background: #ffffff;
 
-  box-shadow:
-    0 0 0 4px
-    rgba(37, 99, 235, 0.08);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
 }
 
 .transaction-search input {
@@ -15926,12 +14311,7 @@ a {
 
   color: #ffffff;
 
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #1d4ed8
-    );
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
 
   transition:
     opacity 0.2s ease,
@@ -15941,7 +14321,6 @@ a {
 .transaction-search button:hover {
   opacity: 0.92;
 }
-
 
 /* =========================================================
    FILTER SELECTS
@@ -15988,7 +14367,6 @@ a {
   cursor: pointer;
 }
 
-
 /* =========================================================
    TABLE CARD
 ========================================================= */
@@ -16001,9 +14379,7 @@ a {
   border: 1px solid #e2e8f0;
   border-radius: 18px;
 
-  box-shadow:
-    0 6px 20px
-    rgba(15, 23, 42, 0.04);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04);
 }
 
 .transactions-table-wrapper {
@@ -16053,8 +14429,7 @@ a {
 }
 
 .transactions-table tbody tr {
-  transition:
-    background 0.2s ease;
+  transition: background 0.2s ease;
 }
 
 .transactions-table tbody tr:hover {
@@ -16064,7 +14439,6 @@ a {
 .transactions-table tbody tr:last-child td {
   border-bottom: none;
 }
-
 
 /* =========================================================
    TRANSACTION TYPE
@@ -16125,7 +14499,6 @@ a {
   color: #94a3b8;
 }
 
-
 /* =========================================================
    REFERENCE / DATE / AMOUNT
 ========================================================= */
@@ -16140,9 +14513,7 @@ a {
   text-overflow: ellipsis;
   white-space: nowrap;
 
-  font-family:
-    var(--font-geist-mono),
-    monospace;
+  font-family: var(--font-geist-mono), monospace;
 
   font-size: 11px;
 
@@ -16161,7 +14532,6 @@ a {
 
   color: #172033;
 }
-
 
 /* =========================================================
    STATUS BADGES
@@ -16203,7 +14573,6 @@ a {
   background: #f3e8ff;
 }
 
-
 /* =========================================================
    VIEW BUTTON
 ========================================================= */
@@ -16227,8 +14596,7 @@ a {
   color: #2563eb;
   background: #ffffff;
 
-  transition:
-    all 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .view-transaction-button:hover {
@@ -16237,11 +14605,8 @@ a {
   color: #ffffff;
   background: #2563eb;
 
-  box-shadow:
-    0 5px 12px
-    rgba(37, 99, 235, 0.18);
+  box-shadow: 0 5px 12px rgba(37, 99, 235, 0.18);
 }
-
 
 /* =========================================================
    LOADING STATE
@@ -16268,8 +14633,7 @@ a {
   border-top-color: #2563eb;
   border-radius: 50%;
 
-  animation:
-    transaction-spin 0.8s linear infinite;
+  animation: transaction-spin 0.8s linear infinite;
 }
 
 .transactions-loading h3 {
@@ -16285,7 +14649,6 @@ a {
 
   font-size: 13px;
 }
-
 
 /* =========================================================
    EMPTY STATE
@@ -16310,7 +14673,6 @@ a {
   color: #2563eb;
   background: #eff6ff;
 }
-
 
 /* =========================================================
    PAGINATION
@@ -16342,8 +14704,7 @@ a {
   color: #475569;
   background: #ffffff;
 
-  transition:
-    all 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .pagination button:hover:not(:disabled) {
@@ -16383,14 +14744,12 @@ a {
   background: #eff6ff;
 }
 
-
 /* =========================================================
    ANIMATIONS
 ========================================================= */
 
 .refresh-spin {
-  animation:
-    transaction-spin 0.8s linear infinite;
+  animation: transaction-spin 0.8s linear infinite;
 }
 
 @keyframes transaction-spin {
@@ -16403,16 +14762,13 @@ a {
   }
 }
 
-
 /* =========================================================
    RESPONSIVE
 ========================================================= */
 
 @media (max-width: 1200px) {
-
   .transaction-summary-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .transaction-filters {
@@ -16435,12 +14791,9 @@ a {
   .filter-select select {
     width: 100%;
   }
-
 }
 
-
 @media (max-width: 768px) {
-
   .transactions-page {
     padding: 20px 16px;
   }
@@ -16484,12 +14837,9 @@ a {
   .filter-select {
     width: 100%;
   }
-
 }
 
-
 @media (max-width: 480px) {
-
   .transactions-page {
     padding: 16px 12px;
   }
@@ -16514,7 +14864,6 @@ a {
   .transaction-search button {
     padding: 0 14px;
   }
-
 }
 /* =========================================================
    TRANSACTION DETAILS PAGE
@@ -16527,7 +14876,6 @@ a {
   padding: 32px;
   animation: pageFadeIn 0.3s ease;
 }
-
 
 /* =========================================================
    PAGE HEADER
@@ -16555,7 +14903,6 @@ a {
   color: #667085;
 }
 
-
 /* =========================================================
    BACK BUTTON
 ========================================================= */
@@ -16582,7 +14929,6 @@ a {
   color: #2563eb;
 }
 
-
 /* =========================================================
    REVERSE BUTTON
 ========================================================= */
@@ -16608,8 +14954,7 @@ a {
 
   cursor: pointer;
 
-  box-shadow:
-    0 6px 14px rgba(220, 38, 38, 0.18);
+  box-shadow: 0 6px 14px rgba(220, 38, 38, 0.18);
 
   transition:
     transform 0.2s ease,
@@ -16621,10 +14966,8 @@ a {
   background: #b91c1c;
   transform: translateY(-1px);
 
-  box-shadow:
-    0 10px 20px rgba(220, 38, 38, 0.24);
+  box-shadow: 0 10px 20px rgba(220, 38, 38, 0.24);
 }
-
 
 /* =========================================================
    SUCCESS MESSAGE
@@ -16663,7 +15006,6 @@ a {
   align-items: center;
 }
 
-
 /* =========================================================
    ERROR MESSAGE
 ========================================================= */
@@ -16701,7 +15043,6 @@ a {
   align-items: center;
 }
 
-
 /* =========================================================
    TRANSACTION SUMMARY CARD
 ========================================================= */
@@ -16717,15 +15058,9 @@ a {
   border: 1px solid #e4e7ec;
   border-radius: 18px;
 
-  background:
-    linear-gradient(
-      135deg,
-      #ffffff 0%,
-      #f8faff 100%
-    );
+  background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
 
-  box-shadow:
-    0 8px 24px rgba(16, 24, 40, 0.06);
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
 }
 
 .transaction-summary-icon {
@@ -16740,17 +15075,11 @@ a {
 
   border-radius: 16px;
 
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #1d4ed8
-    );
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
 
   color: #ffffff;
 
-  box-shadow:
-    0 10px 22px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.2);
 }
 
 .transaction-summary-content {
@@ -16796,7 +15125,6 @@ a {
   word-break: break-all;
 }
 
-
 /* =========================================================
    TRANSACTION DETAILS GRID
 ========================================================= */
@@ -16804,14 +15132,12 @@ a {
 .transaction-details-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 
   gap: 24px;
 
   margin-bottom: 24px;
 }
-
 
 /* =========================================================
    STANDARD TRANSACTION CARD
@@ -16825,8 +15151,7 @@ a {
 
   padding: 24px;
 
-  box-shadow:
-    0 4px 16px rgba(16, 24, 40, 0.04);
+  box-shadow: 0 4px 16px rgba(16, 24, 40, 0.04);
 
   transition:
     transform 0.2s ease,
@@ -16834,10 +15159,8 @@ a {
 }
 
 .transaction-card:hover {
-  box-shadow:
-    0 10px 28px rgba(16, 24, 40, 0.07);
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.07);
 }
-
 
 /* =========================================================
    CARD HEADER
@@ -16864,7 +15187,6 @@ a {
   font-size: 16px;
   font-weight: 700;
 }
-
 
 /* =========================================================
    INFORMATION LIST
@@ -16918,7 +15240,6 @@ a {
   white-space: nowrap;
 }
 
-
 /* =========================================================
    STATUS BADGES
 ========================================================= */
@@ -16949,14 +15270,12 @@ a {
   font-size: 10px;
 }
 
-
 /* COMPLETED */
 
 .status-completed {
   background: #dcfae6;
   color: #067647;
 }
-
 
 /* REVERSED */
 
@@ -16965,14 +15284,12 @@ a {
   color: #92400e;
 }
 
-
 /* FAILED */
 
 .status-failed {
   background: #fee4e2;
   color: #b42318;
 }
-
 
 /* PENDING */
 
@@ -16981,14 +15298,12 @@ a {
   color: #b54708;
 }
 
-
 /* PROCESSING */
 
 .status-processing {
   background: #e0edff;
   color: #175cd3;
 }
-
 
 /* =========================================================
    WALLET MOVEMENT
@@ -17046,7 +15361,6 @@ a {
   color: #2563eb;
 }
 
-
 /* =========================================================
    REVERSED INFORMATION
 ========================================================= */
@@ -17083,7 +15397,6 @@ a {
   color: #a16207;
 }
 
-
 /* =========================================================
    LOADING STATE
 ========================================================= */
@@ -17114,7 +15427,6 @@ a {
     transform: rotate(360deg);
   }
 }
-
 
 /* =========================================================
    ERROR PAGE
@@ -17155,7 +15467,6 @@ a {
   line-height: 1.6;
 }
 
-
 /* =========================================================
    SECONDARY BUTTON
 ========================================================= */
@@ -17191,7 +15502,6 @@ a {
   border-color: #98a2b3;
 }
 
-
 /* =========================================================
    MODAL OVERLAY
 ========================================================= */
@@ -17209,14 +15519,11 @@ a {
 
   padding: 20px;
 
-  background:
-    rgba(15, 23, 42, 0.55);
+  background: rgba(15, 23, 42, 0.55);
 
-  backdrop-filter:
-    blur(4px);
+  backdrop-filter: blur(4px);
 
-  animation:
-    modalFadeIn 0.2s ease;
+  animation: modalFadeIn 0.2s ease;
 }
 
 @keyframes modalFadeIn {
@@ -17228,7 +15535,6 @@ a {
     opacity: 1;
   }
 }
-
 
 /* =========================================================
    REVERSAL MODAL
@@ -17246,26 +15552,20 @@ a {
 
   background: #ffffff;
 
-  box-shadow:
-    0 30px 70px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.25);
 
-  animation:
-    modalSlideUp 0.25s ease;
+  animation: modalSlideUp 0.25s ease;
 }
 
 @keyframes modalSlideUp {
   from {
     opacity: 0;
-    transform:
-      translateY(16px)
-      scale(0.98);
+    transform: translateY(16px) scale(0.98);
   }
 
   to {
     opacity: 1;
-    transform:
-      translateY(0)
-      scale(1);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -17331,7 +15631,6 @@ a {
   line-height: 1.6;
 }
 
-
 /* =========================================================
    REVERSAL WARNING
 ========================================================= */
@@ -17358,7 +15657,6 @@ a {
   line-height: 1.5;
 }
 
-
 /* =========================================================
    REVERSAL AMOUNT
 ========================================================= */
@@ -17379,7 +15677,6 @@ a {
   font-size: 25px;
   font-weight: 700;
 }
-
 
 /* =========================================================
    MODAL ACTIONS
@@ -17445,13 +15742,11 @@ a {
   cursor: not-allowed;
 }
 
-
 /* =========================================================
    TABLET RESPONSIVE
 ========================================================= */
 
 @media (max-width: 900px) {
-
   .transaction-details-page {
     padding: 24px;
   }
@@ -17463,16 +15758,13 @@ a {
   .transaction-summary-card {
     padding: 22px;
   }
-
 }
-
 
 /* =========================================================
    MOBILE RESPONSIVE
 ========================================================= */
 
 @media (max-width: 640px) {
-
   .transaction-details-page {
     padding: 18px;
   }
@@ -17546,7 +15838,6 @@ a {
   .modal-confirm-reversal {
     width: 100%;
   }
-
 }
 /* =========================================================
    LEDGER PAGE
@@ -17632,9 +15923,7 @@ a {
 
   transform: translateY(-1px);
 
-  box-shadow:
-    0 8px 18px
-    rgba(37, 99, 235, 0.08);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.08);
 }
 
 .ledger-refresh-button:disabled {
@@ -17744,9 +16033,7 @@ a {
   border: 1px solid #e4e7ec;
   border-radius: 16px;
 
-  box-shadow:
-    0 4px 14px
-    rgba(16, 24, 40, 0.04);
+  box-shadow: 0 4px 14px rgba(16, 24, 40, 0.04);
 
   transition:
     transform 0.2s ease,
@@ -17759,9 +16046,7 @@ a {
 
   border-color: #d0d5dd;
 
-  box-shadow:
-    0 14px 28px
-    rgba(16, 24, 40, 0.08);
+  box-shadow: 0 14px 28px rgba(16, 24, 40, 0.08);
 }
 
 .ledger-summary-card > div:last-child {
@@ -17852,19 +16137,12 @@ a {
 
   padding: 22px 24px;
 
-  background:
-    linear-gradient(
-      135deg,
-      #ffffff 0%,
-      #f8fbff 100%
-    );
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
 
   border: 1px solid #e4e7ec;
   border-radius: 16px;
 
-  box-shadow:
-    0 4px 14px
-    rgba(16, 24, 40, 0.04);
+  box-shadow: 0 4px 14px rgba(16, 24, 40, 0.04);
 }
 
 .ledger-info-icon {
@@ -17931,9 +16209,7 @@ a {
   border: 1px solid #e4e7ec;
   border-radius: 18px;
 
-  box-shadow:
-    0 6px 20px
-    rgba(16, 24, 40, 0.05);
+  box-shadow: 0 6px 20px rgba(16, 24, 40, 0.05);
 }
 
 .ledger-table-header {
@@ -18104,9 +16380,7 @@ a {
 
   color: #475467;
 
-  font-family:
-    var(--font-geist-mono),
-    monospace;
+  font-family: var(--font-geist-mono), monospace;
 
   font-size: 11px;
   font-weight: 600;
@@ -18308,8 +16582,7 @@ a {
 
 @media (max-width: 1200px) {
   .ledger-summary-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -18427,16 +16700,9 @@ a {
 
   color: #ffffff;
 
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #1d4ed8
-    );
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
 
-  box-shadow:
-    0 10px 25px
-    rgba(37, 99, 235, 0.22);
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.22);
 }
 
 .audit-eyebrow {
@@ -18500,9 +16766,7 @@ a {
   background: #f8fafc;
   border-color: #2563eb;
 
-  box-shadow:
-    0 8px 20px
-    rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
 
   transform: translateY(-1px);
 }
@@ -18512,7 +16776,6 @@ a {
   cursor: not-allowed;
 }
 
-
 /* =========================================================
    STATISTICS
 ========================================================= */
@@ -18520,8 +16783,7 @@ a {
 .audit-stats-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 
   gap: 18px;
 
@@ -18536,9 +16798,7 @@ a {
 
   background: #ffffff;
 
-  box-shadow:
-    0 4px 16px
-    rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
 
   transition:
     transform 0.2s ease,
@@ -18551,9 +16811,7 @@ a {
 
   border-color: #cbd5e1;
 
-  box-shadow:
-    0 14px 30px
-    rgba(15, 23, 42, 0.08);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
 }
 
 .audit-stat-content {
@@ -18623,7 +16881,6 @@ a {
   background: #f5f3ff;
 }
 
-
 /* =========================================================
    AUDIT CARD
 ========================================================= */
@@ -18636,9 +16893,7 @@ a {
 
   background: #ffffff;
 
-  box-shadow:
-    0 8px 24px
-    rgba(15, 23, 42, 0.05);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
 }
 
 .audit-card-header {
@@ -18650,8 +16905,7 @@ a {
 
   gap: 24px;
 
-  border-bottom:
-    1px solid #edf1f5;
+  border-bottom: 1px solid #edf1f5;
 }
 
 .audit-card-header h2 {
@@ -18670,7 +16924,6 @@ a {
 
   color: #64748b;
 }
-
 
 /* =========================================================
    SEARCH & FILTERS
@@ -18709,9 +16962,7 @@ a {
 .audit-search:focus-within {
   border-color: #2563eb;
 
-  box-shadow:
-    0 0 0 3px
-    rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .audit-search input {
@@ -18763,7 +17014,6 @@ a {
   cursor: pointer;
 }
 
-
 /* =========================================================
    TABLE
 ========================================================= */
@@ -18795,15 +17045,13 @@ a {
 
   color: #64748b;
 
-  border-bottom:
-    1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .audit-table td {
   padding: 17px 24px;
 
-  border-bottom:
-    1px solid #edf1f5;
+  border-bottom: 1px solid #edf1f5;
 
   font-size: 13px;
 
@@ -18811,8 +17059,7 @@ a {
 }
 
 .audit-table tbody tr {
-  transition:
-    background 0.2s ease;
+  transition: background 0.2s ease;
 }
 
 .audit-table tbody tr:hover {
@@ -18826,7 +17073,6 @@ a {
 .audit-table-action {
   text-align: right !important;
 }
-
 
 /* =========================================================
    ACTION BADGES
@@ -18871,7 +17117,6 @@ a {
   background: #f1f5f9;
 }
 
-
 /* =========================================================
    ENTITY
 ========================================================= */
@@ -18895,7 +17140,6 @@ a {
 
   color: #94a3b8;
 }
-
 
 /* =========================================================
    USER
@@ -18930,7 +17174,6 @@ a {
   color: #475569;
 }
 
-
 /* =========================================================
    DATE
 ========================================================= */
@@ -18942,7 +17185,6 @@ a {
 
   white-space: nowrap;
 }
-
 
 /* =========================================================
    VIEW BUTTON
@@ -18976,7 +17218,6 @@ a {
   transform: translateY(-1px);
 }
 
-
 /* =========================================================
    LOADING
 ========================================================= */
@@ -19003,7 +17244,6 @@ a {
 
   font-size: 14px;
 }
-
 
 /* =========================================================
    ERROR
@@ -19040,7 +17280,6 @@ a {
 
   color: #b91c1c;
 }
-
 
 /* =========================================================
    EMPTY STATE
@@ -19091,7 +17330,6 @@ a {
   color: #64748b;
 }
 
-
 /* =========================================================
    PAGINATION
 ========================================================= */
@@ -19105,8 +17343,7 @@ a {
 
   gap: 20px;
 
-  border-top:
-    1px solid #edf1f5;
+  border-top: 1px solid #edf1f5;
 }
 
 .audit-pagination p {
@@ -19169,7 +17406,6 @@ a {
   color: #475569;
 }
 
-
 /* =========================================================
    MODAL OVERLAY
 ========================================================= */
@@ -19187,16 +17423,12 @@ a {
 
   padding: 24px;
 
-  background:
-    rgba(15, 23, 42, 0.55);
+  background: rgba(15, 23, 42, 0.55);
 
-  backdrop-filter:
-    blur(5px);
+  backdrop-filter: blur(5px);
 
-  animation:
-    auditFadeIn 0.2s ease;
+  animation: auditFadeIn 0.2s ease;
 }
-
 
 /* =========================================================
    MODAL
@@ -19213,12 +17445,9 @@ a {
 
   background: #ffffff;
 
-  box-shadow:
-    0 30px 80px
-    rgba(15, 23, 42, 0.35);
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.35);
 
-  animation:
-    auditModalIn 0.25s ease;
+  animation: auditModalIn 0.25s ease;
 }
 
 .audit-modal-header {
@@ -19228,8 +17457,7 @@ a {
   align-items: flex-start;
   justify-content: space-between;
 
-  border-bottom:
-    1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .audit-modal-header p {
@@ -19283,7 +17511,6 @@ a {
   transform: rotate(90deg);
 }
 
-
 /* =========================================================
    MODAL BODY
 ========================================================= */
@@ -19295,8 +17522,7 @@ a {
 .audit-details-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 
   gap: 16px;
 }
@@ -19339,7 +17565,6 @@ a {
   grid-column: 1 / -1;
 }
 
-
 /* =========================================================
    METADATA
 ========================================================= */
@@ -19349,8 +17574,7 @@ a {
 
   padding-top: 24px;
 
-  border-top:
-    1px solid #e2e8f0;
+  border-top: 1px solid #e2e8f0;
 }
 
 .audit-metadata-header h3 {
@@ -19381,17 +17605,13 @@ a {
 
   background: #0f172a;
 
-  box-shadow:
-    inset 0 0 0 1px
-    rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .audit-code-block pre {
   margin: 0;
 
-  font-family:
-    'Courier New',
-    monospace;
+  font-family: 'Courier New', monospace;
 
   font-size: 12px;
   line-height: 1.7;
@@ -19402,14 +17622,12 @@ a {
   word-break: break-word;
 }
 
-
 /* =========================================================
    ANIMATIONS
 ========================================================= */
 
 .spin {
-  animation:
-    auditSpin 0.8s linear infinite;
+  animation: auditSpin 0.8s linear infinite;
 }
 
 @keyframes auditSpin {
@@ -19431,19 +17649,14 @@ a {
 @keyframes auditModalIn {
   from {
     opacity: 0;
-    transform:
-      translateY(20px)
-      scale(0.98);
+    transform: translateY(20px) scale(0.98);
   }
 
   to {
     opacity: 1;
-    transform:
-      translateY(0)
-      scale(1);
+    transform: translateY(0) scale(1);
   }
 }
-
 
 /* =========================================================
    RESPONSIVE
@@ -19451,8 +17664,7 @@ a {
 
 @media (max-width: 1100px) {
   .audit-stats-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .audit-card-header {
@@ -19533,8 +17745,7 @@ a {
     max-width: 100%;
     max-height: 92vh;
 
-    border-radius:
-      22px 22px 0 0;
+    border-radius: 22px 22px 0 0;
   }
 
   .audit-modal-header,
@@ -19548,5 +17759,918 @@ a {
 
   .audit-detail-item.full-width {
     grid-column: auto;
+  }
+}
+
+/* =========================================================
+   FINFLOW PAGE STYLE FIXES
+   AUDIT + LEDGER
+========================================================= */
+
+/* =========================================================
+   GENERAL PAGE CONSISTENCY
+========================================================= */
+
+.audit-page,
+.ledger-page {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  color: var(--text-primary);
+}
+
+/* =========================================================
+   AUDIT LOGS PAGE
+========================================================= */
+
+.audit-page {
+  padding: 0;
+}
+
+/* ---------------------------------------------------------
+   AUDIT HEADER
+--------------------------------------------------------- */
+
+.audit-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  margin-bottom: 28px;
+}
+
+.audit-title-row {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  margin-bottom: 8px;
+}
+
+.audit-title-row svg {
+  color: var(--primary);
+}
+
+.audit-title-row h1 {
+  margin: 0;
+
+  font-size: 30px;
+  font-weight: 700;
+
+  letter-spacing: -0.6px;
+
+  color: var(--text-primary);
+}
+
+.audit-header > div > p {
+  margin: 0;
+
+  font-size: 14px;
+  line-height: 1.6;
+
+  color: var(--text-secondary);
+}
+
+.audit-refresh-button {
+  min-height: 42px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  padding: 0 16px;
+
+  border: 1px solid var(--border);
+  border-radius: 9px;
+
+  background: var(--surface);
+
+  color: var(--text-primary);
+
+  font-size: 14px;
+  font-weight: 600;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.audit-refresh-button:hover:not(:disabled) {
+  background: #f8fafc;
+
+  border-color: #cbd5e1;
+
+  transform: translateY(-1px);
+}
+
+.audit-refresh-button:disabled {
+  opacity: 0.65;
+
+  cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------
+   AUDIT ERROR
+--------------------------------------------------------- */
+
+.audit-error {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 16px 18px;
+
+  margin-bottom: 24px;
+
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+
+  background: #fef2f2;
+
+  color: #991b1b;
+}
+
+.audit-error > svg {
+  flex-shrink: 0;
+
+  color: #dc2626;
+}
+
+.audit-error > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+
+  min-width: 0;
+}
+
+.audit-error strong {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.audit-error span {
+  font-size: 13px;
+
+  color: #b91c1c;
+}
+
+.audit-error button {
+  margin-left: auto;
+
+  border: none;
+
+  background: transparent;
+
+  color: #dc2626;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------
+   AUDIT STATISTICS
+--------------------------------------------------------- */
+
+.audit-stats-grid {
+  display: grid;
+
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+
+  gap: 18px;
+
+  margin-bottom: 28px;
+}
+
+.audit-stat-card {
+  display: flex;
+  align-items: center;
+
+  gap: 16px;
+
+  min-height: 120px;
+
+  padding: 20px;
+
+  border: 1px solid var(--border);
+  border-radius: 16px;
+
+  background: var(--surface);
+
+  box-shadow: var(--shadow-sm);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.audit-stat-card:hover {
+  transform: translateY(-2px);
+
+  border-color: #cbd5e1;
+
+  box-shadow: var(--shadow-md);
+}
+
+/* THIS FIXES THE TEXT OVERLAPPING ISSUE */
+
+.audit-stat-card > div:last-child {
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+
+  min-width: 0;
+}
+
+.audit-stat-card span {
+  display: block;
+
+  font-size: 13px;
+  font-weight: 500;
+
+  color: var(--text-secondary);
+}
+
+.audit-stat-card strong {
+  display: block;
+
+  font-size: 28px;
+  line-height: 1.1;
+
+  font-weight: 700;
+
+  color: var(--text-primary);
+}
+
+.audit-stat-card small {
+  display: block;
+
+  font-size: 12px;
+  line-height: 1.4;
+
+  color: var(--text-muted);
+}
+
+/* ---------------------------------------------------------
+   AUDIT ICONS
+--------------------------------------------------------- */
+
+.audit-stat-icon {
+  width: 46px;
+  height: 46px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 13px;
+}
+
+.audit-stat-icon.primary {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.audit-stat-icon.success {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.audit-stat-icon.warning {
+  background: #fff7ed;
+  color: #d97706;
+}
+
+.audit-stat-icon.info {
+  background: #f5f3ff;
+  color: #7c3aed;
+}
+
+/* ---------------------------------------------------------
+   AUDIT CONTROLS
+--------------------------------------------------------- */
+
+.audit-controls {
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  margin-bottom: 20px;
+}
+
+.audit-search {
+  flex: 1;
+
+  max-width: 520px;
+
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 0 14px;
+
+  border: 1px solid var(--border);
+  border-radius: 10px;
+
+  background: var(--surface);
+
+  color: var(--text-muted);
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.audit-search:focus-within {
+  border-color: var(--primary);
+
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.audit-search input {
+  width: 100%;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+
+  color: var(--text-primary);
+
+  font-size: 14px;
+}
+
+.audit-search input::placeholder {
+  color: var(--text-muted);
+}
+
+.audit-filter {
+  height: 44px;
+
+  min-width: 170px;
+
+  padding: 0 14px;
+
+  border: 1px solid var(--border);
+  border-radius: 10px;
+
+  background: var(--surface);
+
+  color: var(--text-primary);
+
+  outline: none;
+
+  font-size: 14px;
+}
+
+/* ---------------------------------------------------------
+   AUDIT TABLE
+--------------------------------------------------------- */
+
+.audit-table-section {
+  overflow: hidden;
+
+  border: 1px solid var(--border);
+  border-radius: 16px;
+
+  background: var(--surface);
+
+  box-shadow: var(--shadow-sm);
+}
+
+.audit-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 22px 24px;
+
+  border-bottom: 1px solid var(--border-light);
+}
+
+.audit-table-header h2 {
+  margin: 0;
+
+  font-size: 18px;
+  font-weight: 700;
+
+  color: var(--text-primary);
+}
+
+.audit-table-header p {
+  margin: 6px 0 0;
+
+  font-size: 13px;
+
+  color: var(--text-secondary);
+}
+
+.audit-count {
+  flex-shrink: 0;
+
+  padding: 7px 11px;
+
+  border-radius: 999px;
+
+  background: var(--primary-light);
+
+  color: var(--primary);
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.audit-table-wrapper {
+  width: 100%;
+
+  overflow-x: auto;
+}
+
+.audit-table {
+  width: 100%;
+
+  min-width: 950px;
+
+  border-collapse: collapse;
+}
+
+.audit-table th {
+  padding: 14px 18px;
+
+  background: #f8fafc;
+
+  border-bottom: 1px solid var(--border);
+
+  color: var(--text-secondary);
+
+  font-size: 11px;
+  font-weight: 700;
+
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+
+  text-align: left;
+
+  white-space: nowrap;
+}
+
+.audit-table td {
+  padding: 17px 18px;
+
+  border-bottom: 1px solid var(--border-light);
+
+  color: var(--text-primary);
+
+  font-size: 13px;
+
+  vertical-align: middle;
+}
+
+.audit-table tbody tr {
+  transition: background 0.2s ease;
+}
+
+.audit-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.audit-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ---------------------------------------------------------
+   AUDIT BADGES
+--------------------------------------------------------- */
+
+.audit-action-badge {
+  display: inline-flex;
+  align-items: center;
+
+  padding: 6px 10px;
+
+  border-radius: 999px;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.audit-action-success {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.audit-action-danger {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.audit-action-warning {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.audit-action-info {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.audit-action-default {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* ---------------------------------------------------------
+   AUDIT EMPTY STATE
+--------------------------------------------------------- */
+
+.audit-empty {
+  min-height: 320px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+
+  padding: 40px;
+}
+
+.audit-empty svg {
+  margin-bottom: 16px;
+
+  color: var(--text-muted);
+}
+
+.audit-empty h3 {
+  margin-bottom: 8px;
+
+  font-size: 18px;
+
+  color: var(--text-primary);
+}
+
+.audit-empty p {
+  max-width: 430px;
+
+  color: var(--text-secondary);
+
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ---------------------------------------------------------
+   AUDIT LOADING
+--------------------------------------------------------- */
+
+.audit-loading {
+  min-height: 420px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 14px;
+
+  color: var(--text-secondary);
+}
+
+/* =========================================================
+   LEDGER PAGE IMPROVEMENTS
+========================================================= */
+
+.ledger-page {
+  padding: 0;
+}
+
+/* ---------------------------------------------------------
+   LEDGER HEADER
+--------------------------------------------------------- */
+
+.ledger-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  margin-bottom: 28px;
+}
+
+.ledger-title-row {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  margin-bottom: 8px;
+}
+
+.ledger-title-row svg {
+  color: var(--primary);
+}
+
+.ledger-title-row h1 {
+  margin: 0;
+
+  font-size: 30px;
+  font-weight: 700;
+
+  letter-spacing: -0.6px;
+
+  color: var(--text-primary);
+}
+
+.ledger-header > div > p {
+  margin: 0;
+
+  color: var(--text-secondary);
+
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.ledger-refresh-button {
+  min-height: 42px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  padding: 0 16px;
+
+  border: 1px solid var(--border);
+  border-radius: 9px;
+
+  background: var(--surface);
+
+  color: var(--text-primary);
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ledger-refresh-button:hover:not(:disabled) {
+  background: #f8fafc;
+
+  border-color: #cbd5e1;
+}
+
+.ledger-refresh-button:disabled {
+  opacity: 0.65;
+
+  cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------
+   LEDGER SUMMARY CARDS
+--------------------------------------------------------- */
+
+.ledger-summary-grid {
+  display: grid;
+
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+
+  gap: 18px;
+
+  margin-bottom: 30px;
+}
+
+.ledger-summary-card {
+  display: flex;
+  align-items: center;
+
+  gap: 16px;
+
+  min-height: 118px;
+
+  padding: 20px;
+
+  border: 1px solid var(--border);
+  border-radius: 16px;
+
+  background: var(--surface);
+
+  box-shadow: var(--shadow-sm);
+}
+
+.ledger-summary-card > div:last-child {
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+
+  min-width: 0;
+}
+
+.ledger-summary-card span {
+  font-size: 13px;
+
+  color: var(--text-secondary);
+}
+
+.ledger-summary-card strong {
+  font-size: 28px;
+  line-height: 1.1;
+
+  color: var(--text-primary);
+}
+
+.ledger-summary-card small {
+  font-size: 11px;
+
+  color: var(--text-muted);
+}
+
+/* ---------------------------------------------------------
+   LEDGER FINANCIAL SECTION
+--------------------------------------------------------- */
+
+.ledger-financial-section {
+  margin-bottom: 28px;
+}
+
+.ledger-financial-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  margin-bottom: 16px;
+}
+
+.ledger-financial-header h2 {
+  margin: 0 0 6px;
+
+  font-size: 18px;
+
+  color: var(--text-primary);
+}
+
+.ledger-financial-header p {
+  margin: 0;
+
+  font-size: 13px;
+
+  color: var(--text-secondary);
+}
+
+.ledger-financial-header > svg {
+  color: var(--text-muted);
+}
+
+.ledger-info-grid {
+  display: grid;
+
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 18px;
+}
+
+.ledger-info-card {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 16px;
+
+  padding: 22px;
+
+  border: 1px solid var(--border);
+  border-radius: 16px;
+
+  background: var(--surface);
+
+  box-shadow: var(--shadow-sm);
+}
+
+.ledger-balance-content {
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+
+  min-width: 0;
+
+  flex: 1;
+}
+
+/* =========================================================
+   COMMON SPINNER
+========================================================= */
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1200px) {
+  .audit-stats-grid,
+  .ledger-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .audit-header,
+  .ledger-header {
+    flex-direction: column;
+  }
+
+  .audit-refresh-button,
+  .ledger-refresh-button {
+    align-self: flex-start;
+  }
+
+  .audit-controls {
+    flex-direction: column;
+
+    align-items: stretch;
+  }
+
+  .audit-search {
+    max-width: none;
+  }
+
+  .audit-filter {
+    width: 100%;
+  }
+}
+
+@media (max-width: 700px) {
+  .audit-stats-grid,
+  .ledger-summary-grid,
+  .ledger-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .audit-table-header {
+    flex-direction: column;
+
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .audit-title-row h1,
+  .ledger-title-row h1 {
+    font-size: 25px;
+  }
+
+  .audit-stat-card,
+  .ledger-summary-card {
+    padding: 16px;
+  }
+
+  .audit-error {
+    align-items: flex-start;
+
+    flex-wrap: wrap;
+  }
+
+  .audit-error button {
+    width: 100%;
+
+    margin-left: 0;
+
+    text-align: left;
   }
 }

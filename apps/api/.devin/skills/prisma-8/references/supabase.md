@@ -1,4 +1,3 @@
-
 # Prisma Next — Supabase
 
 > **Edit your data contract. Prisma handles the rest.**
@@ -12,7 +11,7 @@ This skill covers using Prisma Next against a **Supabase** project end-to-end: c
 - User wants per-request role binding (`asUser(jwt)`, `asAnon()`, `asServiceRole()`).
 - User wants a foreign key into `auth.users` (cross-space FK).
 - User wants to read Supabase-internal tables (`auth.*`, `storage.*`) as an admin.
-- User mentions: *supabase, RLS, row level security, policy, anon, authenticated, service_role, auth.users, auth.uid(), JWT, jwtSecret, jwksUrl, SUPABASE.JWT_INVALID, RoleBoundDb, session pooler*.
+- User mentions: _supabase, RLS, row level security, policy, anon, authenticated, service_role, auth.users, auth.uid(), JWT, jwtSecret, jwksUrl, SUPABASE.JWT_INVALID, RoleBoundDb, session pooler_.
 
 ## When Not to Use
 
@@ -27,13 +26,13 @@ This skill covers using Prisma Next against a **Supabase** project end-to-end: c
 - **Roles come from the pack; you never declare them.** RLS `roles = [authenticated]` identifiers resolve against the composed contract. Pointing the runtime at a non-Supabase Postgres fails verify with a `not-found` issue naming the missing role — the common "wrong database" misconfiguration surfaces before queries run.
 - **The runtime is role-first.** `supabase()` returns a `SupabaseDb` with **no top-level query surface** — there is no `db.sql` / `db.orm` until you bind a role. `await db.asUser(jwt)` / `db.asAnon()` / `db.asServiceRole()` each return a `RoleBoundDb` exposing `.sql`, `.orm`, `.raw`, `.execute(plan)`, and `.transaction(fn)`. This is deliberate: in a Supabase app there is no meaningful "no role" execution context, and defaulting to the connection's login role is a silent-RLS-bypass footgun.
 - **Role binding is below middleware and cannot leak.** Each role-bound query runs on a connection that had `set_config('role', …)` and `set_config('request.jwt.claims', …)` applied beneath the user-middleware chain, with `RESET ALL` on release. Postgres-side `auth.uid()` / `auth.jwt()` read those session vars — RLS enforcement is Postgres's job; the runtime's job is binding the context.
-- **RLS is enforced by policies *and* grants.** Policies filter *rows*; `GRANT` controls *table access*. Prisma Next authors and migrates the policies; it does not author grants (see *What Prisma Next doesn't do yet*). A role with policies but no `GRANT` gets a permission error, not filtered rows. On Supabase your `public` tables already carry the platform-role grants via default privileges — the grant that is actually missing out of the box is `service_role`'s on `auth.*` / `storage.*` (see *Workflow — Grants*).
-- **JWT validation is eager and configurable — current Supabase projects need `jwksUrl`.** `asUser(jwt)` verifies the token (via `jose`) *before* any connection is acquired: signature + expiry against `jwksUrl` (asymmetric signing keys — **the default on current Supabase projects**, which sign ES256) **xor** `jwtSecret` (the symmetric HS256 secret — legacy projects only). Both or neither → a structured error with code `SUPABASE.CONFIG_INVALID`. Bad tokens throw a structured error with code `SUPABASE.JWT_INVALID` and a typed `meta.reason` — including a mismatch between the token's algorithm and the configured key source (an ES256 token against a `jwtSecret` client names the problem and tells you to switch to `jwksUrl`). The Postgres role is derived from the token's `role` claim (defaults to `authenticated`). Note: `supabase status` still prints a `JWT_SECRET` even on projects that sign ES256 — its presence does not mean your project uses it.
-- **Admin access to `auth.*` / `storage.*` is a secondary root on `service_role` only — and needs a one-time grant.** `db.asServiceRole().supabase` exposes the pack's own contract (`.sql`, `.orm`, `.nativeEnums`, `.execute`). The root exists only on `service_role` by design, but a real Supabase project grants `service_role` **no table privileges** on `auth.*` / `storage.*` (only schema `USAGE`; only `postgres` holds table grants). Before the admin root can read a Supabase-internal table, run the narrow grant once (see *Workflow — Grants*). `asUser` / `asAnon` have no `.supabase`, and the primary `asServiceRole().sql` / `.orm` stay scoped to *your* contract.
+- **RLS is enforced by policies _and_ grants.** Policies filter _rows_; `GRANT` controls _table access_. Prisma Next authors and migrates the policies; it does not author grants (see _What Prisma Next doesn't do yet_). A role with policies but no `GRANT` gets a permission error, not filtered rows. On Supabase your `public` tables already carry the platform-role grants via default privileges — the grant that is actually missing out of the box is `service_role`'s on `auth.*` / `storage.*` (see _Workflow — Grants_).
+- **JWT validation is eager and configurable — current Supabase projects need `jwksUrl`.** `asUser(jwt)` verifies the token (via `jose`) _before_ any connection is acquired: signature + expiry against `jwksUrl` (asymmetric signing keys — **the default on current Supabase projects**, which sign ES256) **xor** `jwtSecret` (the symmetric HS256 secret — legacy projects only). Both or neither → a structured error with code `SUPABASE.CONFIG_INVALID`. Bad tokens throw a structured error with code `SUPABASE.JWT_INVALID` and a typed `meta.reason` — including a mismatch between the token's algorithm and the configured key source (an ES256 token against a `jwtSecret` client names the problem and tells you to switch to `jwksUrl`). The Postgres role is derived from the token's `role` claim (defaults to `authenticated`). Note: `supabase status` still prints a `JWT_SECRET` even on projects that sign ES256 — its presence does not mean your project uses it.
+- **Admin access to `auth.*` / `storage.*` is a secondary root on `service_role` only — and needs a one-time grant.** `db.asServiceRole().supabase` exposes the pack's own contract (`.sql`, `.orm`, `.nativeEnums`, `.execute`). The root exists only on `service_role` by design, but a real Supabase project grants `service_role` **no table privileges** on `auth.*` / `storage.*` (only schema `USAGE`; only `postgres` holds table grants). Before the admin root can read a Supabase-internal table, run the narrow grant once (see _Workflow — Grants_). `asUser` / `asAnon` have no `.supabase`, and the primary `asServiceRole().sql` / `.orm` stay scoped to _your_ contract.
 
 ## Workflow — Wire the pack into the config
 
-The concept: the pack registers the Supabase contract space so your contract can reference it and the planner/verifier know what Supabase owns. The extension has no `/control` subpath yet, so it can't go through the target façade's `defineConfig({ extensions: [...] })` — it wires into the low-level config's `extensions` (see *What Prisma Next doesn't do yet*). The low-level imports below are a **deliberate exception** to the façade-only import rule, forced by that gap; the block mirrors `examples/supabase/prisma.config.ts` verbatim — copy it rather than composing your own:
+The concept: the pack registers the Supabase contract space so your contract can reference it and the planner/verifier know what Supabase owns. The extension has no `/control` subpath yet, so it can't go through the target façade's `defineConfig({ extensions: [...] })` — it wires into the low-level config's `extensions` (see _What Prisma Next doesn't do yet_). The low-level imports below are a **deliberate exception** to the façade-only import rule, forced by that gap; the block mirrors `examples/supabase/prisma.config.ts` verbatim — copy it rather than composing your own:
 
 ```typescript
 // prisma.config.ts
@@ -107,7 +106,7 @@ The `Uuid` constructor selects native UUID storage in type position. The legacy 
 The pieces:
 
 - **Per-operation policy blocks**: `policy_select`, `policy_insert`, `policy_update`, `policy_delete`, `policy_all`. Body is `key = value`: `target` (a model in this namespace), `roles` (resolve against the composed contract — the pack supplies `anon` / `authenticated` / `service_role`), `using`, and (for write operations) `withCheck`. Multiple permissive policies per `(target, operation)` are valid — Postgres ORs them. A block may also carry `@@map("physical name")` to adopt an existing live policy under its exact name (no wire-name hash; drift detection then byte-compares the body against Postgres's reprint, so keep the text as captured — hand-authoring it warns).
-- **`@@rls` is required on policy targets.** A `policy_*` block whose target model lacks `@@rls` fails emit with `PSL_EXTENSION_TARGET_MODEL_MISSING_ATTRIBUTE`. A model with `@@rls` and *no* policies is also meaningful: RLS enabled, deny-all.
+- **`@@rls` is required on policy targets.** A `policy_*` block whose target model lacks `@@rls` fails emit with `PSL_EXTENSION_TARGET_MODEL_MISSING_ATTRIBUTE`. A model with `@@rls` and _no_ policies is also meaningful: RLS enabled, deny-all.
 - **Predicates are verbatim SQL strings.** Quote camelCase column names inside them (`\"userId\"`), and cast where needed — `auth.uid()` returns `uuid`. Renames in your contract do not rewrite predicate bodies.
 - **TS-builder parity exists.** `@internal/postgres/contract-builder` exports `policySelect` / `policyInsert` / `policyUpdate` / `policyDelete` / `policyAll`, `rlsEnabled(Model)`, and `role('anon')` — mirroring the PSL lowering key-for-key (identical emitted wire names). PSL is the canonical path shown here.
 
@@ -125,7 +124,7 @@ import contractJson from './contract.json' with { type: 'json' };
 
 export const db = await supabase<Contract>({
   contractJson,
-  url: process.env['DATABASE_URL'],        // direct Postgres connection — see pitfalls
+  url: process.env['DATABASE_URL'], // direct Postgres connection — see pitfalls
   jwksUrl: process.env['SUPABASE_JWKS_URL'], // https://<project-ref>.supabase.co/auth/v1/.well-known/jwks.json
   // Legacy HS256 projects use jwtSecret: process.env['SUPABASE_JWT_SECRET'] instead — exactly one of the two.
 });
@@ -143,23 +142,29 @@ const userDb = await db.asUser(jwt); // async — rejects with code SUPABASE.JWT
 const mine = await userDb.orm.public.Profile.select('id', 'username').all();
 
 // The anon role: sees what anon policies permit.
-const listing = await db.asAnon().orm.public.Profile.select('id', 'username').all();
+const listing = await db
+  .asAnon()
+  .orm.public.Profile.select('id', 'username')
+  .all();
 
 // service_role: BYPASSRLS — sees everything in YOUR contract.
-const all = await db.asServiceRole().orm.public.Profile.select('id', 'username').all();
+const all = await db
+  .asServiceRole()
+  .orm.public.Profile.select('id', 'username')
+  .all();
 
 // Writes ride the same surfaces; RLS filters them too. An UPDATE against
 // another owner's row affects 0 rows; a withCheck violation raises an error.
-const updated = await userDb.orm.public.Profile
-  .where({ userId: me })
-  .updateAndCount({ username: 'new-name' });
+const updated = await userDb.orm.public.Profile.where({
+  userId: me,
+}).updateAndCount({ username: 'new-name' });
 ```
 
-Notes: `asAnon()` / `asServiceRole()` are sync; only `asUser` is async. Multi-namespace contracts address models by coordinate (`orm.public.Profile`, `sql.public.profile`) — see `references/queries.md` § *Namespace-aware accessors*. `RoleBoundDb.transaction(fn)` wraps work in a transaction on the role-bound session.
+Notes: `asAnon()` / `asServiceRole()` are sync; only `asUser` is async. Multi-namespace contracts address models by coordinate (`orm.public.Profile`, `sql.public.profile`) — see `references/queries.md` § _Namespace-aware accessors_. `RoleBoundDb.transaction(fn)` wraps work in a transaction on the role-bound session.
 
 ## Workflow — Admin reads of `auth.*` / `storage.*`
 
-The concept: Supabase-internal tables are not part of your contract, so they are not on your query surfaces. The `service_role` binding carries a **secondary root** — `db.asServiceRole().supabase` — which is the *pack's* contract surface:
+The concept: Supabase-internal tables are not part of your contract, so they are not on your query surfaces. The `service_role` binding carries a **secondary root** — `db.asServiceRole().supabase` — which is the _pack's_ contract surface:
 
 ```typescript
 const admin = db.asServiceRole();
@@ -170,7 +175,10 @@ const users = await admin.supabase
   .toArray();
 
 // ORM over the pack contract:
-const sessions = await admin.supabase.orm.auth.AuthSession.select('id', 'aal').all();
+const sessions = await admin.supabase.orm.auth.AuthSession.select(
+  'id',
+  'aal',
+).all();
 
 // Native enum values (e.g. auth.aal_level) come typed:
 type AalLevel = (typeof admin.supabase.nativeEnums.auth.AalLevel)['Value'];
@@ -183,14 +191,14 @@ GRANT USAGE ON SCHEMA auth TO service_role;
 GRANT SELECT ON TABLE auth.users TO service_role;
 ```
 
-Other boundaries to respect: `asUser` / `asAnon` have **no** `.supabase`; the admin root has **no** `.transaction` (it is a separate contract-bound runtime sharing the pool — a transaction spanning both roots is out of scope); and for user *management* (creating users, password resets) prefer the GoTrue Admin API — Supabase-internal schemas can drift across platform upgrades; direct `service_role` SQL is for ad-hoc admin reads.
+Other boundaries to respect: `asUser` / `asAnon` have **no** `.supabase`; the admin root has **no** `.transaction` (it is a separate contract-bound runtime sharing the pool — a transaction spanning both roots is out of scope); and for user _management_ (creating users, password resets) prefer the GoTrue Admin API — Supabase-internal schemas can drift across platform upgrades; direct `service_role` SQL is for ad-hoc admin reads.
 
 ## Workflow — Grants
 
 The concept: RLS policies are row filters on top of ordinary table privileges — a role with policies but no `GRANT` gets `permission denied`, not filtered rows. On Supabase the two directions are easy to get backwards:
 
 - **Your own `public` tables need nothing.** Supabase ships `ALTER DEFAULT PRIVILEGES` on `public`, so tables created by `prisma db init` / `prisma db migrate` inherit full grants for `anon` / `authenticated` / `service_role` automatically — the same as dashboard-created tables. RLS policies are what actually protect the rows; do not add per-table grants, and do not narrow the defaults unless you have a reason.
-- **The one grant you do need is for admin reads of Supabase-internal tables** — `service_role` has no table privileges on `auth.*` / `storage.*` (see *Admin reads* above for the narrow `GRANT USAGE` / `GRANT SELECT` pair).
+- **The one grant you do need is for admin reads of Supabase-internal tables** — `service_role` has no table privileges on `auth.*` / `storage.*` (see _Admin reads_ above for the narrow `GRANT USAGE` / `GRANT SELECT` pair).
 
 Run grants via the Supabase SQL editor or `psql`. Symptom of a missing grant: `permission denied for table …` (sqlState `42501`) instead of an empty result.
 

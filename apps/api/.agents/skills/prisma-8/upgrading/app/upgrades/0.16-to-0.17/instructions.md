@@ -1,6 +1,6 @@
 ---
-from: "0.16"
-to: "0.17"
+from: '0.16'
+to: '0.17'
 changes:
   - id: one-prisma-package-per-application
     summary: |
@@ -32,7 +32,7 @@ changes:
       from packages your manifest names directly — the facade, your extension packs, and
       (for tooling authors) `@prisma/orm-toolchain`.
     detection:
-      glob: "**/*.{json,ts,tsx,mts,cts,js,mjs,cjs}"
+      glob: '**/*.{json,ts,tsx,mts,cts,js,mjs,cjs}'
       contains:
         - '@prisma-next/'
       anyMatch: true
@@ -53,7 +53,7 @@ changes:
       whose marker/ledger still hold prefixed values report a hash mismatch on verify — there is
       no compatibility shim; re-sign against the regenerated contract (`prisma-next db sign`).
     detection:
-      glob: "**/*.{json,ts,tsx}"
+      glob: '**/*.{json,ts,tsx}'
       contains:
         - 'sha256:'
       anyMatch: true
@@ -97,10 +97,10 @@ changes:
       review the diff, then `pnpm typecheck` (or your project's equivalent) to
       confirm every rewritten `migration.ts` import resolves.
     detection:
-      glob: "**/migration.ts"
+      glob: '**/migration.ts'
       contains:
-        - "./start-contract.json"
-        - "./end-contract.json"
+        - './start-contract.json'
+        - './end-contract.json'
         - "./start-contract'"
         - "./end-contract'"
       anyMatch: true
@@ -128,7 +128,7 @@ changes:
       migration-package and ref-paired snapshots), review the diff, then
       re-run `prisma-next ref list` to confirm your refs are unaffected.
     detection:
-      glob: "**/refs/*.contract.json"
+      glob: '**/refs/*.contract.json'
       anyMatch: true
   - id: extension-packs-config-key-renamed-to-extensions
     summary: |
@@ -149,9 +149,9 @@ changes:
       (a schema-unchanged project needs a hash-advance migration or a
       re-baseline; the database schema itself does not change).
     detection:
-      glob: "**/{prisma.config.ts,contract.ts,db.ts}"
+      glob: '**/{prisma.config.ts,contract.ts,db.ts}'
       contains:
-        - "extensionPacks"
+        - 'extensionPacks'
   - id: contract-source-format-key-renamed
     summary: |
       The contract source provider field `sourceFormat` is renamed to `format`
@@ -160,26 +160,26 @@ changes:
       automatically once upgraded). Rename any literal `sourceFormat:` in
       hand-written provider objects or config assertions.
     detection:
-      glob: "**/prisma.config.ts"
+      glob: '**/prisma.config.ts'
       contains:
-        - "sourceFormat"
+        - 'sourceFormat'
   - id: sugar-output-path-key-renamed-to-output
     summary: |
       The target façades' `defineConfig` option `outputPath` is renamed to
       `output`. Semantics are unchanged (a directory; `contract.json` is
       written inside it). Rename the key in `prisma.config.ts`.
     detection:
-      glob: "**/prisma.config.ts"
+      glob: '**/prisma.config.ts'
       contains:
-        - "outputPath"
+        - 'outputPath'
   - id: orm-count-only-mutation-terminals-renamed
     summary: Replace `createCount(...)`, `updateCount(...)`, and `deleteCount()` with `createAndCount(...)`, `updateAndCount(...)`, and `deleteAndCount()` in ORM call sites; arguments, guards, behavior, and `Promise<number>` results are unchanged, and no compatibility aliases remain.
     detection:
-      glob: "**/*.{ts,tsx,mts,cts}"
+      glob: '**/*.{ts,tsx,mts,cts}'
       contains:
-        - ".createCount("
-        - ".updateCount("
-        - ".deleteCount("
+        - '.createCount('
+        - '.updateCount('
+        - '.deleteCount('
       anyMatch: true
   - id: psl-format-error-class-removed
     summary: |
@@ -191,9 +191,9 @@ changes:
       (`isStructuredError` from `@internal/utils/structured-error`). The message
       text is unchanged.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "PslFormatError"
+        - 'PslFormatError'
   - id: scalar-type-descriptors-channel-removed
     summary: |
       The scalar-type descriptor channel is retired in favour of the unified authoring type
@@ -208,19 +208,19 @@ changes:
       from `@internal/framework-components/authoring`. Standard target setups
       (`@internal/postgres`, `@internal/sqlite`) supply the contributions themselves.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "createPostgresScalarTypeDescriptors"
-        - "createSqliteScalarTypeDescriptors"
-        - "scalarTypeDescriptors"
+        - 'createPostgresScalarTypeDescriptors'
+        - 'createSqliteScalarTypeDescriptors'
+        - 'scalarTypeDescriptors'
       anyMatch: true
   - id: postgres-native-types-move-to-type-position
     summary: |
       PostgreSQL native storage types are authored directly in PSL type position, and the legacy `@db.*` attribute channel is removed. Rewrite `BaseType @db.Type` as `Type` and `BaseType @db.Type(args)` as `Type(args)` in both `types {}` aliases and model fields, then re-run `prisma-next contract emit`. Any remaining `@db.X(args)` fails with `@db.X(args) is no longer supported; use X(args) in type position`, preserving the constructor name and arguments in the suggested replacement. The supported translations are `@db.Char` → `Char`, `@db.VarChar` → `VarChar`, `@db.Numeric` → `Numeric`, `@db.Uuid` → `Uuid`, `@db.Inet` → `Inet`, `@db.SmallInt` → `SmallInt`, `@db.Real` → `Real`, `@db.Timestamp` → `Timestamp`, `@db.Timestamptz` → `Timestamptz`, `@db.Date` → `Date`, `@db.Time` → `Time`, and `@db.Timetz` → `Timetz`; preserve constructor arguments. Rewrite the old native-json spelling `Json @db.Json` as bare `Json`. This source migration preserves native types and supplied type parameters. It also preserves codec ids except for `@db.Date` → `Date`, which rebinds `pg/timestamptz@1` to `pg/date@1`, changes the contract storage hash, and requires re-emission plus re-signing; see the `postgres-date-rebound-to-pg-date` entry below. Separately, apply the `postgres-json-rebound-to-native-json` entry below to old bare `Json` fields that meant jsonb storage.
     detection:
-      glob: "**/*.prisma"
+      glob: '**/*.prisma'
       contains:
-        - "@db."
+        - '@db.'
       anyMatch: true
   - id: postgres-json-rebound-to-native-json
     summary: |
@@ -233,9 +233,9 @@ changes:
       new storage hash, which against an existing jsonb database is a schema change. The
       removed `@db.Json` spelling must be rewritten from `Json @db.Json` to bare `Json`; any remaining use fails with migration guidance to use `Json` in type position. SQLite and Mongo `Json` bindings are untouched. The TS builder surface (`field.json()`, `jsonbColumn`) is unchanged and stays jsonb.
     detection:
-      glob: "**/*.prisma"
+      glob: '**/*.prisma'
       contains:
-        - "Json"
+        - 'Json'
       anyMatch: true
   - id: default-generators-no-longer-set-storage
     summary: |
@@ -258,12 +258,12 @@ changes:
       (`field.id.uuidv4String()`, `field.generated(uuidv4())`, …) are untouched — they bundle
       their `char(N)` storage explicitly.
     detection:
-      glob: "**/*.prisma"
+      glob: '**/*.prisma'
       contains:
-        - "@default(uuid("
-        - "@default(cuid("
-        - "@default(nanoid("
-        - "@default(ulid("
+        - '@default(uuid('
+        - '@default(cuid('
+        - '@default(nanoid('
+        - '@default(ulid('
       anyMatch: true
   - id: postgres-date-rebound-to-pg-date
     summary: |
@@ -277,7 +277,7 @@ changes:
       `RUNTIME.DECODE_FAILED`. Update tests or application code that pinned the old
       local-midnight instants to expect `new Date(Date.UTC(y, m, d))`.
     detection:
-      glob: "**/*.prisma"
+      glob: '**/*.prisma'
       regex:
         - '@db\.Date'
         - '\sDate(\s|\?|\[|$)'
@@ -293,9 +293,9 @@ changes:
       (`isStructuredError` from `@internal/utils/structured-error`). Message text is
       unchanged.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "SqlEscapeError"
+        - 'SqlEscapeError'
   - id: supabase-error-classes-removed
     summary: |
       The `SupabaseConfigError` and `InvalidJwtError` classes are deleted from
@@ -308,10 +308,10 @@ changes:
       (`isStructuredError` from `@internal/utils/structured-error`). Message
       text is unchanged.
     detection:
-      glob: "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}"
+      glob: '**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}'
       contains:
-        - "SupabaseConfigError"
-        - "InvalidJwtError"
+        - 'SupabaseConfigError'
+        - 'InvalidJwtError'
       anyMatch: true
 
   - id: indexes-are-name-identified
@@ -337,10 +337,10 @@ changes:
       destructive-allowed plan dropping it. Update any code or tests that hard-code the old
       physical index names.
     detection:
-      glob: "**/*.{prisma,ts,json}"
+      glob: '**/*.{prisma,ts,json}'
       contains:
-        - "@@index"
-        - "constraints.index"
+        - '@@index'
+        - 'constraints.index'
         - '"indexes":'
       anyMatch: true
   - id: rls-policy-migration-literal-carries-the-naming-union
@@ -357,9 +357,9 @@ changes:
       mechanical, and the migration's identity (`migrationHash`, the SQL it executes) does not
       depend on the literal's spelling.
     detection:
-      glob: "**/migrations/**/migration.ts"
+      glob: '**/migrations/**/migration.ts'
       contains:
-        - "createRlsPolicy"
+        - 'createRlsPolicy'
   - id: framework-error-classes-removed
     summary: |
       Three exported framework error classes are deleted: `ConfigFileNotFoundError`
@@ -373,11 +373,11 @@ changes:
       (`isStructuredError` from `@internal/utils/structured-error`). Message
       text is unchanged.
     detection:
-      glob: "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}"
+      glob: '**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}'
       contains:
-        - "ConfigFileNotFoundError"
-        - "ConfigValidationError"
-        - "DomainNamespaceResolutionError"
+        - 'ConfigFileNotFoundError'
+        - 'ConfigValidationError'
+        - 'DomainNamespaceResolutionError'
       anyMatch: true
   - id: pg-int8-application-values-are-bigint
     summary: |
@@ -392,11 +392,11 @@ changes:
       A contract's `int8` literal defaults are also emitted as decimal strings rather than JSON
       numbers; re-emit to pick that up.
     detection:
-      glob: "**/*.{ts,tsx,mts,cts}"
+      glob: '**/*.{ts,tsx,mts,cts}'
       contains:
-        - "fns.count("
-        - "pg/int8@1"
-        - "int8Column"
+        - 'fns.count('
+        - 'pg/int8@1'
+        - 'int8Column'
       anyMatch: true
   - id: pg-interval-values-are-structured-durations
     summary: |
@@ -411,10 +411,10 @@ changes:
       a contract holds the ISO-8601 duration string (`P1M`, `P1Y2M3DT4H5M6S`, `PT0S`), so
       re-emit; `micros` past microsecond resolution rounds as PostgreSQL rounds.
     detection:
-      glob: "**/*.{ts,tsx,mts,cts}"
+      glob: '**/*.{ts,tsx,mts,cts}'
       contains:
-        - "pg/interval@1"
-        - "intervalColumn"
+        - 'pg/interval@1'
+        - 'intervalColumn'
       anyMatch: true
   - id: codec-json-forms-are-canonical
     summary: |
@@ -438,17 +438,17 @@ changes:
       spelling, and with it the `storageHash`. Code that reads such a default out of a contract,
       or that hand-writes one, must use the new form.
     detection:
-      glob: "**/*.{ts,tsx,mts,cts,json,d.ts}"
+      glob: '**/*.{ts,tsx,mts,cts,json,d.ts}'
       contains:
-        - "pg/numeric@1"
-        - "pg/bytea@1"
-        - "pg/int8@1"
-        - "pg/interval@1"
-        - "pg/timestamptz@1"
-        - "pg/vector@1"
-        - "sqlite/bigint@1"
-        - "sqlite/blob@1"
-        - "sqlite/json@1"
+        - 'pg/numeric@1'
+        - 'pg/bytea@1'
+        - 'pg/int8@1'
+        - 'pg/interval@1'
+        - 'pg/timestamptz@1'
+        - 'pg/vector@1'
+        - 'sqlite/bigint@1'
+        - 'sqlite/blob@1'
+        - 'sqlite/json@1'
       anyMatch: true
   - id: float-json-requires-extra-float-digits-at-least-one
     summary: |
@@ -460,9 +460,9 @@ changes:
       round-trips. Check any connection string, pool `options`, server config or proxy that sets
       `extra_float_digits` and remove settings of 0 or below.
     detection:
-      glob: "**/*.{ts,tsx,mts,cts,js,mjs,cjs,json,toml,yaml,yml,env}"
+      glob: '**/*.{ts,tsx,mts,cts,js,mjs,cjs,json,toml,yaml,yml,env}'
       contains:
-        - "extra_float_digits"
+        - 'extra_float_digits'
       anyMatch: true
   - id: sqlite-real-rejects-non-finite-values
     summary: |
@@ -472,10 +472,10 @@ changes:
       value silently. Guard any computation that can produce a non-finite float before writing it
       to a `REAL` column, or store it in a column whose codec admits it.
     detection:
-      glob: "**/*.{ts,tsx,mts,cts}"
+      glob: '**/*.{ts,tsx,mts,cts}'
       contains:
-        - "sqlite/real@1"
-        - "realColumn"
+        - 'sqlite/real@1'
+        - 'realColumn'
       anyMatch: true
   - id: pg-timestamptz-json-is-utc-iso
     summary: |
@@ -488,11 +488,11 @@ changes:
       session-dependent parsing, and drop any `SET DateStyle` / `SET TimeZone` you added to
       stabilise it.
     detection:
-      glob: "**/*.{ts,tsx,mts,cts,sql}"
+      glob: '**/*.{ts,tsx,mts,cts,sql}'
       contains:
-        - "pg/timestamptz@1"
-        - "timestamptzColumn"
-        - "DateStyle"
+        - 'pg/timestamptz@1'
+        - 'timestamptzColumn'
+        - 'DateStyle'
       anyMatch: true
   - id: sqlite-json-documents-survive-nesting
     summary: |
@@ -505,10 +505,10 @@ changes:
       follows the column's codec, not its content. Remove any `JSON.parse` you added to compensate
       for the double encoding.
     detection:
-      glob: "**/*.{ts,tsx,mts,cts}"
+      glob: '**/*.{ts,tsx,mts,cts}'
       contains:
-        - "sqlite/json@1"
-        - "jsonColumn"
+        - 'sqlite/json@1'
+        - 'jsonColumn'
       anyMatch: true
   - id: sqlite-blob-null-is-distinct-from-empty
     summary: |
@@ -519,10 +519,10 @@ changes:
       around the old behaviour by treating a zero-length blob as absent — that check now needs to
       test for `null`.
     detection:
-      glob: "**/*.{ts,tsx,mts,cts}"
+      glob: '**/*.{ts,tsx,mts,cts}'
       contains:
-        - "sqlite/blob@1"
-        - "blobColumn"
+        - 'sqlite/blob@1'
+        - 'blobColumn'
       anyMatch: true
   - id: sql-float-rejects-non-finite-values
     summary: |
@@ -533,10 +533,10 @@ changes:
       produce a non-finite float before writing it to a `sql/float@1` column, or use
       `pg/numeric@1`, whose application value is text and which admits all three.
     detection:
-      glob: "**/*.{ts,tsx,mts,cts}"
+      glob: '**/*.{ts,tsx,mts,cts}'
       contains:
-        - "sql/float@1"
-        - "sqlFloatColumn"
+        - 'sql/float@1'
+        - 'sqlFloatColumn'
       anyMatch: true
   - id: explicit-codec-refs-need-readable-type-params
     summary: |
@@ -552,10 +552,10 @@ changes:
       [TML-3114](https://linear.app/prisma-company/issue/TML-3114). Add the `typeParams` your
       column declares, or drop the explicit codec and let the column's own codec resolve.
     detection:
-      glob: "**/*.{ts,tsx,mts,cts}"
+      glob: '**/*.{ts,tsx,mts,cts}'
       contains:
-        - "codec: { codecId"
-        - "pg/enum@1"
+        - 'codec: { codecId'
+        - 'pg/enum@1'
       anyMatch: true
   - id: sql-timestamp-json-is-utc-not-local
     summary: |
@@ -577,10 +577,10 @@ changes:
       `pg/timestamp@1` is unaffected — it already read as UTC and already emitted the zone-less
       form.
     detection:
-      glob: "**/*.{ts,tsx,mts,cts,json}"
+      glob: '**/*.{ts,tsx,mts,cts,json}'
       contains:
-        - "sql/timestamp@1"
-        - "sqlTimestampColumn"
+        - 'sql/timestamp@1'
+        - 'sqlTimestampColumn'
       anyMatch: true
 ---
 
@@ -668,12 +668,12 @@ prisma-next contract emit
 
 ### What changed about physical index names
 
-| Authoring input | 0.16 physical name | 0.17 physical name |
-| --- | --- | --- |
-| PSL `@@index([a, b])` / TS `constraints.index([cols.a, cols.b])` (unnamed) | `<table>_<a>_<b>_idx` | `<table>_<a>_<b>_idx_<8hex>` (wire-named) |
-| FK-backing index (derived from a relation) | `<table>_<col>_idx` | `<table>_<col>_idx_<8hex>` (wire-named) |
-| TS `constraints.index([...], { name: "x" })` | `x` | `x_<8hex>` — the name is now a wire *prefix* |
-| PSL `@@index([...], map: "x")` | `x` | `x` — an exact physical name, now verified against the live catalog |
+| Authoring input                                                            | 0.16 physical name    | 0.17 physical name                                                  |
+| -------------------------------------------------------------------------- | --------------------- | ------------------------------------------------------------------- |
+| PSL `@@index([a, b])` / TS `constraints.index([cols.a, cols.b])` (unnamed) | `<table>_<a>_<b>_idx` | `<table>_<a>_<b>_idx_<8hex>` (wire-named)                           |
+| FK-backing index (derived from a relation)                                 | `<table>_<col>_idx`   | `<table>_<col>_idx_<8hex>` (wire-named)                             |
+| TS `constraints.index([...], { name: "x" })`                               | `x`                   | `x_<8hex>` — the name is now a wire _prefix_                        |
+| PSL `@@index([...], map: "x")`                                             | `x`                   | `x` — an exact physical name, now verified against the live catalog |
 
 The `<8hex>` suffix is a content hash over the index definition (element list, predicate, uniqueness, access method, options), so an unchanged definition always produces the same name.
 
@@ -686,7 +686,7 @@ No index is rebuilt. After re-emitting the contract, the first plan that allows 
 
 Inspect the plan before applying — for a schema whose only drift is the index naming, it contains nothing but renames.
 
-Under an **additive-only** policy (e.g. `db init`'s class set) the rename pairing is skipped: the plan creates the new wire-named index beside the old one. Once both indexes exist, a later widening plan has nothing left to pair — the new name is already present, and the rename op's own precheck requires its target name to be absent — so after the additive create the old index is removed **only** by a destructive-allowed plan dropping it. A rename happens only when a widening-allowed plan is the *first* convergence, before any create. This degradation is deliberate — an additive-only run never emits an op class it is not allowed to execute; if you want renames instead of create-then-drop, run the widening plan first.
+Under an **additive-only** policy (e.g. `db init`'s class set) the rename pairing is skipped: the plan creates the new wire-named index beside the old one. Once both indexes exist, a later widening plan has nothing left to pair — the new name is already present, and the rename op's own precheck requires its target name to be absent — so after the additive create the old index is removed **only** by a destructive-allowed plan dropping it. A rename happens only when a widening-allowed plan is the _first_ convergence, before any create. This degradation is deliberate — an additive-only run never emits an op class it is not allowed to execute; if you want renames instead of create-then-drop, run the widening plan first.
 
 ### Hard-coded names
 
@@ -698,17 +698,25 @@ Generated migrations that create an RLS policy carry the policy as a literal. Wh
 
 ```ts
 // 0.16
-this.createRlsPolicy({ schema: "public", table: "post", policy: {
-  name: "post_owner_a1b2c3d4",
-  prefix: "post_owner",
-  // …
-} })
+this.createRlsPolicy({
+  schema: 'public',
+  table: 'post',
+  policy: {
+    name: 'post_owner_a1b2c3d4',
+    prefix: 'post_owner',
+    // …
+  },
+});
 
 // 0.17
-this.createRlsPolicy({ schema: "public", table: "post", policy: {
-  naming: { kind: "wire", prefix: "post_owner", hash: "a1b2c3d4" },
-  // …
-} })
+this.createRlsPolicy({
+  schema: 'public',
+  table: 'post',
+  policy: {
+    naming: { kind: 'wire', prefix: 'post_owner', hash: 'a1b2c3d4' },
+    // …
+  },
+});
 ```
 
 A policy whose name the author owns (adopted through `@@map`) carries `naming: { kind: "exact", name: "Tenant members can read" }` instead. Every other key of the literal is unchanged.
@@ -743,7 +751,7 @@ TypeScript does not implicitly convert between `number` and `bigint`, so `pnpm t
 
 - **Row-type annotations.** A counted column is `bigint`: `SqlQueryPlan<{ name: string; postCount: bigint }>`.
 - **Comparison literals.** `fns.gt(fns.count(), 5)` becomes `fns.gt(fns.count(), 5n)`.
-- **Values read from a driver.** A raw `pg` query returns an `int8` as a decimal *string*; convert with `BigInt(row.id)` rather than annotating it `number`.
+- **Values read from a driver.** A raw `pg` query returns an `int8` as a decimal _string_; convert with `BigInt(row.id)` rather than annotating it `number`.
 
 Arithmetic mixing the two throws at runtime rather than coercing, so a site that typechecks after a cast is worth reading again.
 
@@ -753,11 +761,11 @@ An interval is not a duration. PostgreSQL stores three independent fields — mo
 
 ```ts
 // before
-const gap: string = row.gap;              // "{\"days\":1}"
+const gap: string = row.gap; // "{\"days\":1}"
 
 // after
-const gap = row.gap;                      // { months: 0, days: 1, micros: 0n }
-const totalDays = gap.days + gap.months * 30;   // your calendar rule, not ours
+const gap = row.gap; // { months: 0, days: 1, micros: 0n }
+const totalDays = gap.days + gap.months * 30; // your calendar rule, not ours
 ```
 
 The representation is separate from the value, as it is for `pg/bytea@1` (a `Uint8Array` carried as base64) and `pg/int8@1` (a `bigint` carried as decimal text). A contract holds the ISO-8601 duration string, so re-emit to pick up the spelling — `P1M`, `P1Y2M3DT4H5M6S`, `PT0S` for zero, each component carrying its own sign.

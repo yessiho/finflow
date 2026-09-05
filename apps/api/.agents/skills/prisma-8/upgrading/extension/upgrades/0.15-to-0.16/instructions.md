@@ -1,6 +1,6 @@
 ---
-from: "0.15"
-to: "0.16"
+from: '0.15'
+to: '0.16'
 changes:
   - id: extension-supabase-test-utils-export-removed
     summary: |
@@ -13,9 +13,9 @@ changes:
       (tests import them by source path) rather than publishing them as subpath exports whose
       on-disk fixtures don't ship.
     detection:
-      glob: "**/*.{ts,mts,cts,js,mjs}"
+      glob: '**/*.{ts,mts,cts,js,mjs}'
       contains:
-        - "extension-supabase/test/utils"
+        - 'extension-supabase/test/utils'
       anyMatch: true
   - id: identity-columns-need-explicit-default-under-strict-verify
     summary: |
@@ -39,10 +39,10 @@ changes:
       deleted, and `validateScalarTypeCodecIds` now takes the authoring type namespace instead of
       a descriptor map.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "scalarTypeDescriptors"
-        - "assembleScalarTypeDescriptors"
+        - 'scalarTypeDescriptors'
+        - 'assembleScalarTypeDescriptors'
       anyMatch: true
   - id: postgres-json-rebound-to-native-json
     summary: |
@@ -59,9 +59,9 @@ changes:
       (`NATIVE_TYPE_SPECS`) is unchanged, as are sqlite/mongo `Json` bindings and the TS
       builder surface (`field.json()`, `jsonbColumn`).
     detection:
-      glob: "**/*.{prisma,ts,mts,cts}"
+      glob: '**/*.{prisma,ts,mts,cts}'
       contains:
-        - "Json"
+        - 'Json'
       anyMatch: true
   - id: default-generators-no-longer-set-storage
     summary: |
@@ -84,15 +84,15 @@ changes:
       char storage explicitly in the type position (`Char(36) @default(uuid())`, …), then
       re-emit.
     detection:
-      glob: "**/*.{ts,mts,cts,prisma}"
+      glob: '**/*.{ts,mts,cts,prisma}'
       contains:
-        - "resolveGeneratedColumnDescriptor"
-        - "resolveBuiltinGeneratedColumnDescriptor"
-        - "baseScalar"
-        - "@default(uuid("
-        - "@default(cuid("
-        - "@default(nanoid("
-        - "@default(ulid("
+        - 'resolveGeneratedColumnDescriptor'
+        - 'resolveBuiltinGeneratedColumnDescriptor'
+        - 'baseScalar'
+        - '@default(uuid('
+        - '@default(cuid('
+        - '@default(nanoid('
+        - '@default(ulid('
       anyMatch: true
 ---
 

@@ -1,6 +1,6 @@
 ---
-from: "8.0.0-rc.6"
-to: "8.0.0-rc.7"
+from: '8.0.0-rc.6'
+to: '8.0.0-rc.7'
 changes:
   - id: rename-orm-pagination-methods
     summary: |
@@ -12,7 +12,7 @@ changes:
       the installed toolchain. The toolchain also re-released against
       `@prisma/cli-engine@0.2.3` (a CLI-side change with no ORM-facing surface).
     detection:
-      glob: "**/contract.json"
+      glob: '**/contract.json'
       contains:
         - '"version": "8.0.0-rc.6"'
 ---

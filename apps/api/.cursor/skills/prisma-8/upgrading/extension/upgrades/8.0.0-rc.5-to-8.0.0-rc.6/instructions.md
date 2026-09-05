@@ -1,6 +1,6 @@
 ---
-from: "8.0.0-rc.5"
-to: "8.0.0-rc.6"
+from: '8.0.0-rc.5'
+to: '8.0.0-rc.6'
 changes:
   - id: postgres-temporal-codec-ids-retired
     summary: |
@@ -36,10 +36,10 @@ changes:
       5. **Re-emit any contract your package commits.** `build:contract-space` (or
          `prisma contract emit`) rewrites `contract.json` and `contract.d.ts`; commit both.
     detection:
-      glob: "**/*.{ts,mts,cts,json}"
+      glob: '**/*.{ts,mts,cts,json}'
       regex:
-        - "pg/(date|timestamp|timestamptz|time)@1"
-        - "sql/timestamp@1"
+        - 'pg/(date|timestamp|timestamptz|time)@1'
+        - 'sql/timestamp@1'
       anyMatch: true
   - id: temporal-codecs-require-a-global-and-refuse-a-date
     summary: |
@@ -65,9 +65,9 @@ changes:
          the matching `Temporal.*` value — a `Date` no longer slips through to be serialized as
          `Date.prototype.toString()`.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       regex:
-        - "pg/(date|timestamp|timestamptz|time)-temporal@1"
+        - 'pg/(date|timestamp|timestamptz|time)-temporal@1'
       anyMatch: true
   - id: contract-space-restamp
     summary: |
@@ -77,7 +77,7 @@ changes:
       toolchain also re-released against `@prisma/cli-engine@0.2.2` (a CLI-side fix with no
       extension-facing surface).
     detection:
-      glob: "**/contract.json"
+      glob: '**/contract.json'
       contains:
         - '"version": "8.0.0-rc.5"'
 ---
@@ -86,7 +86,7 @@ changes:
 
 # PostgreSQL temporal representations, for extension authors
 
-There is no codemod: the retired ids map to *two* replacements each, and which one an extension
+There is no codemod: the retired ids map to _two_ replacements each, and which one an extension
 should name is a judgement about what its consumers do with the column. Sweep by id, decide per
 site, then re-emit any committed contract artifact.
 

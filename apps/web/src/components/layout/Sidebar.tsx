@@ -1,19 +1,18 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 
 import {
+  BookOpen,
+  Landmark,
   LayoutDashboard,
-  WalletCards,
+  LogOut,
   ReceiptText,
   Settings,
-  LogOut,
-  Landmark,
-  BookOpen,
   ShieldCheck,
+  WalletCards,
 } from 'lucide-react';
-
-import { usePathname } from 'next/navigation';
 
 const navigation = [
   {
@@ -45,12 +44,13 @@ const navigation = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
 
   function logout() {
     localStorage.removeItem('access_token');
     localStorage.removeItem('user');
 
-    window.location.href = '/login';
+    router.replace('/login');
   }
 
   function isActive(href: string) {
@@ -58,10 +58,7 @@ export default function Sidebar() {
       return pathname === href;
     }
 
-    return (
-      pathname === href ||
-      pathname.startsWith(`${href}/`)
-    );
+    return pathname === href || pathname.startsWith(`${href}/`);
   }
 
   return (
@@ -79,19 +76,15 @@ export default function Sidebar() {
       <nav className="sidebar-nav">
         {navigation.map((item) => {
           const Icon = item.icon;
-
           const active = isActive(item.href);
 
           return (
             <Link
               key={item.name}
               href={item.href}
-              className={`nav-item ${
-                active ? 'active' : ''
-              }`}
+              className={`nav-item ${active ? 'active' : ''}`}
             >
               <Icon size={20} />
-
               <span>{item.name}</span>
             </Link>
           );
@@ -102,14 +95,9 @@ export default function Sidebar() {
       <div className="sidebar-bottom">
         <Link
           href="/settings"
-          className={`nav-item ${
-            pathname === '/settings'
-              ? 'active'
-              : ''
-          }`}
+          className={`nav-item ${pathname === '/settings' ? 'active' : ''}`}
         >
           <Settings size={20} />
-
           <span>Settings</span>
         </Link>
 
@@ -119,7 +107,6 @@ export default function Sidebar() {
           onClick={logout}
         >
           <LogOut size={20} />
-
           <span>Logout</span>
         </button>
       </div>

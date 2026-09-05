@@ -68,7 +68,9 @@ async function findManifests(root: string): Promise<string[]> {
   return out.sort();
 }
 
-function looksLikeMigrationManifest(value: unknown): value is Record<string, unknown> {
+function looksLikeMigrationManifest(
+  value: unknown,
+): value is Record<string, unknown> {
   if (typeof value !== 'object' || value === null) return false;
   const obj = value as Record<string, unknown>;
   return 'from' in obj && 'to' in obj && 'migrationHash' in obj;
@@ -158,7 +160,8 @@ function removeTopLevelKey(text: string, key: string): string {
     if (text[removeEnd] === '\n') removeEnd += 1;
     let lineStart = removeStart;
     while (lineStart > 0 && text[lineStart - 1] !== '\n') lineStart -= 1;
-    if (text.slice(lineStart, removeStart).trim() === '') removeStart = lineStart;
+    if (text.slice(lineStart, removeStart).trim() === '')
+      removeStart = lineStart;
   } else {
     let back = removeStart - 1;
     while (back > 0 && /[ \t]/.test(text[back] ?? '')) back -= 1;
@@ -179,7 +182,8 @@ async function processManifest(path: string): Promise<Result> {
   const raw = await readFile(path, 'utf-8');
   const data: Record<string, unknown> = JSON.parse(raw);
   const removed = REMOVED_KEYS.filter((key) => key in data);
-  if (removed.length === 0) return { path, status: 'already-clean', removed: [] };
+  if (removed.length === 0)
+    return { path, status: 'already-clean', removed: [] };
 
   let stripped = raw;
   for (const key of removed) stripped = removeTopLevelKey(stripped, key);

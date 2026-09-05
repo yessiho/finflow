@@ -6,13 +6,11 @@ async function resetPassword() {
 
   const passwordHash = await bcrypt.hash(newPassword, 12);
 
-  const user = await db.orm.public.User
-    .where({
-      id: 2,
-    })
-    .update({
-      passwordHash,
-    });
+  const user = await db.orm.public.User.where({
+    id: 2,
+  }).update({
+    passwordHash,
+  });
 
   console.log('Password reset successful');
   console.log({

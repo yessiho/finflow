@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 
 import { apiFetch } from '@/lib/api';
 
@@ -17,6 +17,27 @@ type WithdrawModalProps = {
   onSuccess: () => void;
 };
 
+interface ApiError {
+  message?: string;
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof (error as ApiError).message === 'string'
+  ) {
+    return (error as ApiError).message as string;
+  }
+
+  return 'Unable to withdraw money.';
+}
+
 export default function WithdrawModal({
   wallet,
   onClose,
@@ -26,48 +47,38 @@ export default function WithdrawModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>,
-  ) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setError('');
 
     const numericAmount = Number(amount);
+    const availableBalance = Number(wallet.balance);
 
-    if (
-      !numericAmount ||
-      numericAmount <= 0
-    ) {
-      setError(
-        'Please enter a valid amount greater than zero.',
-      );
+    if (!numericAmount || numericAmount <= 0) {
+      setError('Please enter a valid amount greater than zero.');
+      return;
+    }
 
+    if (numericAmount > availableBalance) {
+      setError('Withdrawal amount cannot exceed your available balance.');
       return;
     }
 
     setLoading(true);
 
     try {
-      await apiFetch(
-        `/wallets/${wallet.id}/withdraw`,
-        {
-          method: 'POST',
-
-          body: JSON.stringify({
-            amount: numericAmount,
-          }),
-        },
-      );
+      await apiFetch(`/wallets/${wallet.id}/withdraw`, {
+        method: 'POST',
+        body: JSON.stringify({
+          amount: numericAmount,
+        }),
+      });
 
       onSuccess();
-
       onClose();
-    } catch (error: any) {
-      setError(
-        error.message ||
-          'Unable to withdraw money.',
-      );
+    } catch (error: unknown) {
+      setError(getErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -77,64 +88,60 @@ export default function WithdrawModal({
     <div
       className="modal-overlay"
       onClick={onClose}
+      role="presentation"
     >
       <div
         className="wallet-modal"
-        onClick={(event) =>
-          event.stopPropagation()
-        }
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="withdraw-modal-title"
       >
         <div className="modal-header">
           <div>
-            <h2>Withdraw Money</h2>
+            <h2 id="withdraw-modal-title">Withdraw Money</h2>
 
-            <p>
-              Withdraw money from your wallet.
-            </p>
+            <p>Withdraw money from your wallet.</p>
           </div>
 
           <button
             className="modal-close"
             onClick={onClose}
             type="button"
+            aria-label="Close withdrawal modal"
           >
             <X size={22} />
           </button>
         </div>
 
         <div className="wallet-summary">
-          <span>
-            {wallet.currency} Wallet
-          </span>
+          <span>{wallet.currency} Wallet</span>
 
           <strong>
-            Available Balance:{' '}
-            {wallet.balance}
+            Available Balance: {wallet.balance}
           </strong>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="wallet-action-form"
-        >
+        <form onSubmit={handleSubmit} className="wallet-action-form">
           {error && (
-            <div className="form-error">
+            <div className="form-error" role="alert">
               {error}
             </div>
           )}
 
           <div className="form-group">
-            <label>Amount</label>
+            <label htmlFor="withdraw-amount">Amount</label>
 
             <input
+              id="withdraw-amount"
               type="number"
               placeholder="Enter amount"
               value={amount}
-              min="1"
-              onChange={(event) =>
-                setAmount(event.target.value)
-              }
+              min="0.01"
+              step="0.01"
+              onChange={(event) => setAmount(event.target.value)}
               required
+              disabled={loading}
             />
           </div>
 
@@ -155,11 +162,7 @@ export default function WithdrawModal({
             >
               {loading ? (
                 <>
-                  <Loader2
-                    size={18}
-                    className="spinner"
-                  />
-
+                  <Loader2 size={18} className="spinner" />
                   Processing...
                 </>
               ) : (

@@ -8,7 +8,7 @@ The per-transition instructions this reference reads live under [`../upgrading/e
 
 ## Step 0 — Upgrade to the newest instructions, then re-read
 
-The upgrade instructions ship inside the installed Prisma packages, so the copy on disk describes the version currently installed — not the version being upgraded *to*. Bug fixes to *old* per-transition instructions ship with each release as part of the cumulative set, so the newest copy is the one to run.
+The upgrade instructions ship inside the installed Prisma packages, so the copy on disk describes the version currently installed — not the version being upgraded _to_. Bug fixes to _old_ per-transition instructions ship with each release as part of the cumulative set, so the newest copy is the one to run.
 
 Do the version bump first (step 1 of the per-step flow below), re-sync the skills from the newly installed packages (`prisma skills sync`), and re-read this reference and the per-transition instructions before applying any code translation.
 

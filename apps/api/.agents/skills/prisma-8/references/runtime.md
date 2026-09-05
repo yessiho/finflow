@@ -1,4 +1,3 @@
-
 # Prisma Next — Runtime (`db.ts` Wiring)
 
 > **Edit your data contract. Prisma handles the rest.**
@@ -13,7 +12,7 @@ This skill covers the **runtime entry point** — `db.ts` — and how to compose
 - User wants to switch between the Postgres, SQLite, and Mongo façades.
 - User wants to wrap operations in `db.transaction(...)` (Postgres and SQLite).
 - User is running a one-off script (`tsx my-script.ts`, Node CLI, CI task) and the process won't exit after queries finish, or they need script teardown (`db.close()`, `await using`).
-- User mentions: *db.ts, postgres(), mongo(), middleware, telemetry, lints, budgets, DATABASE_URL, .env, connection pool, poolOptions, dev vs prod, transactions, read replicas, multi-database, script won't exit, hangs, db.close, db.end, close connection, pool.end, await using*.
+- User mentions: _db.ts, postgres(), mongo(), middleware, telemetry, lints, budgets, DATABASE_URL, .env, connection pool, poolOptions, dev vs prod, transactions, read replicas, multi-database, script won't exit, hangs, db.close, db.end, close connection, pool.end, await using_.
 
 ## When Not to Use
 
@@ -27,9 +26,9 @@ This skill covers the **runtime entry point** — `db.ts` — and how to compose
 ## Key Concepts
 
 - **`db.ts` is the runtime entry point.** Imports the runtime factory from the `@internal/<target>` façade (`@internal/postgres/runtime`, `@internal/sqlite/runtime`, or `@internal/mongo/runtime`), the contract artefacts (`contract.json` + the `Contract` type from `contract.d.ts`), and any middleware. Exports a `db` value the rest of your app imports.
-- **The façade's runtime factory is the only surface user-authored `db.ts` imports from.** Each factory is a *default* export. For Postgres: `import postgres from '@internal/postgres/runtime'`; SQLite: `import sqlite from '@internal/sqlite/runtime'`; Mongo: `import mongo from '@internal/mongo/runtime'`. The factory signature is `<Target><Contract>(options)` — a single type parameter (the `Contract` type from `contract.d.ts`), and one options object.
+- **The façade's runtime factory is the only surface user-authored `db.ts` imports from.** Each factory is a _default_ export. For Postgres: `import postgres from '@internal/postgres/runtime'`; SQLite: `import sqlite from '@internal/sqlite/runtime'`; Mongo: `import mongo from '@internal/mongo/runtime'`. The factory signature is `<Target><Contract>(options)` — a single type parameter (the `Contract` type from `contract.d.ts`), and one options object.
 - **Lazy connect.** The factory does not connect to the database synchronously. Static query surfaces (`db.sql`, `db.orm`) are available immediately; the driver / pool is instantiated on the first call that needs a runtime (or when you explicitly call `await db.connect({ url })`). This is why `db.ts` can be imported in modules that load before the env is ready.
-- **Middleware composes in order.** The first middleware in the `middleware: [...]` array runs *outermost* — it sees the operation first on the way in and last on the way out. Telemetry first means budget / lint failures show up inside telemetry spans.
+- **Middleware composes in order.** The first middleware in the `middleware: [...]` array runs _outermost_ — it sees the operation first on the way in and last on the way out. Telemetry first means budget / lint failures show up inside telemetry spans.
 - **`prisma.config.ts` vs `.env`.** The config (`defineConfig({ contract, db, extensions, migrations })`) is for static project shape: contract path, installed extensions, migrations directory, default connection string. `.env` is for per-environment values (`DATABASE_URL`, secrets). The config reads `.env` automatically via `dotenv/config`. Hardcoding `DATABASE_URL` in the config file leaks credentials and bypasses per-env overrides.
 - **Build-system / dev-server integration is a separate skill.** `vite dev` auto-emit lives in `references/build.md`. The runtime side (this skill) reads `contract.json` / `contract.d.ts` regardless of how they got onto disk, so the two skills compose cleanly.
 
@@ -59,7 +58,7 @@ Three things to know:
 - **`with { type: 'json' }` is required.** Node's ESM JSON-import-attribute spec. Without it, the import errors.
 - **`url` is optional at construct time.** If `DATABASE_URL` is not set when `db.ts` loads, the factory still returns a client; you can call `await db.connect({ url })` later. The factory throws lazily — only when a runtime is actually needed.
 
-The Mongo façade has the same construction shape — `import mongo from '@internal/mongo/runtime'` — and the same `db.connect(...)` / `db.close()` lifecycle methods. **The Mongo façade does not expose `db.transaction(...)`.** See *What Prisma Next doesn't do yet* for the workaround. **The ORM surface differs in one place: keys.** On Mongo, `db.orm` is keyed by the collection's storage name (from `@@map(...)`, or the lowercased model name if no `@@map` is set), not by the PSL model name — so `model User { … @@map("users") }` is reached at `db.orm.users`, not `db.orm.User`. The SQL builder lane (`db.sql.<table>`) doesn't exist on Mongo at all (`db.sql` is `undefined`). See `references/queries.md` § *MongoDB ORM addressing* for the full rule and a rewrite recipe for SQL-target examples.
+The Mongo façade has the same construction shape — `import mongo from '@internal/mongo/runtime'` — and the same `db.connect(...)` / `db.close()` lifecycle methods. **The Mongo façade does not expose `db.transaction(...)`.** See _What Prisma Next doesn't do yet_ for the workaround. **The ORM surface differs in one place: keys.** On Mongo, `db.orm` is keyed by the collection's storage name (from `@@map(...)`, or the lowercased model name if no `@@map` is set), not by the PSL model name — so `model User { … @@map("users") }` is reached at `db.orm.users`, not `db.orm.User`. The SQL builder lane (`db.sql.<table>`) doesn't exist on Mongo at all (`db.sql` is `undefined`). See `references/queries.md` § _MongoDB ORM addressing_ for the full rule and a rewrite recipe for SQL-target examples.
 
 ## Workflow — Running as a script (teardown)
 
@@ -71,7 +70,10 @@ The concept: short scripts that connect, query, then expect the process to exit 
 // src/scripts/hello.ts
 import { db } from '../prisma/db';
 
-const created = await db.orm.User.create({ email: 'alice@example.com', name: 'Alice' });
+const created = await db.orm.User.create({
+  email: 'alice@example.com',
+  name: 'Alice',
+});
 const read = await db.orm.User.first();
 console.log({ created, read });
 
@@ -86,7 +88,10 @@ import postgres from '@internal/postgres/runtime';
 import type { Contract } from '../prisma/contract.d';
 import contractJson from '../prisma/contract.json' with { type: 'json' };
 
-await using db = postgres<Contract>({ contractJson, url: process.env.DATABASE_URL! });
+await using db = postgres<Contract>({
+  contractJson,
+  url: process.env.DATABASE_URL!,
+});
 
 const user = await db.orm.User.first();
 console.log(user);
@@ -95,12 +100,15 @@ console.log(user);
 
 ### `await using` is **block-scoped** — do not put it inside a request handler
 
-This is the most important rule in this section. `await using db = postgres(...)` disposes when the *enclosing block* exits. In a script module, that block is the module body and disposal fires at process exit — fine. In a request handler, the enclosing block is the handler function, so disposal fires **after every request** — a fresh `pg.Pool` per call, TCP-connect storm, hot loop tearing connections up and down.
+This is the most important rule in this section. `await using db = postgres(...)` disposes when the _enclosing block_ exits. In a script module, that block is the module body and disposal fires at process exit — fine. In a request handler, the enclosing block is the handler function, so disposal fires **after every request** — a fresh `pg.Pool` per call, TCP-connect storm, hot loop tearing connections up and down.
 
 ```typescript
 // DO NOT do this — closes the pool after every request.
 app.get('/users', async (req, res) => {
-  await using db = postgres<Contract>({ contractJson, url: process.env.DATABASE_URL! });
+  await using db = postgres<Contract>({
+    contractJson,
+    url: process.env.DATABASE_URL!,
+  });
   const users = await db.orm.User.all();
   res.json(users);
 });
@@ -110,7 +118,10 @@ The right server pattern is a **module-level singleton** in `db.ts`, imported by
 
 ```typescript
 // src/prisma/db.ts — constructed once, lives for the process
-export const db = postgres<Contract>({ contractJson, url: process.env.DATABASE_URL });
+export const db = postgres<Contract>({
+  contractJson,
+  url: process.env.DATABASE_URL,
+});
 
 // src/routes/users.ts
 import { db } from '../prisma/db';
@@ -161,7 +172,7 @@ export const db = postgres<Contract>({
 
 The concept: lints catch authoring mistakes that survive type-check (e.g. `DELETE` without a `WHERE`, `SELECT` without a `LIMIT` on a large table); budgets enforce row-count and latency ceilings at runtime. Both surface findings through the structured-error envelope so an agent can branch on the code.
 
-These ship in the underlying SQL runtime package (`@internal/sql-runtime`) and are *not* yet re-exported from the postgres façade — see *What Prisma Next doesn't do yet*. The example apps under `examples/prisma-8-demo/src/prisma/db.ts` show the canonical import.
+These ship in the underlying SQL runtime package (`@internal/sql-runtime`) and are _not_ yet re-exported from the postgres façade — see _What Prisma Next doesn't do yet_. The example apps under `examples/prisma-8-demo/src/prisma/db.ts` show the canonical import.
 
 ```typescript
 import postgres from '@internal/postgres/runtime';
@@ -209,7 +220,7 @@ Order matters: outermost wraps. Telemetry first means budget / lint failures are
 
 ## Workflow — Configure the connection
 
-The concept: the runtime takes one of three binding shapes — `url`, `pg` (a pre-constructed `pg.Pool` or `pg.Client`), or `binding` (an explicit kind tag). They're mutually exclusive. The `pg` form is for projects that already manage their own pool (e.g. a Lambda layer); `url` is the default. Pool tuning is `poolOptions.connectionTimeoutMillis` / `poolOptions.idleTimeoutMillis` — *not* `driverOptions`.
+The concept: the runtime takes one of three binding shapes — `url`, `pg` (a pre-constructed `pg.Pool` or `pg.Client`), or `binding` (an explicit kind tag). They're mutually exclusive. The `pg` form is for projects that already manage their own pool (e.g. a Lambda layer); `url` is the default. Pool tuning is `poolOptions.connectionTimeoutMillis` / `poolOptions.idleTimeoutMillis` — _not_ `driverOptions`.
 
 ```typescript
 // Default — URL string, factory constructs the pool.
@@ -246,7 +257,9 @@ export const db = postgres<Contract>({
     ? [createTelemetryMiddleware({ onEvent })]
     : [
         createTelemetryMiddleware({ onEvent }),
-        lints({ severities: { noLimit: 'error', deleteWithoutWhere: 'error' } }),
+        lints({
+          severities: { noLimit: 'error', deleteWithoutWhere: 'error' },
+        }),
       ],
 });
 ```
@@ -279,7 +292,10 @@ import mongo from '@internal/mongo/runtime';
 import type { Contract } from './contract.d';
 import contractJson from './contract.json' with { type: 'json' };
 
-export const db = mongo<Contract>({ contractJson, url: process.env['DATABASE_URL'] });
+export const db = mongo<Contract>({
+  contractJson,
+  url: process.env['DATABASE_URL'],
+});
 ```
 
 SQLite:
@@ -312,7 +328,7 @@ The runtime side (this skill) is the same regardless: `db.ts` reads `contract.js
 2. **Omitting the `<Contract>` type parameter** in `postgres<Contract>(...)`. Without it, static surfaces collapse to a generic shape and you lose autocomplete for models. There is no second type parameter — the older two-param signature (`postgres<Contract, TypeMaps>`) is gone.
 3. **Forgetting `with { type: 'json' }` on the contract import.** Required by Node's ESM JSON-import-attribute spec.
 4. **Middleware order matters.** Outermost wraps. Put telemetry first if you want it to capture inner-middleware errors.
-5. **Importing middleware from a non-existent façade subpath.** `@internal/postgres/middleware` does *not* exist. Telemetry comes from `@internal/middleware-telemetry`; lints / budgets come from `@internal/sql-runtime` today (see *What Prisma Next doesn't do yet*).
+5. **Importing middleware from a non-existent façade subpath.** `@internal/postgres/middleware` does _not_ exist. Telemetry comes from `@internal/middleware-telemetry`; lints / budgets come from `@internal/sql-runtime` today (see _What Prisma Next doesn't do yet_).
 6. **Confabulating lint / budget option names.** Lints take `severities` (with the five keys above), not `requireWhere` / `maxRowsWithoutLimit`. Budgets use `maxLatencyMs` (not `maxDurationMs`) plus `maxRows` / `defaultTableRows` / `tableRows`. When in doubt, read the source.
 7. **Switching targets without re-emitting.** The contract artefacts are target-shaped; emit after the target change.
 8. **Script hangs after queries finish on Postgres.** The `pg.Pool` keeps Node's event loop alive. Solution: `await db.close()` before the script returns, or `await using db = postgres<Contract>(...)` at the top of a script module. Do not put `await using db = postgres(...)` inside a request handler — it's block-scoped and would close the pool after every request. The right server pattern is a module-level singleton in `db.ts` that lives for the process lifetime.
@@ -340,5 +356,5 @@ This skill is intentionally body-only; `prisma orm init --help`, the `defineConf
 - [ ] Did NOT hardcode credentials in any committed file.
 - [ ] Did NOT confabulate a `@internal/postgres/middleware` subpath, a `@internal/postgres-extension-audit` package, or a second type parameter on `postgres<...>`.
 - [ ] Did NOT claim `db.transaction(...)` exists on the Mongo façade — only Postgres and SQLite expose it.
-- [ ] Did NOT confabulate read-replica / multi-DB / extra pool config — pointed at *What Prisma Next doesn't do yet* and routed to `references/feedback.md`.
+- [ ] Did NOT confabulate read-replica / multi-DB / extra pool config — pointed at _What Prisma Next doesn't do yet_ and routed to `references/feedback.md`.
 - [ ] For build-system / dev-server prompts (Vite plugin, Next.js plugin, …) routed to `references/build.md`.

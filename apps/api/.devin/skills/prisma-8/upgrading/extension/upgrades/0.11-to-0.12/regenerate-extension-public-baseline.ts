@@ -20,7 +20,13 @@
  *             and exits 1 if any remain.
  */
 import { execFile } from 'node:child_process';
-import { access, copyFile, readdir, readFile, writeFile } from 'node:fs/promises';
+import {
+  access,
+  copyFile,
+  readdir,
+  readFile,
+  writeFile,
+} from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 
@@ -102,7 +108,8 @@ async function findMigrationDirs(migrationsDir: string): Promise<string[]> {
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
     const migrationDir = join(migrationsDir, entry.name);
-    if (await pathExists(join(migrationDir, 'migration.ts'))) out.push(migrationDir);
+    if (await pathExists(join(migrationDir, 'migration.ts')))
+      out.push(migrationDir);
   }
   return out.sort();
 }
@@ -126,13 +133,19 @@ async function patchMigrationToHash(
   storageHash: string,
 ): Promise<boolean> {
   const raw = await readFile(migrationTsPath, 'utf-8');
-  const patched = raw.replace(/(\bto:\s*['"])sha256:[0-9a-f]{64}(['"])/, `$1${storageHash}$2`);
+  const patched = raw.replace(
+    /(\bto:\s*['"])sha256:[0-9a-f]{64}(['"])/,
+    `$1${storageHash}$2`,
+  );
   if (patched === raw) return false;
   await writeFile(migrationTsPath, patched);
   return true;
 }
 
-async function patchHeadRef(headPath: string, storageHash: string): Promise<boolean> {
+async function patchHeadRef(
+  headPath: string,
+  storageHash: string,
+): Promise<boolean> {
   const raw = await readFile(headPath, 'utf-8');
   let parsed: unknown;
   try {
@@ -165,7 +178,9 @@ for (const pkgPath of await findPackageJsonFiles(projectRoot)) {
 }
 
 if (extensionRoots.length === 0) {
-  console.error(`No extension public-default migration candidates under ${projectRoot}.`);
+  console.error(
+    `No extension public-default migration candidates under ${projectRoot}.`,
+  );
   process.exit(dryRun ? 0 : 1);
 }
 
@@ -188,7 +203,10 @@ for (const { dir, contractPath } of extensionRoots) {
   }
 
   console.log(`REGENERATE  ${rel}`);
-  await execFileAsync('pnpm', ['build:contract-space'], { cwd: dir, env: process.env });
+  await execFileAsync('pnpm', ['build:contract-space'], {
+    cwd: dir,
+    env: process.env,
+  });
 
   const storageHash = await readStorageHash(contractPath);
   if (storageHash === null) {
@@ -206,7 +224,10 @@ for (const { dir, contractPath } of extensionRoots) {
     }
     const migrationTs = join(migrationDir, 'migration.ts');
     await patchMigrationToHash(migrationTs, storageHash);
-    await execFileAsync('pnpm', ['exec', 'tsx', migrationTs], { cwd: dir, env: process.env });
+    await execFileAsync('pnpm', ['exec', 'tsx', migrationTs], {
+      cwd: dir,
+      env: process.env,
+    });
   }
 
   const headPath = join(migrationsDir, 'refs', 'head.json');

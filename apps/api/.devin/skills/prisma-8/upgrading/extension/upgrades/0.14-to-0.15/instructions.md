@@ -1,6 +1,6 @@
 ---
-from: "0.14"
-to: "0.15"
+from: '0.14'
+to: '0.15'
 changes:
   - id: sql-contract-createnamespace-required
     summary: |
@@ -12,10 +12,10 @@ changes:
       `@internal/target-postgres/types`, or `sqliteCreateNamespace` from `@internal/target-sqlite/control`.
       Without it, `contract emit` / build fails at runtime with "createNamespace is not a function".
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "prismaContract("
-        - "defineContract("
+        - 'prismaContract('
+        - 'defineContract('
       anyMatch: true
   - id: sql-namespace-types-renamed-and-removed
     summary: |
@@ -27,12 +27,12 @@ changes:
       / `sqliteCreateNamespace`). Any hand-written SQL namespace type literal or fixture must carry the
       target `kind` (e.g. `'postgres-schema'`) instead of the removed `'sql-namespace'` discriminator.
     detection:
-      glob: "**/*.{ts,mts,cts,tsx}"
+      glob: '**/*.{ts,mts,cts,tsx}'
       contains:
-        - "SqlNamespaceTablesInput"
-        - "buildSqlNamespace"
-        - "SqlBoundNamespace"
-        - "SqlUnboundNamespace"
+        - 'SqlNamespaceTablesInput'
+        - 'buildSqlNamespace'
+        - 'SqlBoundNamespace'
+        - 'SqlUnboundNamespace'
         - "'sql-namespace'"
       anyMatch: true
   - id: codec-render-value-literal-for-restricted-columns
@@ -48,11 +48,11 @@ changes:
       already supply it — no action there. (`side`: `output` = the read/SELECT type, `input` = the
       create/update type.)
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "CodecDescriptorImpl"
-        - "renderValueTypeFor"
-        - "renderOutputType"
+        - 'CodecDescriptorImpl'
+        - 'renderValueTypeFor'
+        - 'renderOutputType'
       anyMatch: true
   - id: sql-codec-json-result-decoding
     summary: |
@@ -67,10 +67,10 @@ changes:
       text. SQLite cannot represent BLOB values inside its native JSON values; such queries still fail
       at the database boundary rather than receiving a synthetic codec representation.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "encodeJson"
-        - "decodeJson"
+        - 'encodeJson'
+        - 'decodeJson'
       anyMatch: true
   - id: mongo-derive-json-schema-value-sets-param
     summary: |
@@ -85,10 +85,10 @@ changes:
       Mongo contracts through `mongoContract(...)` / `defineContract(...)`, which call these
       internally — those need no change.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "deriveJsonSchema"
-        - "derivePolymorphicJsonSchema"
+        - 'deriveJsonSchema'
+        - 'derivePolymorphicJsonSchema'
       anyMatch: true
   - id: sql-migration-planner-keep-diff-issue-to-ownership-oracle
     summary: |
@@ -105,9 +105,9 @@ changes:
       the aggregate (or any object implementing `SchemaOwnership`) as `ownership`. There is no
       names-set and no filter function — ownership lives in the aggregate; the planner only asks.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "keepDiffIssue"
+        - 'keepDiffIssue'
       anyMatch: true
   - id: family-sql-collect-sql-schema-issues-removed
     summary: |
@@ -122,11 +122,11 @@ changes:
       `buildSqlitePlanDiff` from the sqlite target) for the same op-render-stamped comparison the
       planner itself runs.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "collectSqlSchemaIssues"
-        - "collectSqlSchemaIssuesPerNamespace"
-        - "CollectSqlSchemaIssuesOptions"
+        - 'collectSqlSchemaIssues'
+        - 'collectSqlSchemaIssuesPerNamespace'
+        - 'CollectSqlSchemaIssuesOptions'
       anyMatch: true
   - id: sql-control-target-descriptor-diff-database-schema-removed
     summary: |
@@ -138,9 +138,9 @@ changes:
       entry above). `diffSchemaForVerdict` (the full-tree node diff the verify verdict derives from)
       is unaffected and still required.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "diffDatabaseSchema"
+        - 'diffDatabaseSchema'
       anyMatch: true
   - id: migration-tools-aggregate-strategy-rename
     summary: |
@@ -151,11 +151,11 @@ changes:
       unchanged — only the names. If your extension imports any of these symbols directly (rather
       than going through `planMigration`, which handles this internally), update the import names.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "graphWalkStrategy"
-        - "GraphWalkOutcome"
-        - "GraphWalkStrategyInputs"
+        - 'graphWalkStrategy'
+        - 'GraphWalkOutcome'
+        - 'GraphWalkStrategyInputs'
       anyMatch: true
   - id: target-postgres-diff-postgres-database-schema-removed
     summary: |
@@ -167,9 +167,9 @@ changes:
       comparison the planner itself uses (relational + RLS-policy issues in one node-typed list,
       filter to the subset you need) and additionally stamps the op-render payload the planner reads.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "diffPostgresDatabaseSchema"
+        - 'diffPostgresDatabaseSchema'
       anyMatch: true
   - id: schema-issue-vocabulary-retired
     summary: |
@@ -184,11 +184,11 @@ changes:
       hand, or reads `.outcome` off a `SchemaDiffIssue`, switch to the node-typed shape and
       `reason`.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "BaseSchemaIssue"
-        - "EnumValuesChangedIssue"
-        - "SchemaDiffOutcome"
+        - 'BaseSchemaIssue'
+        - 'EnumValuesChangedIssue'
+        - 'SchemaDiffOutcome'
         - ".outcome === 'missing'"
         - ".outcome === 'extra'"
         - ".outcome === 'mismatch'"
@@ -206,10 +206,10 @@ changes:
       concatenate the old two lists into one, in the same order, if you need to reproduce prior
       combined output.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "schemaDiffIssues"
-        - "new SchemaDiff("
+        - 'schemaDiffIssues'
+        - 'new SchemaDiff('
       anyMatch: true
   - id: codec-verify-type-hook-returns-schema-diff-issue
     summary: |
@@ -222,10 +222,10 @@ changes:
       extension implements a custom codec's `verifyType` hook, return `{ path, reason, message,
       expected?, actual? }` issues instead of the old `{ kind, table, message }` shape.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "verifyType:"
-        - "verifyType("
+        - 'verifyType:'
+        - 'verifyType('
       anyMatch: true
   - id: policy-target-models-require-rls-attribute
     summary: |
@@ -235,9 +235,9 @@ changes:
       policy-bearing models and re-emit; the contract gains an `rls` marker entity
       (`entries.rls[tableName]`) and a new storage hash.
     detection:
-      glob: "**/*.prisma"
+      glob: '**/*.prisma'
       contains:
-        - "policy_select"
+        - 'policy_select'
       anyMatch: true
   - id: postgres-table-schema-node-rls-enabled-required
     summary: |
@@ -248,9 +248,9 @@ changes:
       RLS-controlled. The expected side derives the value from the contract's `entries.rls`
       marker; the actual side from `pg_class.relrowsecurity` at introspection.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "new PostgresTableSchemaNode("
+        - 'new PostgresTableSchemaNode('
       anyMatch: true
   - id: authoring-contributions-model-attributes-slot
     summary: |
@@ -265,10 +265,10 @@ changes:
       declare `requiresModelAttribute: { parameter, attribute }` to demand that the model
       named by a ref parameter carries a bare `@@` attribute.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "AssembledAuthoringContributions"
-        - "authoringContributions: {"
+        - 'AssembledAuthoringContributions'
+        - 'authoringContributions: {'
       anyMatch: true
   - id: native-enum-serialized-in-contract-json
     summary: |
@@ -284,11 +284,11 @@ changes:
       The change is backward compatible (a pre-existing contract still hydrates), so re-emit at your
       next release rather than urgently.
     detection:
-      glob: "**/*.{prisma,ts,mts,cts}"
+      glob: '**/*.{prisma,ts,mts,cts}'
       contains:
-        - "native_enum"
-        - "pg.enum("
-        - "nativeEnum("
+        - 'native_enum'
+        - 'pg.enum('
+        - 'nativeEnum('
       anyMatch: true
   - id: native-enum-entry-keyed-by-physical-type-name
     summary: |
@@ -303,11 +303,11 @@ changes:
       (`contract.storage.namespaces[<ns>].entries.native_enum[<name>]`), switch that key from the
       PascalCase type name to the physical type name.
     detection:
-      glob: "**/*.{prisma,ts,mts,cts}"
+      glob: '**/*.{prisma,ts,mts,cts}'
       contains:
-        - "native_enum"
-        - "pg.enum("
-        - "nativeEnum("
+        - 'native_enum'
+        - 'pg.enum('
+        - 'nativeEnum('
       anyMatch: true
   - id: scalar-field-state-descriptor-generic
     summary: |
@@ -327,9 +327,9 @@ changes:
       `expectTypeOf`-style equality assertions to the narrowed types; do not re-widen production
       types to satisfy them.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "ScalarFieldState"
+        - 'ScalarFieldState'
       anyMatch: true
   - id: schema-ir-fk-unbound-referenced-schema-absent
     summary: |
@@ -345,10 +345,10 @@ changes:
       `referencedSchema` only for bound (named-schema) FK targets need no change — absence already
       meant "unbound" downstream.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "SqlForeignKeyIR"
-        - "referencedSchema"
+        - 'SqlForeignKeyIR'
+        - 'referencedSchema'
       anyMatch: true
   - id: supabase-pack-contract-complete
     summary: |
@@ -365,9 +365,9 @@ changes:
       shim users need no change beyond re-running. The curated `/contract` model handles (AuthUser,
       AuthIdentity, AuthSession, StorageBucket, StorageObject) are unchanged.
     detection:
-      glob: "**/*.{ts,mts,cts,tsx,prisma,json}"
+      glob: '**/*.{ts,mts,cts,tsx,prisma,json}'
       contains:
-        - "@internal/extension-supabase"
+        - '@internal/extension-supabase'
       anyMatch: true
   - id: psl-relation-index-argument
     summary: |
@@ -380,9 +380,9 @@ changes:
       `backingIndexColumnKeys`/`isBackedByColumnKeys` in `@internal/family-sql`). Purely additive —
       omitted `index` keeps the default `true`; existing contracts re-emit byte-identically.
     detection:
-      glob: "**/*.prisma"
+      glob: '**/*.prisma'
       contains:
-        - "@relation"
+        - '@relation'
       anyMatch: true
   - id: contract-canonicalization-preserves-false
     summary: |
@@ -393,9 +393,9 @@ changes:
       default is now present) and therefore its storageHash. No authoring-surface change; re-emit and
       commit the refreshed artifacts.
     detection:
-      glob: "**/*.prisma"
+      glob: '**/*.prisma'
       contains:
-        - "@default(false)"
+        - '@default(false)'
       anyMatch: true
   - id: sql-array-columns-round-trip
     summary: |
@@ -410,10 +410,10 @@ changes:
       output or assert on derived schema-IR for array/expression-indexed tables should re-run and
       refresh expectations.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "contractToSchemaIR"
-        - "introspect"
+        - 'contractToSchemaIR'
+        - 'introspect'
       anyMatch: true
   - id: postgres-inet-codec
     summary: |
@@ -423,10 +423,10 @@ changes:
       `Unsupported("inet")`. Purely additive — no existing contract changes; re-running `contract
       infer` against a database with inet columns now includes them in the output.
     detection:
-      glob: "**/*.{prisma,ts,mts,cts}"
+      glob: '**/*.{prisma,ts,mts,cts}'
       contains:
-        - "inet"
-        - "db.Inet"
+        - 'inet'
+        - 'db.Inet'
       anyMatch: true
   - id: psl-role-block
     summary: |
@@ -443,10 +443,10 @@ changes:
       document top level — is rejected with `PSL_ROLE_BLOCK_OUTSIDE_UNBOUND_NAMESPACE`. Purely
       additive for existing contracts.
     detection:
-      glob: "**/*.{prisma,ts,mts,cts}"
+      glob: '**/*.{prisma,ts,mts,cts}'
       contains:
-        - "role "
-        - "AuthoringPslBlockDescriptor"
+        - 'role '
+        - 'AuthoringPslBlockDescriptor'
       anyMatch: true
   - id: supabase-pack-contract-declares-roles
     summary: |
@@ -461,11 +461,12 @@ changes:
       it is now derived from the `SupabaseRole` Prisma Next enum handle's values; the contract declares the roles via the
       new PSL `role` blocks inside `namespace unbound { }` (see the `psl-role-block` entry).
     detection:
-      glob: "**/*.{ts,mts,cts,tsx,prisma,json}"
+      glob: '**/*.{ts,mts,cts,tsx,prisma,json}'
       contains:
-        - "@internal/extension-supabase"
+        - '@internal/extension-supabase'
       anyMatch: true
 ---
+
 <!--
 Release bump to 0.15.0 (PR #988): the version bump itself. Every
 `packages/3-extensions/*/package.json` advances to 0.15.0 (version field +

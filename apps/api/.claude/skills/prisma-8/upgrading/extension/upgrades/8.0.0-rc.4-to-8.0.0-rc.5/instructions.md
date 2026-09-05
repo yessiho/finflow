@@ -1,17 +1,17 @@
 ---
-from: "8.0.0-rc.4"
-to: "8.0.0-rc.5"
+from: '8.0.0-rc.4'
+to: '8.0.0-rc.5'
 changes:
   - id: wrap-pg-constructions-with-suppress-idle-connection-errors
     summary: |
       Wrap every pg `Pool` or `Client` your extension constructs with `suppressIdleConnectionErrors`, newly exported from `@internal/driver-postgres/runtime` (canonical home `@internal/utils/suppress-idle-connection-errors`). node-postgres emits 'error' on the pool or client when an idle connection drops; with no listener Node kills the host process. The helper attaches a no-op listener, is idempotent per emitter, and returns the same instance. Bindings handed to the driver (`pgPool`/`pgClient`/`url`) are wrapped by the driver itself since rc.5, so this applies to pg handles your extension uses outside a driver binding.
     detection:
-      glob: "**/*.ts"
+      glob: '**/*.ts'
       contains:
-        - "new Pool("
-        - "new Client("
-        - "new pg.Pool("
-        - "new pg.Client("
+        - 'new Pool('
+        - 'new Client('
+        - 'new pg.Pool('
+        - 'new pg.Client('
       anyMatch: true
   - id: distinct-on-requires-postgres-capability
     summary: |
@@ -26,7 +26,7 @@ changes:
       instead of a silently wrong result set at runtime. Move the call to a contract that
       declares `postgres.distinctOn`, or remove it — there is no runtime opt-out.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       regex:
         - '\.distinctOn\('
       anyMatch: true
@@ -54,7 +54,7 @@ changes:
       `.orderBy(...)` naming one of the fields passed to `groupBy(...)` before the `take()` /
       `skip()` call.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       regex:
         - '\.groupBy\('
       anyMatch: true
@@ -77,6 +77,7 @@ const pool = suppressIdleConnectionErrors(
 This is the same translation applied to the in-repo `@internal/postgres` and `@internal/extension-supabase` runtimes in this transition. The helper only attaches a no-op `'error'` listener (connect/query failures still reject their own promises), so behavior is otherwise unchanged; without it, a dropped idle connection crashes the process that hosts the extension.
 
 If your extension's test suite fakes the `pg` module, the fakes need an `on` method (`on = vi.fn().mockReturnThis()` on a class fake, or `on: vi.fn()` on an object literal) — the runtime now calls `.on('error', ...)` on every pool, client, and checked-out pool client.
+
 ## `distinct-on-requires-postgres-capability`
 
 `Collection#distinctOn(...)` used to compile and run on any target, but only Postgres ever
@@ -99,7 +100,7 @@ no capability, on any target.
 ## `groupby-pre-group-pagination-now-scopes-rows`
 
 Any `.take(...)`, `.skip(...)`, `.cursor(...)`, `.distinct(...)`, `.distinctOn(...)`, or
-`.orderBy(...)` your extension calls *before* `.groupBy(...)` on a `Collection` used to be
+`.orderBy(...)` your extension calls _before_ `.groupBy(...)` on a `Collection` used to be
 silently dropped once `.groupBy(...)` joined the chain — the aggregate reduced over every
 matching row, ignoring the pagination clause entirely. It now scopes the rows that get grouped,
 the same way root `.aggregate()` scopes its rows (see the sibling entry for that fix, already
@@ -116,7 +117,7 @@ correct behavior.
 ## `groupby-post-group-pagination-requires-order-by`
 
 `GroupedCollection` (what `.groupBy(...)` returns) gained `take()`, `skip()`, and `orderBy()`,
-which page the *grouped* rows when written after `.groupBy(...)` — previously `.groupBy(...)` had
+which page the _grouped_ rows when written after `.groupBy(...)` — previously `.groupBy(...)` had
 no chain of its own past `.having(...)`. Calling post-group `take()` or `skip()` without a prior
 post-group `orderBy()` is a compile error: the parameter type narrows to `never`, because a
 database may return groups in any order and "the first n groups" has no defined meaning without

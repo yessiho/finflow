@@ -16,25 +16,11 @@ async function bootstrap() {
    * ==========================================
    */
   app.enableCors({
-    origin: [
-      'http://localhost:3000',
-      'http://localhost:3001',
-    ],
+    origin: ['http://localhost:3000', 'http://localhost:3001'],
 
-    methods: [
-      'GET',
-      'HEAD',
-      'PUT',
-      'PATCH',
-      'POST',
-      'DELETE',
-      'OPTIONS',
-    ],
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
 
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-    ],
+    allowedHeaders: ['Content-Type', 'Authorization'],
 
     credentials: true,
   });
@@ -54,9 +40,7 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(
-    process.env.PORT ?? 3000,
-  );
+  await app.listen(process.env.PORT ?? 3000);
 }
 
 bootstrap();

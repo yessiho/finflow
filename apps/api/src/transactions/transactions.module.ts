@@ -9,19 +9,10 @@ import { TransactionsController } from './transactions.controller.js';
 import { TransactionsService } from './transactions.service.js';
 
 @Module({
-  imports: [
-    PrismaModule,
-    AuthModule,
-    LedgerModule,
-    AuditModule,
-  ],
+  imports: [PrismaModule, AuthModule, LedgerModule, AuditModule],
 
-  controllers: [
-    TransactionsController,
-  ],
+  controllers: [TransactionsController],
 
-  providers: [
-    TransactionsService,
-  ],
+  providers: [TransactionsService],
 })
 export class TransactionsModule {}

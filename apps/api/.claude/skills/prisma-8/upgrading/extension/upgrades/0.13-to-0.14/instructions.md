@@ -1,6 +1,6 @@
 ---
-from: "0.13"
-to: "0.14"
+from: '0.13'
+to: '0.14'
 changes:
   - id: uuid-preset-rename
     summary: |
@@ -11,11 +11,11 @@ changes:
       `field.uuidNative()` / `field.id.uuidv4Native()` / `field.id.uuidv7Native()`
       presets from `@internal/postgres/contract-builder`.
     detection:
-      glob: "**/*.ts"
+      glob: '**/*.ts'
       contains:
-        - "field.uuid()"
-        - "field.id.uuidv4()"
-        - "field.id.uuidv7()"
+        - 'field.uuid()'
+        - 'field.id.uuidv4()'
+        - 'field.id.uuidv7()'
       anyMatch: true
     script: uuid-preset-rename.ts
   - id: qualify-flat-builder-accessors
@@ -30,10 +30,10 @@ changes:
       declared in, which is call-site-specific. Extensions that only contribute codecs, types,
       or migrations (and never build queries through `sql`/`orm`) are unaffected.
     detection:
-      glob: "**/*.{ts,tsx}"
+      glob: '**/*.{ts,tsx}'
       contains:
-        - "@internal/sql-builder"
-        - "@internal/sql-orm-client"
+        - '@internal/sql-builder'
+        - '@internal/sql-orm-client'
       anyMatch: true
   - id: create-runtime-removed
     summary: |
@@ -44,9 +44,9 @@ changes:
       `@internal/sqlite/runtime`. Pass the same options minus the `stackInstance`
       unpacking — supply `adapter` directly instead of `stackInstance.adapter`.
     detection:
-      glob: "**/*.{ts,tsx}"
+      glob: '**/*.{ts,tsx}'
       contains:
-        - "createRuntime"
+        - 'createRuntime'
   - id: migration-op-factories-to-methods
     summary: |
       The bare migration op factory functions are removed from
@@ -56,7 +56,7 @@ changes:
       subclass. The option shapes changed from positional arguments to a single
       options object.
     detection:
-      glob: "**/migration.ts"
+      glob: '**/migration.ts'
       contains:
         - "from '@internal/postgres/migration'"
         - "from '@internal/target-postgres/migration'"
@@ -74,11 +74,11 @@ changes:
       Annotations and type constraints that hard-code the closed shape
       must be widened to the open dict.
     detection:
-      glob: "**/*.{ts,tsx}"
+      glob: '**/*.{ts,tsx}'
       contains:
-        - ".entries.table"
-        - ".entries.collection"
-        - ".entries.valueSet"
+        - '.entries.table'
+        - '.entries.collection'
+        - '.entries.valueSet'
       anyMatch: true
   - id: enum-becomes-domain-concept
     summary: |
@@ -95,13 +95,13 @@ changes:
       alone); fixtures that used `pg/enum@1` as a codec id must switch to a live codec
       or an inert fixture id.
     detection:
-      glob: "**/*.{ts,tsx}"
+      glob: '**/*.{ts,tsx}'
       contains:
-        - "PostgresEnumStorageEntry"
-        - "pg/enum@1"
-        - "pgEnumColumn"
-        - "PgEnumDescriptor"
-        - "PG_ENUM_CODEC_ID"
+        - 'PostgresEnumStorageEntry'
+        - 'pg/enum@1'
+        - 'pgEnumColumn'
+        - 'PgEnumDescriptor'
+        - 'PG_ENUM_CODEC_ID'
       anyMatch: true
   - id: namespaced-type-resolution
     summary: |
@@ -116,11 +116,11 @@ changes:
       for an unbound/SQLite contract. Extensions that only contribute codecs, native types, or
       migrations and never reference these types are unaffected.
     detection:
-      glob: "**/*.{ts,tsx}"
+      glob: '**/*.{ts,tsx}'
       contains:
-        - "ExtractFieldOutputTypes"
-        - "ExtractFieldInputTypes"
-        - "TableProxy<"
+        - 'ExtractFieldOutputTypes'
+        - 'ExtractFieldInputTypes'
+        - 'TableProxy<'
       anyMatch: true
   - id: contract-model-definitions-removed
     summary: |
@@ -134,11 +134,11 @@ changes:
       become single-arg `MongoContract<S>`; carry precise per-model types via an
       explicit per-namespace `domain` override.
     detection:
-      glob: "**/*.{ts,tsx}"
+      glob: '**/*.{ts,tsx}'
       contains:
-        - "ContractModelDefinitions"
-        - "Contract<"
-        - "MongoContract<"
+        - 'ContractModelDefinitions'
+        - 'Contract<'
+        - 'MongoContract<'
       anyMatch: true
 ---
 
@@ -168,7 +168,6 @@ README was updated to reflect the current authoring surface. No extension-author
 beyond what the `sqlite-create-table-method` entry in the 0.12-to-0.13 instructions
 already covers. Incidental substrate diff only.
 -->
-
 
 <!--
 TML-2785: the sql-orm-client runtime gained M:N correlated include
@@ -220,9 +219,9 @@ byte-identical. No extension-author action. Incidental substrate diff only.
 
 The uuid field preset names now include the storage encoding suffix:
 
-| Before | After |
-| --- | --- |
-| `field.uuid()` | `field.uuidString()` |
+| Before              | After                     |
+| ------------------- | ------------------------- |
+| `field.uuid()`      | `field.uuidString()`      |
 | `field.id.uuidv4()` | `field.id.uuidv4String()` |
 | `field.id.uuidv7()` | `field.id.uuidv7String()` |
 
@@ -246,7 +245,7 @@ No change to emitted `contract.json` — both old and new preset names emit the 
 
 The query builder (`@internal/sql-builder`) and ORM client (`@internal/sql-orm-client`) are now **always qualified by namespace**. The flat by-bare-name accessors are gone: the value returned by `sql({ … })` / `orm({ … })` is a map of per-namespace facets, so there is no `sql.<table>` and no `orm.<Model>` at the top level. You reach a table or model by naming its namespace.
 
-This affects extension code that *builds queries* through these packages. Extensions that only contribute codecs, native types, or migration operations — and never construct a `sql`/`orm` query — need no change.
+This affects extension code that _builds queries_ through these packages. Extensions that only contribute codecs, native types, or migration operations — and never construct a `sql`/`orm` query — need no change.
 
 ### Migrate query-building call sites
 
@@ -255,11 +254,11 @@ Insert the namespace segment after the builder output, naming the namespace each
 ```ts
 // Before
 const plan = sql.user.select('id', 'email').build();
-const row  = await orm.User.find({ where: { id } });
+const row = await orm.User.find({ where: { id } });
 
 // After — name the namespace (`public` for a standard single-schema SQL contract)
 const plan = sql.public.user.select('id', 'email').build();
-const row  = await orm.public.User.find({ where: { id } });
+const row = await orm.public.User.find({ where: { id } });
 ```
 
 For an unbound contract (e.g. SQLite, or any target whose entities live in the late-bound namespace) the namespace segment is `__unbound__` — import `UNBOUND_NAMESPACE_ID` from `@internal/framework-components/ir` and index with it (`sql[UNBOUND_NAMESPACE_ID].user`) rather than hard-coding the string. For a multi-namespace contract, name the specific namespace each table/model sits in.
@@ -276,16 +275,16 @@ The option shapes also changed: positional arguments are replaced by a single op
 
 Remove the bare names from your import and replace each call-site:
 
-| Before (bare function) | After (method) |
-| --- | --- |
-| `dropColumn(schema, table, column)` | `this.dropColumn({ schema, table, column })` |
-| `setNotNull(schema, table, column)` | `this.setNotNull({ schema, table, column })` |
-| `setDefault(schema, table, column, defaultSql)` | `this.setDefault({ schema, table, column, defaultSql })` |
-| `addPrimaryKey(schema, table, name, columns)` | `this.addPrimaryKey({ schema, table, constraint: name, columns })` |
+| Before (bare function)                                                  | After (method)                                                                               |
+| ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `dropColumn(schema, table, column)`                                     | `this.dropColumn({ schema, table, column })`                                                 |
+| `setNotNull(schema, table, column)`                                     | `this.setNotNull({ schema, table, column })`                                                 |
+| `setDefault(schema, table, column, defaultSql)`                         | `this.setDefault({ schema, table, column, defaultSql })`                                     |
+| `addPrimaryKey(schema, table, name, columns)`                           | `this.addPrimaryKey({ schema, table, constraint: name, columns })`                           |
 | `addForeignKey(schema, table, { name, columns, references, onDelete })` | `this.addForeignKey({ schema, table, foreignKey: { name, columns, references, onDelete } })` |
-| `addCheckConstraint(schema, table, name, column, values)` | `this.addCheckConstraint({ schema, table, constraint: name, column, values })` |
-| `createIndex(schema, table, indexName, columns)` | `this.createIndex({ schema, table, index: indexName, columns })` |
-| `installExtension({ id, extensionName, invariantId })` | `this.installExtension({ id, extensionName, invariantId })` |
+| `addCheckConstraint(schema, table, name, column, values)`               | `this.addCheckConstraint({ schema, table, constraint: name, column, values })`               |
+| `createIndex(schema, table, indexName, columns)`                        | `this.createIndex({ schema, table, index: indexName, columns })`                             |
+| `installExtension({ id, extensionName, invariantId })`                  | `this.installExtension({ id, extensionName, invariantId })`                                  |
 
 Example (extension migration):
 
@@ -334,11 +333,21 @@ const runtime = createRuntime({ stackInstance, context, driver, ...opts });
 
 // After — Postgres
 import { PostgresRuntimeImpl } from '@internal/postgres/runtime';
-const runtime = new PostgresRuntimeImpl({ adapter: stackInstance.adapter, context, driver, ...opts });
+const runtime = new PostgresRuntimeImpl({
+  adapter: stackInstance.adapter,
+  context,
+  driver,
+  ...opts,
+});
 
 // After — SQLite
 import { SqliteRuntimeImpl } from '@internal/sqlite/runtime';
-const runtime = new SqliteRuntimeImpl({ adapter: stackInstance.adapter, context, driver, ...opts });
+const runtime = new SqliteRuntimeImpl({
+  adapter: stackInstance.adapter,
+  context,
+  driver,
+  ...opts,
+});
 ```
 
 The options are identical except `stackInstance` is no longer passed: supply `adapter` from `stackInstance.adapter` directly. Depend on the bare-name interfaces (`PostgresRuntime`, `SqliteRuntime`) for type annotations, not the `Impl` classes.
@@ -374,9 +383,12 @@ const tables = ns.entries['table'] as Record<string, StorageTable> | undefined;
 
 ```ts
 // Using the namespaceTables() helper (for SqlNamespace values)
-import { namespaceTables, namespaceValueSets } from '@internal/sql-contract/types';
-const tables = namespaceTables(ns);    // Record<string, StorageTable>
-const vsets  = namespaceValueSets(ns); // Record<string, StorageValueSet> | undefined
+import {
+  namespaceTables,
+  namespaceValueSets,
+} from '@internal/sql-contract/types';
+const tables = namespaceTables(ns); // Record<string, StorageTable>
+const vsets = namespaceValueSets(ns); // Record<string, StorageValueSet> | undefined
 
 // Using the namespaceCollections() helper (for MongoNamespace values)
 import { namespaceCollections } from '@internal/mongo-contract';
@@ -387,10 +399,14 @@ const collections = namespaceCollections(ns); // Record<string, MongoCollection>
 
 ```ts
 // Before
-const ns = namespaces[id] as { entries: { table: Record<string, StorageTable> } };
+const ns = namespaces[id] as {
+  entries: { table: Record<string, StorageTable> };
+};
 
 // After — open dict annotation
-const ns = namespaces[id] as { entries: Record<string, Record<string, unknown>> };
+const ns = namespaces[id] as {
+  entries: Record<string, Record<string, unknown>>;
+};
 // then narrow via the helper:
 const tables = namespaceTables(ns);
 ```
@@ -405,8 +421,14 @@ Native Postgres enums are removed from the framework. Enums are now a **domain c
 
   ```ts
   // Before
-  import type { PostgresEnumStorageEntry, StorageTypeInstance } from '@internal/sql-contract/types';
-  type TypesConstraint = Record<string, StorageTypeInstance | PostgresEnumStorageEntry>;
+  import type {
+    PostgresEnumStorageEntry,
+    StorageTypeInstance,
+  } from '@internal/sql-contract/types';
+  type TypesConstraint = Record<
+    string,
+    StorageTypeInstance | PostgresEnumStorageEntry
+  >;
 
   // After
   import type { StorageTypeInstance } from '@internal/sql-contract/types';
@@ -455,16 +477,20 @@ Replace any `ContractModelDefinitions<C>` use with a read of a namespace's model
 
 ```ts
 // Before
-import type { Contract, ContractModelDefinitions } from '@internal/contract/types';
+import type {
+  Contract,
+  ContractModelDefinitions,
+} from '@internal/contract/types';
 type Models = ContractModelDefinitions<C>;
 type UserModel = Models['User'];
 
 // After — read the sole namespace's models (or name a specific namespace)
-type Models = C['domain']['namespaces'][keyof C['domain']['namespaces']]['models'];
+type Models =
+  C['domain']['namespaces'][keyof C['domain']['namespaces']]['models'];
 type UserModel = Models['User'];
 ```
 
-If you need a bare model shape rather than the contract's own models, use `ContractModelBase` from `@internal/contract/types`. Family contract aliases drop their model parameter too — `MongoContract<S, M>` becomes `MongoContract<S>`. When you build a contract *type* that must carry precise per-model shapes (e.g. a test fixture or a `defineContract` result type), override the `domain` explicitly:
+If you need a bare model shape rather than the contract's own models, use `ContractModelBase` from `@internal/contract/types`. Family contract aliases drop their model parameter too — `MongoContract<S, M>` becomes `MongoContract<S>`. When you build a contract _type_ that must carry precise per-model shapes (e.g. a test fixture or a `defineContract` result type), override the `domain` explicitly:
 
 ```ts
 type MyContract = Omit<Contract<MyStorage>, 'domain'> & {

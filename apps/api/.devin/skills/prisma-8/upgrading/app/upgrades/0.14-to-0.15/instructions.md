@@ -1,6 +1,6 @@
 ---
-from: "0.14"
-to: "0.15"
+from: '0.14'
+to: '0.15'
 changes:
   - id: sql-orm-includes-decode-codec-values
     summary: |
@@ -18,9 +18,9 @@ changes:
       read `schema.issues` (it already carries everything the two lists used to, concatenated)
       and switch any `.outcome` comparison to the matching `.reason` value.
     detection:
-      glob: "**/*.{ts,mts,cts,js,mjs,sh}"
+      glob: '**/*.{ts,mts,cts,js,mjs,sh}'
       contains:
-        - "schemaDiffIssues"
+        - 'schemaDiffIssues'
         - ".outcome === 'missing'"
         - ".outcome === 'extra'"
         - ".outcome === 'mismatch'"
@@ -38,9 +38,9 @@ changes:
       `DISABLE ROW LEVEL SECURITY` (requires the destructive allowance), and changing only a
       policy's name prefix plans a single `ALTER POLICY ... RENAME TO` instead of drop+create.
     detection:
-      glob: "**/*.prisma"
+      glob: '**/*.prisma'
       contains:
-        - "policy_select"
+        - 'policy_select'
       anyMatch: true
 ---
 

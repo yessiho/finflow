@@ -27,15 +27,24 @@ export default class M extends Migration<Start, End> {
         schema: 'public',
         table: 'auditLog',
         columns: [
-          col('action', 'text', { notNull: true, codecRef: { codecId: 'pg/text@1' } }),
+          col('action', 'text', {
+            notNull: true,
+            codecRef: { codecId: 'pg/text@1' },
+          }),
           col('createdAt', 'timestamptz', {
             notNull: true,
             default: fn('now()'),
             codecRef: { codecId: 'pg/timestamptz-string@1' },
           }),
-          col('entity', 'text', { notNull: true, codecRef: { codecId: 'pg/text@1' } }),
+          col('entity', 'text', {
+            notNull: true,
+            codecRef: { codecId: 'pg/text@1' },
+          }),
           col('entityId', 'text', { codecRef: { codecId: 'pg/text@1' } }),
-          col('id', 'SERIAL', { notNull: true, codecRef: { codecId: 'pg/int4@1' } }),
+          col('id', 'SERIAL', {
+            notNull: true,
+            codecRef: { codecId: 'pg/int4@1' },
+          }),
           col('metadata', 'text', { codecRef: { codecId: 'pg/text@1' } }),
           col('userId', 'int4', { codecRef: { codecId: 'pg/int4@1' } }),
         ],
@@ -50,16 +59,31 @@ export default class M extends Migration<Start, End> {
             default: lit(true),
             codecRef: { codecId: 'pg/bool@1' },
           }),
-          col('code', 'text', { notNull: true, codecRef: { codecId: 'pg/text@1' } }),
+          col('code', 'text', {
+            notNull: true,
+            codecRef: { codecId: 'pg/text@1' },
+          }),
           col('createdAt', 'timestamptz', {
             notNull: true,
             default: fn('now()'),
             codecRef: { codecId: 'pg/timestamptz-string@1' },
           }),
-          col('currency', 'text', { notNull: true, codecRef: { codecId: 'pg/text@1' } }),
-          col('id', 'SERIAL', { notNull: true, codecRef: { codecId: 'pg/int4@1' } }),
-          col('name', 'text', { notNull: true, codecRef: { codecId: 'pg/text@1' } }),
-          col('type', 'text', { notNull: true, codecRef: { codecId: 'pg/text@1' } }),
+          col('currency', 'text', {
+            notNull: true,
+            codecRef: { codecId: 'pg/text@1' },
+          }),
+          col('id', 'SERIAL', {
+            notNull: true,
+            codecRef: { codecId: 'pg/int4@1' },
+          }),
+          col('name', 'text', {
+            notNull: true,
+            codecRef: { codecId: 'pg/text@1' },
+          }),
+          col('type', 'text', {
+            notNull: true,
+            codecRef: { codecId: 'pg/text@1' },
+          }),
           col('updatedAt', 'timestamptz', {
             notNull: true,
             codecRef: { codecId: 'pg/timestamptz-string@1' },
@@ -81,7 +105,10 @@ export default class M extends Migration<Start, End> {
         schema: 'public',
         table: 'ledgerEntry',
         columns: [
-          col('accountId', 'int4', { notNull: true, codecRef: { codecId: 'pg/int4@1' } }),
+          col('accountId', 'int4', {
+            notNull: true,
+            codecRef: { codecId: 'pg/int4@1' },
+          }),
           col('createdAt', 'timestamptz', {
             notNull: true,
             default: fn('now()'),
@@ -97,8 +124,14 @@ export default class M extends Migration<Start, End> {
             default: lit('0'),
             codecRef: { codecId: 'pg/int8@1' },
           }),
-          col('id', 'SERIAL', { notNull: true, codecRef: { codecId: 'pg/int4@1' } }),
-          col('transactionId', 'int4', { notNull: true, codecRef: { codecId: 'pg/int4@1' } }),
+          col('id', 'SERIAL', {
+            notNull: true,
+            codecRef: { codecId: 'pg/int4@1' },
+          }),
+          col('transactionId', 'int4', {
+            notNull: true,
+            codecRef: { codecId: 'pg/int4@1' },
+          }),
         ],
         constraints: [primaryKey(['id'])],
       }),
@@ -106,23 +139,40 @@ export default class M extends Migration<Start, End> {
         schema: 'public',
         table: 'transaction',
         columns: [
-          col('amount', 'int8', { notNull: true, codecRef: { codecId: 'pg/int8@1' } }),
+          col('amount', 'int8', {
+            notNull: true,
+            codecRef: { codecId: 'pg/int8@1' },
+          }),
           col('createdAt', 'timestamptz', {
             notNull: true,
             default: fn('now()'),
             codecRef: { codecId: 'pg/timestamptz-string@1' },
           }),
-          col('currency', 'text', { notNull: true, codecRef: { codecId: 'pg/text@1' } }),
-          col('destinationWalletId', 'int4', { codecRef: { codecId: 'pg/int4@1' } }),
-          col('id', 'SERIAL', { notNull: true, codecRef: { codecId: 'pg/int4@1' } }),
-          col('reference', 'text', { notNull: true, codecRef: { codecId: 'pg/text@1' } }),
+          col('currency', 'text', {
+            notNull: true,
+            codecRef: { codecId: 'pg/text@1' },
+          }),
+          col('destinationWalletId', 'int4', {
+            codecRef: { codecId: 'pg/int4@1' },
+          }),
+          col('id', 'SERIAL', {
+            notNull: true,
+            codecRef: { codecId: 'pg/int4@1' },
+          }),
+          col('reference', 'text', {
+            notNull: true,
+            codecRef: { codecId: 'pg/text@1' },
+          }),
           col('sourceWalletId', 'int4', { codecRef: { codecId: 'pg/int4@1' } }),
           col('status', 'text', {
             notNull: true,
             default: lit('PENDING'),
             codecRef: { codecId: 'pg/text@1' },
           }),
-          col('type', 'text', { notNull: true, codecRef: { codecId: 'pg/text@1' } }),
+          col('type', 'text', {
+            notNull: true,
+            codecRef: { codecId: 'pg/text@1' },
+          }),
           col('updatedAt', 'timestamptz', {
             notNull: true,
             codecRef: { codecId: 'pg/timestamptz-string@1' },
@@ -158,8 +208,14 @@ export default class M extends Migration<Start, End> {
             default: fn('now()'),
             codecRef: { codecId: 'pg/timestamptz-string@1' },
           }),
-          col('currency', 'text', { notNull: true, codecRef: { codecId: 'pg/text@1' } }),
-          col('id', 'SERIAL', { notNull: true, codecRef: { codecId: 'pg/int4@1' } }),
+          col('currency', 'text', {
+            notNull: true,
+            codecRef: { codecId: 'pg/text@1' },
+          }),
+          col('id', 'SERIAL', {
+            notNull: true,
+            codecRef: { codecId: 'pg/int4@1' },
+          }),
           col('status', 'text', {
             notNull: true,
             default: lit('ACTIVE'),
@@ -169,7 +225,10 @@ export default class M extends Migration<Start, End> {
             notNull: true,
             codecRef: { codecId: 'pg/timestamptz-string@1' },
           }),
-          col('userId', 'int4', { notNull: true, codecRef: { codecId: 'pg/int4@1' } }),
+          col('userId', 'int4', {
+            notNull: true,
+            codecRef: { codecId: 'pg/int4@1' },
+          }),
         ],
         constraints: [
           primaryKey(['id']),
@@ -195,7 +254,9 @@ export default class M extends Migration<Start, End> {
       this.addColumn({
         schema: 'public',
         table: 'user',
-        column: col('firstName', 'text', { codecRef: { codecId: 'pg/text@1' } }),
+        column: col('firstName', 'text', {
+          codecRef: { codecId: 'pg/text@1' },
+        }),
       }),
       this.dataTransform(endContract, 'backfill-user-firstName', {
         check: () => placeholder('backfill-user-firstName:check'),
@@ -215,13 +276,19 @@ export default class M extends Migration<Start, End> {
       this.addColumn({
         schema: 'public',
         table: 'user',
-        column: col('passwordHash', 'text', { codecRef: { codecId: 'pg/text@1' } }),
+        column: col('passwordHash', 'text', {
+          codecRef: { codecId: 'pg/text@1' },
+        }),
       }),
       this.dataTransform(endContract, 'backfill-user-passwordHash', {
         check: () => placeholder('backfill-user-passwordHash:check'),
         run: () => placeholder('backfill-user-passwordHash:run'),
       }),
-      this.setNotNull({ schema: 'public', table: 'user', column: 'passwordHash' }),
+      this.setNotNull({
+        schema: 'public',
+        table: 'user',
+        column: 'passwordHash',
+      }),
       this.addUnique({
         schema: 'public',
         table: 'ledgerAccount',
@@ -303,7 +370,11 @@ export default class M extends Migration<Start, End> {
         foreignKey: {
           name: 'ledgerEntry_transactionId_fkey',
           columns: ['transactionId'],
-          references: { schema: 'public', table: 'transaction', columns: ['id'] },
+          references: {
+            schema: 'public',
+            table: 'transaction',
+            columns: ['id'],
+          },
         },
       }),
       this.addForeignKey({
@@ -312,7 +383,11 @@ export default class M extends Migration<Start, End> {
         foreignKey: {
           name: 'ledgerEntry_accountId_fkey',
           columns: ['accountId'],
-          references: { schema: 'public', table: 'ledgerAccount', columns: ['id'] },
+          references: {
+            schema: 'public',
+            table: 'ledgerAccount',
+            columns: ['id'],
+          },
         },
       }),
       this.addForeignKey({

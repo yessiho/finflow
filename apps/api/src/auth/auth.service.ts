@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -22,10 +19,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const passwordMatches = await bcrypt.compare(
-      password,
-      user.passwordHash,
-    );
+    const passwordMatches = await bcrypt.compare(password, user.passwordHash);
 
     if (!passwordMatches) {
       throw new UnauthorizedException('Invalid email or password');

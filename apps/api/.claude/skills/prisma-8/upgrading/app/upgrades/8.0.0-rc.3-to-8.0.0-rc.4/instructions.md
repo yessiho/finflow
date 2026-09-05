@@ -1,6 +1,6 @@
 ---
-from: "8.0.0-rc.3"
-to: "8.0.0-rc.4"
+from: '8.0.0-rc.3'
+to: '8.0.0-rc.4'
 changes:
   - id: prisma-config-hard-cut-and-top-level-commands
     summary: |
@@ -32,7 +32,7 @@ changes:
       5. Run `prisma-cli contract emit` to confirm the config loads and to regenerate the
          artifacts (their generated-file headers change with this release).
     detection:
-      glob: "**/prisma-next.config.ts"
+      glob: '**/prisma-next.config.ts'
   - id: raw-moves-to-its-own-lane
     summary: |
       Whole-query raw SQL moves address: ``db.sql.raw`SELECT ...` `` becomes
@@ -48,7 +48,7 @@ changes:
       inside a builder callback, which is where fragments belong. Or terminate the lane's tag
       with `.returns(codecId)` for the same expression, now bound to the contract.
     detection:
-      glob: "**/*.{ts,tsx,mts,cts}"
+      glob: '**/*.{ts,tsx,mts,cts}'
       regex:
         # The old whole-query address, on any receiver.
         - '\.sql\.raw`'
@@ -69,9 +69,9 @@ changes:
       namespace rename. The physical schema keeps the name it has until a plan moves it.
       Renaming back is optional: a namespace you renamed away stays valid.
     detection:
-      glob: "**/*.{prisma,json}"
+      glob: '**/*.{prisma,json}'
       contains:
-        - "ORM.NAMESPACE_RESERVED"
+        - 'ORM.NAMESPACE_RESERVED'
         - '@@schema("raw")'
       anyMatch: true
   - id: contract-artifacts-restamp
@@ -81,7 +81,7 @@ changes:
       the installed toolchain. This applies even to projects whose config needed no
       migration — the restamp is independent of the config changes above.
     detection:
-      glob: "**/contract.json"
+      glob: '**/contract.json'
       contains:
         - '"version": "8.0.0-rc.3"'
 ---
@@ -117,7 +117,9 @@ const upper = db.raw`UPPER(${email})`.returns('pg/text@1');
 
 // After, inside a builder callback — where fragments belong
 const rows = db.sql.public.users
-  .select((f, fns) => ({ upper: fns.raw`UPPER(${f.email})`.returns('pg/text@1') }))
+  .select((f, fns) => ({
+    upper: fns.raw`UPPER(${f.email})`.returns('pg/text@1'),
+  }))
   .build();
 
 // After, from the lane, for a fragment you hold on its own

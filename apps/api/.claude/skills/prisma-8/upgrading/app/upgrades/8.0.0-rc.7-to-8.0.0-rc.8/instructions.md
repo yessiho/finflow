@@ -1,6 +1,6 @@
 ---
-from: "8.0.0-rc.7"
-to: "8.0.0-rc.8"
+from: '8.0.0-rc.7'
+to: '8.0.0-rc.8'
 changes:
   - id: engine-pin-moves-to-0-3-0
     summary: |
@@ -11,7 +11,7 @@ changes:
       dependency; the `prisma` CLI shell supplies it at runtime, so only a project that runs
       the engine outside the CLI shell needs to install the SDK itself.
     detection:
-      glob: "**/package.json"
+      glob: '**/package.json'
       contains:
         - '"@prisma/cli-engine": "0.2.3"'
   - id: contract-artifacts-restamp
@@ -20,7 +20,7 @@ changes:
       to 8.0.0-rc.8. Run `contract emit` once after upgrading so the emitted artifacts match
       the installed toolchain.
     detection:
-      glob: "**/contract.json"
+      glob: '**/contract.json'
       contains:
         - '"version": "8.0.0-rc.7"'
 ---

@@ -145,7 +145,9 @@ async function runEmit(configDir: string): Promise<void> {
   await execFileAsync('pnpm', args, { cwd, env: process.env });
 }
 
-async function configDirNeedsDomainPlaneMigration(configDir: string): Promise<boolean> {
+async function configDirNeedsDomainPlaneMigration(
+  configDir: string,
+): Promise<boolean> {
   for (const candidate of contractJsonCandidates(configDir)) {
     if (!(await pathExists(candidate))) continue;
     const raw = await readFile(candidate, 'utf-8');

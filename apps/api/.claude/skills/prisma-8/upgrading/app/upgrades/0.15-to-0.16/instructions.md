@@ -1,6 +1,6 @@
 ---
-from: "0.15"
-to: "0.16"
+from: '0.15'
+to: '0.16'
 changes:
   - id: extension-supabase-test-utils-export-removed
     summary: |
@@ -11,9 +11,9 @@ changes:
       working code to migrate: delete the import and whatever test setup called
       `bootstrapSupabaseShim`.
     detection:
-      glob: "**/*.{ts,mts,cts,js,mjs}"
+      glob: '**/*.{ts,mts,cts,js,mjs}'
       contains:
-        - "extension-supabase/test/utils"
+        - 'extension-supabase/test/utils'
       anyMatch: true
   - id: identity-columns-need-explicit-default-under-strict-verify
     summary: |
@@ -35,11 +35,11 @@ changes:
       from `@internal/framework-components/authoring`. Standard target setups
       (`@internal/postgres`, `@internal/sqlite`) supply the contributions themselves.
     detection:
-      glob: "**/*.{ts,mts,cts}"
+      glob: '**/*.{ts,mts,cts}'
       contains:
-        - "createPostgresScalarTypeDescriptors"
-        - "createSqliteScalarTypeDescriptors"
-        - "scalarTypeDescriptors"
+        - 'createPostgresScalarTypeDescriptors'
+        - 'createSqliteScalarTypeDescriptors'
+        - 'scalarTypeDescriptors'
       anyMatch: true
   - id: postgres-json-rebound-to-native-json
     summary: |
@@ -54,9 +54,9 @@ changes:
       `pg/json@1` / `json`), and sqlite/mongo `Json` bindings are untouched. The TS builder
       surface (`field.json()`, `jsonbColumn`) is unchanged and stays jsonb.
     detection:
-      glob: "**/*.prisma"
+      glob: '**/*.prisma'
       contains:
-        - "Json"
+        - 'Json'
       anyMatch: true
   - id: default-generators-no-longer-set-storage
     summary: |
@@ -79,12 +79,12 @@ changes:
       (`field.id.uuidv4String()`, `field.generated(uuidv4())`, …) are untouched — they bundle
       their `char(N)` storage explicitly.
     detection:
-      glob: "**/*.prisma"
+      glob: '**/*.prisma'
       contains:
-        - "@default(uuid("
-        - "@default(cuid("
-        - "@default(nanoid("
-        - "@default(ulid("
+        - '@default(uuid('
+        - '@default(cuid('
+        - '@default(nanoid('
+        - '@default(ulid('
       anyMatch: true
 ---
 

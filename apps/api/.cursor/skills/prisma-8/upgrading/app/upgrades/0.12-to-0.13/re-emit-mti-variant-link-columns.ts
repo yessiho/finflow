@@ -108,7 +108,8 @@ function contractNeedsMtiLinkColumns(raw: string): boolean {
 
   const domainNamespaces = domain['namespaces'];
   const storageNamespaces = storage['namespaces'];
-  if (!isJsonObject(domainNamespaces) || !isJsonObject(storageNamespaces)) return false;
+  if (!isJsonObject(domainNamespaces) || !isJsonObject(storageNamespaces))
+    return false;
 
   for (const [nsKey, ns] of Object.entries(domainNamespaces)) {
     if (!isJsonObject(ns)) continue;
@@ -123,7 +124,9 @@ function contractNeedsMtiLinkColumns(raw: string): boolean {
       // The variant table's namespace defaults to the model's enclosing domain
       // namespace when `storage.namespace` is absent.
       const namespaceId =
-        typeof variantStorage['namespace'] === 'string' ? variantStorage['namespace'] : nsKey;
+        typeof variantStorage['namespace'] === 'string'
+          ? variantStorage['namespace']
+          : nsKey;
       if (typeof tableName !== 'string') continue;
       const storageNs = storageNamespaces[namespaceId];
       if (!isJsonObject(storageNs)) continue;
@@ -139,7 +142,10 @@ function contractNeedsMtiLinkColumns(raw: string): boolean {
   return false;
 }
 
-async function packageJsonHasScript(dir: string, name: string): Promise<boolean> {
+async function packageJsonHasScript(
+  dir: string,
+  name: string,
+): Promise<boolean> {
   const pkgPath = join(dir, 'package.json');
   if (!(await pathExists(pkgPath))) return false;
   const raw = await readFile(pkgPath, 'utf-8');
@@ -199,7 +205,9 @@ for (const configDir of configDirs) {
 }
 
 if (targets.length === 0) {
-  console.error(`No MTI variant link-column migration candidates under ${projectRoot}.`);
+  console.error(
+    `No MTI variant link-column migration candidates under ${projectRoot}.`,
+  );
   process.exit(dryRun ? 0 : 1);
 }
 

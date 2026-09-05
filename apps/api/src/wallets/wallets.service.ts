@@ -27,33 +27,24 @@ export class WalletsService {
    * CREATE WALLET
    * ==========================================
    */
-  async create(
-    userId: number,
-    createWalletDto: CreateWalletDto,
-  ) {
+  async create(userId: number, createWalletDto: CreateWalletDto) {
     const { currency } = createWalletDto;
 
-    const existingWallet =
-      await this.prisma.client.orm.public.Wallet.first({
-        userId,
-        currency:
-          currency as 'NGN' | 'USD' | 'EUR' | 'GBP',
-      });
+    const existingWallet = await this.prisma.client.orm.public.Wallet.first({
+      userId,
+      currency: currency as 'NGN' | 'USD' | 'EUR' | 'GBP',
+    });
 
     if (existingWallet) {
-      throw new ConflictException(
-        `You already have a ${currency} wallet`,
-      );
+      throw new ConflictException(`You already have a ${currency} wallet`);
     }
 
-    const wallet =
-      await this.prisma.client.orm.public.Wallet.create({
-        userId,
-        currency:
-          currency as 'NGN' | 'USD' | 'EUR' | 'GBP',
-        balance: 0n,
-        status: 'ACTIVE',
-      });
+    const wallet = await this.prisma.client.orm.public.Wallet.create({
+      userId,
+      currency: currency as 'NGN' | 'USD' | 'EUR' | 'GBP',
+      balance: 0n,
+      status: 'ACTIVE',
+    });
 
     /*
      * ==========================================
@@ -86,16 +77,11 @@ export class WalletsService {
    * ==========================================
    */
   async findMyWallets(userId: number) {
-    const wallets =
-      await this.prisma.client.orm.public.Wallet.all();
+    const wallets = await this.prisma.client.orm.public.Wallet.all();
 
-    const userWallets = wallets.filter(
-      (wallet) => wallet.userId === userId,
-    );
+    const userWallets = wallets.filter((wallet) => wallet.userId === userId);
 
-    return userWallets.map((wallet) =>
-      this.formatWallet(wallet),
-    );
+    return userWallets.map((wallet) => this.formatWallet(wallet));
   }
 
   /*
@@ -103,17 +89,11 @@ export class WalletsService {
    * DEPOSIT
    * ==========================================
    */
-  async deposit(
-    userId: number,
-    walletId: number,
-    depositDto: DepositDto,
-  ) {
+  async deposit(userId: number, walletId: number, depositDto: DepositDto) {
     const amount = BigInt(depositDto.amount);
 
     if (amount <= 0n) {
-      throw new BadRequestException(
-        'Deposit amount must be greater than zero',
-      );
+      throw new BadRequestException('Deposit amount must be greater than zero');
     }
 
     /*
@@ -121,15 +101,12 @@ export class WalletsService {
      * FIND WALLET
      * ==========================================
      */
-    const wallet =
-      await this.prisma.client.orm.public.Wallet.first({
-        id: walletId,
-      });
+    const wallet = await this.prisma.client.orm.public.Wallet.first({
+      id: walletId,
+    });
 
     if (!wallet) {
-      throw new NotFoundException(
-        'Wallet not found',
-      );
+      throw new NotFoundException('Wallet not found');
     }
 
     /*
@@ -138,9 +115,7 @@ export class WalletsService {
      * ==========================================
      */
     if (wallet.userId !== userId) {
-      throw new BadRequestException(
-        'You do not have access to this wallet',
-      );
+      throw new BadRequestException('You do not have access to this wallet');
     }
 
     /*
@@ -149,9 +124,7 @@ export class WalletsService {
      * ==========================================
      */
     if (wallet.status !== 'ACTIVE') {
-      throw new BadRequestException(
-        'Wallet is not active',
-      );
+      throw new BadRequestException('Wallet is not active');
     }
 
     /*
@@ -161,37 +134,32 @@ export class WalletsService {
      */
     const previousBalance = wallet.balance;
 
-    const newBalance =
-      wallet.balance + amount;
+    const newBalance = wallet.balance + amount;
 
     /*
      * ==========================================
      * UPDATE WALLET BALANCE
      * ==========================================
      */
-    const updatedWallet =
-      await this.prisma.client.orm.public.Wallet
-        .where({
-          id: walletId,
-        })
-        .update({
-          balance: newBalance,
-        });
+    const updatedWallet = await this.prisma.client.orm.public.Wallet.where({
+      id: walletId,
+    }).update({
+      balance: newBalance,
+    });
 
     /*
      * ==========================================
      * CREATE TRANSACTION
      * ==========================================
      */
-    const transaction =
-      await this.prisma.client.orm.public.Transaction.create({
-        amount,
-        currency: wallet.currency,
-        destinationWalletId: walletId,
-        reference: this.generateReference('DEP'),
-        status: 'COMPLETED',
-        type: 'DEPOSIT',
-      });
+    const transaction = await this.prisma.client.orm.public.Transaction.create({
+      amount,
+      currency: wallet.currency,
+      destinationWalletId: walletId,
+      reference: this.generateReference('DEP'),
+      status: 'COMPLETED',
+      type: 'DEPOSIT',
+    });
 
     /*
      * ==========================================
@@ -228,10 +196,8 @@ export class WalletsService {
         walletId,
         currency: wallet.currency,
         amount: amount.toString(),
-        previousBalance:
-          previousBalance.toString(),
-        newBalance:
-          newBalance.toString(),
+        previousBalance: previousBalance.toString(),
+        newBalance: newBalance.toString(),
         status: transaction.status,
         type: transaction.type,
       }),
@@ -240,13 +206,9 @@ export class WalletsService {
     return {
       message: 'Deposit successful',
 
-      wallet: this.formatWallet(
-        updatedWallet,
-      ),
+      wallet: this.formatWallet(updatedWallet),
 
-      transaction: this.formatTransaction(
-        transaction,
-      ),
+      transaction: this.formatTransaction(transaction),
     };
   }
 
@@ -255,11 +217,7 @@ export class WalletsService {
    * WITHDRAW
    * ==========================================
    */
-  async withdraw(
-    userId: number,
-    walletId: number,
-    withdrawDto: WithdrawDto,
-  ) {
+  async withdraw(userId: number, walletId: number, withdrawDto: WithdrawDto) {
     const amount = BigInt(withdrawDto.amount);
 
     if (amount <= 0n) {
@@ -273,15 +231,12 @@ export class WalletsService {
      * FIND WALLET
      * ==========================================
      */
-    const wallet =
-      await this.prisma.client.orm.public.Wallet.first({
-        id: walletId,
-      });
+    const wallet = await this.prisma.client.orm.public.Wallet.first({
+      id: walletId,
+    });
 
     if (!wallet) {
-      throw new NotFoundException(
-        'Wallet not found',
-      );
+      throw new NotFoundException('Wallet not found');
     }
 
     /*
@@ -290,9 +245,7 @@ export class WalletsService {
      * ==========================================
      */
     if (wallet.userId !== userId) {
-      throw new BadRequestException(
-        'You do not have access to this wallet',
-      );
+      throw new BadRequestException('You do not have access to this wallet');
     }
 
     /*
@@ -301,9 +254,7 @@ export class WalletsService {
      * ==========================================
      */
     if (wallet.status !== 'ACTIVE') {
-      throw new BadRequestException(
-        'Wallet is not active',
-      );
+      throw new BadRequestException('Wallet is not active');
     }
 
     /*
@@ -312,9 +263,7 @@ export class WalletsService {
      * ==========================================
      */
     if (wallet.balance < amount) {
-      throw new BadRequestException(
-        'Insufficient wallet balance',
-      );
+      throw new BadRequestException('Insufficient wallet balance');
     }
 
     /*
@@ -324,37 +273,32 @@ export class WalletsService {
      */
     const previousBalance = wallet.balance;
 
-    const newBalance =
-      wallet.balance - amount;
+    const newBalance = wallet.balance - amount;
 
     /*
      * ==========================================
      * UPDATE WALLET BALANCE
      * ==========================================
      */
-    const updatedWallet =
-      await this.prisma.client.orm.public.Wallet
-        .where({
-          id: walletId,
-        })
-        .update({
-          balance: newBalance,
-        });
+    const updatedWallet = await this.prisma.client.orm.public.Wallet.where({
+      id: walletId,
+    }).update({
+      balance: newBalance,
+    });
 
     /*
      * ==========================================
      * CREATE TRANSACTION
      * ==========================================
      */
-    const transaction =
-      await this.prisma.client.orm.public.Transaction.create({
-        amount,
-        currency: wallet.currency,
-        sourceWalletId: walletId,
-        reference: this.generateReference('WTH'),
-        status: 'COMPLETED',
-        type: 'WITHDRAWAL',
-      });
+    const transaction = await this.prisma.client.orm.public.Transaction.create({
+      amount,
+      currency: wallet.currency,
+      sourceWalletId: walletId,
+      reference: this.generateReference('WTH'),
+      status: 'COMPLETED',
+      type: 'WITHDRAWAL',
+    });
 
     /*
      * ==========================================
@@ -391,10 +335,8 @@ export class WalletsService {
         walletId,
         currency: wallet.currency,
         amount: amount.toString(),
-        previousBalance:
-          previousBalance.toString(),
-        newBalance:
-          newBalance.toString(),
+        previousBalance: previousBalance.toString(),
+        newBalance: newBalance.toString(),
         status: transaction.status,
         type: transaction.type,
       }),
@@ -403,13 +345,9 @@ export class WalletsService {
     return {
       message: 'Withdrawal successful',
 
-      wallet: this.formatWallet(
-        updatedWallet,
-      ),
+      wallet: this.formatWallet(updatedWallet),
 
-      transaction: this.formatTransaction(
-        transaction,
-      ),
+      transaction: this.formatTransaction(transaction),
     };
   }
 
@@ -423,27 +361,20 @@ export class WalletsService {
     sourceWalletId: number,
     transferDto: TransferDto,
   ) {
-    const {
-      destinationWalletId,
-      amount,
-    } = transferDto;
+    const { destinationWalletId, amount } = transferDto;
 
     /*
      * ==========================================
      * PREVENT TRANSFER TO SAME WALLET
      * ==========================================
      */
-    if (
-      sourceWalletId ===
-      destinationWalletId
-    ) {
+    if (sourceWalletId === destinationWalletId) {
       throw new BadRequestException(
         'You cannot transfer money to the same wallet',
       );
     }
 
-    const transferAmount =
-      BigInt(amount);
+    const transferAmount = BigInt(amount);
 
     if (transferAmount <= 0n) {
       throw new BadRequestException(
@@ -456,15 +387,12 @@ export class WalletsService {
      * FIND SOURCE WALLET
      * ==========================================
      */
-    const sourceWallet =
-      await this.prisma.client.orm.public.Wallet.first({
-        id: sourceWalletId,
-      });
+    const sourceWallet = await this.prisma.client.orm.public.Wallet.first({
+      id: sourceWalletId,
+    });
 
     if (!sourceWallet) {
-      throw new NotFoundException(
-        'Source wallet not found',
-      );
+      throw new NotFoundException('Source wallet not found');
     }
 
     /*
@@ -473,9 +401,7 @@ export class WalletsService {
      * ==========================================
      */
     if (sourceWallet.userId !== userId) {
-      throw new BadRequestException(
-        'You do not have access to this wallet',
-      );
+      throw new BadRequestException('You do not have access to this wallet');
     }
 
     /*
@@ -484,9 +410,7 @@ export class WalletsService {
      * ==========================================
      */
     if (sourceWallet.status !== 'ACTIVE') {
-      throw new BadRequestException(
-        'Source wallet is not active',
-      );
+      throw new BadRequestException('Source wallet is not active');
     }
 
     /*
@@ -494,15 +418,12 @@ export class WalletsService {
      * FIND DESTINATION WALLET
      * ==========================================
      */
-    const destinationWallet =
-      await this.prisma.client.orm.public.Wallet.first({
-        id: destinationWalletId,
-      });
+    const destinationWallet = await this.prisma.client.orm.public.Wallet.first({
+      id: destinationWalletId,
+    });
 
     if (!destinationWallet) {
-      throw new NotFoundException(
-        'Destination wallet not found',
-      );
+      throw new NotFoundException('Destination wallet not found');
     }
 
     /*
@@ -511,9 +432,7 @@ export class WalletsService {
      * ==========================================
      */
     if (destinationWallet.status !== 'ACTIVE') {
-      throw new BadRequestException(
-        'Destination wallet is not active',
-      );
+      throw new BadRequestException('Destination wallet is not active');
     }
 
     /*
@@ -521,13 +440,8 @@ export class WalletsService {
      * PREVENT CROSS-CURRENCY TRANSFER
      * ==========================================
      */
-    if (
-      sourceWallet.currency !==
-      destinationWallet.currency
-    ) {
-      throw new BadRequestException(
-        'Wallet currencies must match',
-      );
+    if (sourceWallet.currency !== destinationWallet.currency) {
+      throw new BadRequestException('Wallet currencies must match');
     }
 
     /*
@@ -535,13 +449,8 @@ export class WalletsService {
      * CHECK SOURCE BALANCE
      * ==========================================
      */
-    if (
-      sourceWallet.balance <
-      transferAmount
-    ) {
-      throw new BadRequestException(
-        'Insufficient wallet balance',
-      );
+    if (sourceWallet.balance < transferAmount) {
+      throw new BadRequestException('Insufficient wallet balance');
     }
 
     /*
@@ -549,19 +458,13 @@ export class WalletsService {
      * CALCULATE NEW BALANCES
      * ==========================================
      */
-    const sourcePreviousBalance =
-      sourceWallet.balance;
+    const sourcePreviousBalance = sourceWallet.balance;
 
-    const destinationPreviousBalance =
-      destinationWallet.balance;
+    const destinationPreviousBalance = destinationWallet.balance;
 
-    const sourceNewBalance =
-      sourceWallet.balance -
-      transferAmount;
+    const sourceNewBalance = sourceWallet.balance - transferAmount;
 
-    const destinationNewBalance =
-      destinationWallet.balance +
-      transferAmount;
+    const destinationNewBalance = destinationWallet.balance + transferAmount;
 
     /*
      * ==========================================
@@ -569,13 +472,11 @@ export class WalletsService {
      * ==========================================
      */
     const updatedSourceWallet =
-      await this.prisma.client.orm.public.Wallet
-        .where({
-          id: sourceWalletId,
-        })
-        .update({
-          balance: sourceNewBalance,
-        });
+      await this.prisma.client.orm.public.Wallet.where({
+        id: sourceWalletId,
+      }).update({
+        balance: sourceNewBalance,
+      });
 
     /*
      * ==========================================
@@ -583,29 +484,26 @@ export class WalletsService {
      * ==========================================
      */
     const updatedDestinationWallet =
-      await this.prisma.client.orm.public.Wallet
-        .where({
-          id: destinationWalletId,
-        })
-        .update({
-          balance: destinationNewBalance,
-        });
+      await this.prisma.client.orm.public.Wallet.where({
+        id: destinationWalletId,
+      }).update({
+        balance: destinationNewBalance,
+      });
 
     /*
      * ==========================================
      * CREATE TRANSACTION
      * ==========================================
      */
-    const transaction =
-      await this.prisma.client.orm.public.Transaction.create({
-        amount: transferAmount,
-        currency: sourceWallet.currency,
-        sourceWalletId,
-        destinationWalletId,
-        reference: this.generateReference('TRF'),
-        status: 'COMPLETED',
-        type: 'TRANSFER',
-      });
+    const transaction = await this.prisma.client.orm.public.Transaction.create({
+      amount: transferAmount,
+      currency: sourceWallet.currency,
+      sourceWalletId,
+      destinationWalletId,
+      reference: this.generateReference('TRF'),
+      status: 'COMPLETED',
+      type: 'TRANSFER',
+    });
 
     /*
      * ==========================================
@@ -641,18 +539,14 @@ export class WalletsService {
 
         sourceWallet: {
           walletId: sourceWalletId,
-          previousBalance:
-            sourcePreviousBalance.toString(),
-          newBalance:
-            sourceNewBalance.toString(),
+          previousBalance: sourcePreviousBalance.toString(),
+          newBalance: sourceNewBalance.toString(),
         },
 
         destinationWallet: {
           walletId: destinationWalletId,
-          previousBalance:
-            destinationPreviousBalance.toString(),
-          newBalance:
-            destinationNewBalance.toString(),
+          previousBalance: destinationPreviousBalance.toString(),
+          newBalance: destinationNewBalance.toString(),
         },
 
         status: transaction.status,
@@ -663,23 +557,13 @@ export class WalletsService {
     return {
       message: 'Transfer successful',
 
-      amount:
-        transferAmount.toString(),
+      amount: transferAmount.toString(),
 
-      sourceWallet:
-        this.formatWallet(
-          updatedSourceWallet,
-        ),
+      sourceWallet: this.formatWallet(updatedSourceWallet),
 
-      destinationWallet:
-        this.formatWallet(
-          updatedDestinationWallet,
-        ),
+      destinationWallet: this.formatWallet(updatedDestinationWallet),
 
-      transaction:
-        this.formatTransaction(
-          transaction,
-        ),
+      transaction: this.formatTransaction(transaction),
     };
   }
 
@@ -688,12 +572,8 @@ export class WalletsService {
    * GENERATE TRANSACTION REFERENCE
    * ==========================================
    */
-  private generateReference(
-    prefix: string,
-  ) {
-    return `${prefix}-${Date.now()}-${Math.floor(
-      Math.random() * 10000,
-    )}`;
+  private generateReference(prefix: string) {
+    return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
   }
 
   /*
@@ -713,9 +593,7 @@ export class WalletsService {
    * FORMAT TRANSACTION RESPONSE
    * ==========================================
    */
-  private formatTransaction(
-    transaction: any,
-  ) {
+  private formatTransaction(transaction: any) {
     return {
       ...transaction,
       amount: transaction.amount.toString(),

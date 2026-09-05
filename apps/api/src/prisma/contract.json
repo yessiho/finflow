@@ -213,12 +213,8 @@
               "user": {
                 "cardinality": "N:1",
                 "on": {
-                  "localFields": [
-                    "userId"
-                  ],
-                  "targetFields": [
-                    "id"
-                  ]
+                  "localFields": ["userId"],
+                  "targetFields": ["id"]
                 },
                 "to": {
                   "model": "User",
@@ -329,12 +325,8 @@
               "entries": {
                 "cardinality": "1:N",
                 "on": {
-                  "localFields": [
-                    "id"
-                  ],
-                  "targetFields": [
-                    "accountId"
-                  ]
+                  "localFields": ["id"],
+                  "targetFields": ["accountId"]
                 },
                 "to": {
                   "model": "LedgerEntry",
@@ -422,12 +414,8 @@
               "account": {
                 "cardinality": "N:1",
                 "on": {
-                  "localFields": [
-                    "accountId"
-                  ],
-                  "targetFields": [
-                    "id"
-                  ]
+                  "localFields": ["accountId"],
+                  "targetFields": ["id"]
                 },
                 "to": {
                   "model": "LedgerAccount",
@@ -437,12 +425,8 @@
               "transaction": {
                 "cardinality": "N:1",
                 "on": {
-                  "localFields": [
-                    "transactionId"
-                  ],
-                  "targetFields": [
-                    "id"
-                  ]
+                  "localFields": ["transactionId"],
+                  "targetFields": ["id"]
                 },
                 "to": {
                   "model": "Transaction",
@@ -570,12 +554,8 @@
               "destinationWallet": {
                 "cardinality": "N:1",
                 "on": {
-                  "localFields": [
-                    "destinationWalletId"
-                  ],
-                  "targetFields": [
-                    "id"
-                  ]
+                  "localFields": ["destinationWalletId"],
+                  "targetFields": ["id"]
                 },
                 "to": {
                   "model": "Wallet",
@@ -585,12 +565,8 @@
               "ledgerEntries": {
                 "cardinality": "1:N",
                 "on": {
-                  "localFields": [
-                    "id"
-                  ],
-                  "targetFields": [
-                    "transactionId"
-                  ]
+                  "localFields": ["id"],
+                  "targetFields": ["transactionId"]
                 },
                 "to": {
                   "model": "LedgerEntry",
@@ -600,12 +576,8 @@
               "sourceWallet": {
                 "cardinality": "N:1",
                 "on": {
-                  "localFields": [
-                    "sourceWalletId"
-                  ],
-                  "targetFields": [
-                    "id"
-                  ]
+                  "localFields": ["sourceWalletId"],
+                  "targetFields": ["id"]
                 },
                 "to": {
                   "model": "Wallet",
@@ -719,12 +691,8 @@
               "auditLogs": {
                 "cardinality": "1:N",
                 "on": {
-                  "localFields": [
-                    "id"
-                  ],
-                  "targetFields": [
-                    "userId"
-                  ]
+                  "localFields": ["id"],
+                  "targetFields": ["userId"]
                 },
                 "to": {
                   "model": "AuditLog",
@@ -734,12 +702,8 @@
               "wallets": {
                 "cardinality": "1:N",
                 "on": {
-                  "localFields": [
-                    "id"
-                  ],
-                  "targetFields": [
-                    "userId"
-                  ]
+                  "localFields": ["id"],
+                  "targetFields": ["userId"]
                 },
                 "to": {
                   "model": "Wallet",
@@ -846,12 +810,8 @@
               "destinationTransactions": {
                 "cardinality": "1:N",
                 "on": {
-                  "localFields": [
-                    "id"
-                  ],
-                  "targetFields": [
-                    "destinationWalletId"
-                  ]
+                  "localFields": ["id"],
+                  "targetFields": ["destinationWalletId"]
                 },
                 "to": {
                   "model": "Transaction",
@@ -861,12 +821,8 @@
               "sourceTransactions": {
                 "cardinality": "1:N",
                 "on": {
-                  "localFields": [
-                    "id"
-                  ],
-                  "targetFields": [
-                    "sourceWalletId"
-                  ]
+                  "localFields": ["id"],
+                  "targetFields": ["sourceWalletId"]
                 },
                 "to": {
                   "model": "Transaction",
@@ -876,12 +832,8 @@
               "user": {
                 "cardinality": "N:1",
                 "on": {
-                  "localFields": [
-                    "userId"
-                  ],
-                  "targetFields": [
-                    "id"
-                  ]
+                  "localFields": ["userId"],
+                  "targetFields": ["id"]
                 },
                 "to": {
                   "model": "User",
@@ -975,16 +927,12 @@
               "foreignKeys": [
                 {
                   "source": {
-                    "columns": [
-                      "userId"
-                    ],
+                    "columns": ["userId"],
                     "namespaceId": "public",
                     "tableName": "auditLog"
                   },
                   "target": {
-                    "columns": [
-                      "id"
-                    ],
+                    "columns": ["id"],
                     "namespaceId": "public",
                     "tableName": "user"
                   }
@@ -992,27 +940,20 @@
               ],
               "indexes": [
                 {
-                  "columns": [
-                    "entity",
-                    "entityId"
-                  ],
+                  "columns": ["entity", "entityId"],
                   "name": "auditLog_entity_entityId_idx_efadd7fc",
                   "prefix": "auditLog_entity_entityId_idx",
                   "unique": false
                 },
                 {
-                  "columns": [
-                    "userId"
-                  ],
+                  "columns": ["userId"],
                   "name": "auditLog_userId_idx_a489d58a",
                   "prefix": "auditLog_userId_idx",
                   "unique": false
                 }
               ],
               "primaryKey": {
-                "columns": [
-                  "id"
-                ]
+                "columns": ["id"]
               },
               "uniques": []
             },
@@ -1098,15 +1039,11 @@
               "foreignKeys": [],
               "indexes": [],
               "primaryKey": {
-                "columns": [
-                  "id"
-                ]
+                "columns": ["id"]
               },
               "uniques": [
                 {
-                  "columns": [
-                    "code"
-                  ]
+                  "columns": ["code"]
                 }
               ]
             },
@@ -1162,32 +1099,24 @@
               "foreignKeys": [
                 {
                   "source": {
-                    "columns": [
-                      "transactionId"
-                    ],
+                    "columns": ["transactionId"],
                     "namespaceId": "public",
                     "tableName": "ledgerEntry"
                   },
                   "target": {
-                    "columns": [
-                      "id"
-                    ],
+                    "columns": ["id"],
                     "namespaceId": "public",
                     "tableName": "transaction"
                   }
                 },
                 {
                   "source": {
-                    "columns": [
-                      "accountId"
-                    ],
+                    "columns": ["accountId"],
                     "namespaceId": "public",
                     "tableName": "ledgerEntry"
                   },
                   "target": {
-                    "columns": [
-                      "id"
-                    ],
+                    "columns": ["id"],
                     "namespaceId": "public",
                     "tableName": "ledgerAccount"
                   }
@@ -1195,26 +1124,20 @@
               ],
               "indexes": [
                 {
-                  "columns": [
-                    "accountId"
-                  ],
+                  "columns": ["accountId"],
                   "name": "ledgerEntry_accountId_idx_cbfb3085",
                   "prefix": "ledgerEntry_accountId_idx",
                   "unique": false
                 },
                 {
-                  "columns": [
-                    "transactionId"
-                  ],
+                  "columns": ["transactionId"],
                   "name": "ledgerEntry_transactionId_idx_d3180832",
                   "prefix": "ledgerEntry_transactionId_idx",
                   "unique": false
                 }
               ],
               "primaryKey": {
-                "columns": [
-                  "id"
-                ]
+                "columns": ["id"]
               },
               "uniques": []
             },
@@ -1321,32 +1244,24 @@
               "foreignKeys": [
                 {
                   "source": {
-                    "columns": [
-                      "sourceWalletId"
-                    ],
+                    "columns": ["sourceWalletId"],
                     "namespaceId": "public",
                     "tableName": "transaction"
                   },
                   "target": {
-                    "columns": [
-                      "id"
-                    ],
+                    "columns": ["id"],
                     "namespaceId": "public",
                     "tableName": "wallet"
                   }
                 },
                 {
                   "source": {
-                    "columns": [
-                      "destinationWalletId"
-                    ],
+                    "columns": ["destinationWalletId"],
                     "namespaceId": "public",
                     "tableName": "transaction"
                   },
                   "target": {
-                    "columns": [
-                      "id"
-                    ],
+                    "columns": ["id"],
                     "namespaceId": "public",
                     "tableName": "wallet"
                   }
@@ -1354,32 +1269,24 @@
               ],
               "indexes": [
                 {
-                  "columns": [
-                    "destinationWalletId"
-                  ],
+                  "columns": ["destinationWalletId"],
                   "name": "transaction_destinationWalletId_idx_b60ffc63",
                   "prefix": "transaction_destinationWalletId_idx",
                   "unique": false
                 },
                 {
-                  "columns": [
-                    "sourceWalletId"
-                  ],
+                  "columns": ["sourceWalletId"],
                   "name": "transaction_sourceWalletId_idx_2e316d30",
                   "prefix": "transaction_sourceWalletId_idx",
                   "unique": false
                 }
               ],
               "primaryKey": {
-                "columns": [
-                  "id"
-                ]
+                "columns": ["id"]
               },
               "uniques": [
                 {
-                  "columns": [
-                    "reference"
-                  ]
+                  "columns": ["reference"]
                 }
               ]
             },
@@ -1454,15 +1361,11 @@
               "foreignKeys": [],
               "indexes": [],
               "primaryKey": {
-                "columns": [
-                  "id"
-                ]
+                "columns": ["id"]
               },
               "uniques": [
                 {
-                  "columns": [
-                    "email"
-                  ]
+                  "columns": ["email"]
                 }
               ]
             },
@@ -1547,16 +1450,12 @@
               "foreignKeys": [
                 {
                   "source": {
-                    "columns": [
-                      "userId"
-                    ],
+                    "columns": ["userId"],
                     "namespaceId": "public",
                     "tableName": "wallet"
                   },
                   "target": {
-                    "columns": [
-                      "id"
-                    ],
+                    "columns": ["id"],
                     "namespaceId": "public",
                     "tableName": "user"
                   }
@@ -1564,25 +1463,18 @@
               ],
               "indexes": [
                 {
-                  "columns": [
-                    "userId"
-                  ],
+                  "columns": ["userId"],
                   "name": "wallet_userId_idx_a489d58a",
                   "prefix": "wallet_userId_idx",
                   "unique": false
                 }
               ],
               "primaryKey": {
-                "columns": [
-                  "id"
-                ]
+                "columns": ["id"]
               },
               "uniques": [
                 {
-                  "columns": [
-                    "userId",
-                    "currency"
-                  ]
+                  "columns": ["userId", "currency"]
                 }
               ]
             }
@@ -1590,22 +1482,11 @@
           "valueSet": {
             "AccountType": {
               "kind": "valueSet",
-              "values": [
-                "ASSET",
-                "LIABILITY",
-                "REVENUE",
-                "EXPENSE",
-                "EQUITY"
-              ]
+              "values": ["ASSET", "LIABILITY", "REVENUE", "EXPENSE", "EQUITY"]
             },
             "Currency": {
               "kind": "valueSet",
-              "values": [
-                "NGN",
-                "USD",
-                "EUR",
-                "GBP"
-              ]
+              "values": ["NGN", "USD", "EUR", "GBP"]
             },
             "TransactionStatus": {
               "kind": "valueSet",
@@ -1619,27 +1500,15 @@
             },
             "TransactionType": {
               "kind": "valueSet",
-              "values": [
-                "DEPOSIT",
-                "WITHDRAWAL",
-                "TRANSFER"
-              ]
+              "values": ["DEPOSIT", "WITHDRAWAL", "TRANSFER"]
             },
             "UserStatus": {
               "kind": "valueSet",
-              "values": [
-                "ACTIVE",
-                "SUSPENDED",
-                "DEACTIVATED"
-              ]
+              "values": ["ACTIVE", "SUSPENDED", "DEACTIVATED"]
             },
             "WalletStatus": {
               "kind": "valueSet",
-              "values": [
-                "ACTIVE",
-                "FROZEN",
-                "CLOSED"
-              ]
+              "values": ["ACTIVE", "FROZEN", "CLOSED"]
             }
           }
         },

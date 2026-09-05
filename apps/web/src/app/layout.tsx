@@ -18,8 +18,7 @@ export const metadata: Metadata = {
     default: 'FinFlow',
     template: '%s | FinFlow',
   },
-  description:
-    'Modern Financial Management Platform',
+  description: 'Modern Financial Management Platform',
 };
 
 export default function RootLayout({
@@ -28,10 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable}`}
-    >
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>{children}</body>
     </html>
   );
