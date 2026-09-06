@@ -87,8 +87,10 @@ describe('AuthService', () => {
 
       mockJwtService.signAsync.mockResolvedValue('mock-access-token');
 
-      const result = await service.login('john@test.com', 'Password123');
-
+      const result = await service.userLogin({
+        email: 'john@test.com',
+        password: 'Password123',
+      });
       expect(
         mockPrismaService.client.orm.public.User.first,
       ).toHaveBeenCalledWith({
@@ -100,13 +102,14 @@ describe('AuthService', () => {
         'hashed-password',
       );
 
-      expect(mockJwtService.signAsync).toHaveBeenCalledWith({
-        sub: mockUser.id,
-        email: mockUser.email,
+     expect(mockJwtService.signAsync).toHaveBeenCalledWith({
+        sub: 1,
+        email: 'john@test.com',
+        type: 'USER',
       });
 
       expect(result).toEqual({
-        access_token: 'mock-access-token',
+        accessToken: 'mock-access-token',
         user: {
           id: 1,
           email: 'john@test.com',
@@ -114,14 +117,17 @@ describe('AuthService', () => {
           lastName: 'Doe',
           status: 'ACTIVE',
         },
-      });
+    });
     });
 
     it('should throw UnauthorizedException when user does not exist', async () => {
       mockPrismaService.client.orm.public.User.first.mockResolvedValue(null);
 
       await expect(
-        service.login('unknown@test.com', 'Password123'),
+        service.userLogin({
+          email: 'unknown@test.com',
+          password: 'Password123',
+        }),
       ).rejects.toThrow(UnauthorizedException);
 
       expect(
@@ -141,7 +147,10 @@ describe('AuthService', () => {
       mockBcryptCompare.mockResolvedValue(false);
 
       await expect(
-        service.login('john@test.com', 'WrongPassword'),
+        service.userLogin({
+          email: 'john@test.com',
+          password: 'WrongPassword',
+        }),
       ).rejects.toThrow(UnauthorizedException);
 
       expect(mockBcryptCompare).toHaveBeenCalledWith(

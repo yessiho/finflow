@@ -4,6 +4,10 @@
   "target": "postgres",
   "profileHash": "3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2",
   "roots": {
+    "admin": {
+      "model": "Admin",
+      "namespace": "public"
+    },
     "auditLog": {
       "model": "AuditLog",
       "namespace": "public"
@@ -55,6 +59,23 @@
               {
                 "name": "EQUITY",
                 "value": "EQUITY"
+              }
+            ]
+          },
+          "AdminStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "ACTIVE",
+                "value": "ACTIVE"
+              },
+              {
+                "name": "SUSPENDED",
+                "value": "SUSPENDED"
+              },
+              {
+                "name": "DEACTIVATED",
+                "value": "DEACTIVATED"
               }
             ]
           },
@@ -157,6 +178,103 @@
           }
         },
         "models": {
+          "Admin": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "email": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "firstName": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "lastName": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "passwordHash": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "AdminStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {},
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "email": {
+                  "column": "email"
+                },
+                "firstName": {
+                  "column": "firstName"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "lastName": {
+                  "column": "lastName"
+                },
+                "passwordHash": {
+                  "column": "passwordHash"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "admin"
+            }
+          },
           "AuditLog": {
             "fields": {
               "action": {
@@ -213,8 +331,12 @@
               "user": {
                 "cardinality": "N:1",
                 "on": {
-                  "localFields": ["userId"],
-                  "targetFields": ["id"]
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
                 },
                 "to": {
                   "model": "User",
@@ -325,8 +447,12 @@
               "entries": {
                 "cardinality": "1:N",
                 "on": {
-                  "localFields": ["id"],
-                  "targetFields": ["accountId"]
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "accountId"
+                  ]
                 },
                 "to": {
                   "model": "LedgerEntry",
@@ -414,8 +540,12 @@
               "account": {
                 "cardinality": "N:1",
                 "on": {
-                  "localFields": ["accountId"],
-                  "targetFields": ["id"]
+                  "localFields": [
+                    "accountId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
                 },
                 "to": {
                   "model": "LedgerAccount",
@@ -425,8 +555,12 @@
               "transaction": {
                 "cardinality": "N:1",
                 "on": {
-                  "localFields": ["transactionId"],
-                  "targetFields": ["id"]
+                  "localFields": [
+                    "transactionId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
                 },
                 "to": {
                   "model": "Transaction",
@@ -554,8 +688,12 @@
               "destinationWallet": {
                 "cardinality": "N:1",
                 "on": {
-                  "localFields": ["destinationWalletId"],
-                  "targetFields": ["id"]
+                  "localFields": [
+                    "destinationWalletId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
                 },
                 "to": {
                   "model": "Wallet",
@@ -565,8 +703,12 @@
               "ledgerEntries": {
                 "cardinality": "1:N",
                 "on": {
-                  "localFields": ["id"],
-                  "targetFields": ["transactionId"]
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "transactionId"
+                  ]
                 },
                 "to": {
                   "model": "LedgerEntry",
@@ -576,8 +718,12 @@
               "sourceWallet": {
                 "cardinality": "N:1",
                 "on": {
-                  "localFields": ["sourceWalletId"],
-                  "targetFields": ["id"]
+                  "localFields": [
+                    "sourceWalletId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
                 },
                 "to": {
                   "model": "Wallet",
@@ -691,8 +837,12 @@
               "auditLogs": {
                 "cardinality": "1:N",
                 "on": {
-                  "localFields": ["id"],
-                  "targetFields": ["userId"]
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
                 },
                 "to": {
                   "model": "AuditLog",
@@ -702,8 +852,12 @@
               "wallets": {
                 "cardinality": "1:N",
                 "on": {
-                  "localFields": ["id"],
-                  "targetFields": ["userId"]
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
                 },
                 "to": {
                   "model": "Wallet",
@@ -810,8 +964,12 @@
               "destinationTransactions": {
                 "cardinality": "1:N",
                 "on": {
-                  "localFields": ["id"],
-                  "targetFields": ["destinationWalletId"]
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "destinationWalletId"
+                  ]
                 },
                 "to": {
                   "model": "Transaction",
@@ -821,8 +979,12 @@
               "sourceTransactions": {
                 "cardinality": "1:N",
                 "on": {
-                  "localFields": ["id"],
-                  "targetFields": ["sourceWalletId"]
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "sourceWalletId"
+                  ]
                 },
                 "to": {
                   "model": "Transaction",
@@ -832,8 +994,12 @@
               "user": {
                 "cardinality": "N:1",
                 "on": {
-                  "localFields": ["userId"],
-                  "targetFields": ["id"]
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
                 },
                 "to": {
                   "model": "User",
@@ -878,6 +1044,89 @@
       "public": {
         "entries": {
           "table": {
+            "admin": {
+              "checks": [
+                {
+                  "expression": "\"status\" IN ('ACTIVE', 'SUSPENDED', 'DEACTIVATED')",
+                  "name": "admin_status_check_5dec1c59",
+                  "prefix": "admin_status_check"
+                }
+              ],
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "email": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "firstName": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "lastName": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "passwordHash": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "ACTIVE"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "AdminStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "email"
+                  ]
+                }
+              ]
+            },
             "auditLog": {
               "columns": {
                 "action": {
@@ -927,12 +1176,16 @@
               "foreignKeys": [
                 {
                   "source": {
-                    "columns": ["userId"],
+                    "columns": [
+                      "userId"
+                    ],
                     "namespaceId": "public",
                     "tableName": "auditLog"
                   },
                   "target": {
-                    "columns": ["id"],
+                    "columns": [
+                      "id"
+                    ],
                     "namespaceId": "public",
                     "tableName": "user"
                   }
@@ -940,20 +1193,27 @@
               ],
               "indexes": [
                 {
-                  "columns": ["entity", "entityId"],
+                  "columns": [
+                    "entity",
+                    "entityId"
+                  ],
                   "name": "auditLog_entity_entityId_idx_efadd7fc",
                   "prefix": "auditLog_entity_entityId_idx",
                   "unique": false
                 },
                 {
-                  "columns": ["userId"],
+                  "columns": [
+                    "userId"
+                  ],
                   "name": "auditLog_userId_idx_a489d58a",
                   "prefix": "auditLog_userId_idx",
                   "unique": false
                 }
               ],
               "primaryKey": {
-                "columns": ["id"]
+                "columns": [
+                  "id"
+                ]
               },
               "uniques": []
             },
@@ -1039,11 +1299,15 @@
               "foreignKeys": [],
               "indexes": [],
               "primaryKey": {
-                "columns": ["id"]
+                "columns": [
+                  "id"
+                ]
               },
               "uniques": [
                 {
-                  "columns": ["code"]
+                  "columns": [
+                    "code"
+                  ]
                 }
               ]
             },
@@ -1099,24 +1363,32 @@
               "foreignKeys": [
                 {
                   "source": {
-                    "columns": ["transactionId"],
+                    "columns": [
+                      "transactionId"
+                    ],
                     "namespaceId": "public",
                     "tableName": "ledgerEntry"
                   },
                   "target": {
-                    "columns": ["id"],
+                    "columns": [
+                      "id"
+                    ],
                     "namespaceId": "public",
                     "tableName": "transaction"
                   }
                 },
                 {
                   "source": {
-                    "columns": ["accountId"],
+                    "columns": [
+                      "accountId"
+                    ],
                     "namespaceId": "public",
                     "tableName": "ledgerEntry"
                   },
                   "target": {
-                    "columns": ["id"],
+                    "columns": [
+                      "id"
+                    ],
                     "namespaceId": "public",
                     "tableName": "ledgerAccount"
                   }
@@ -1124,20 +1396,26 @@
               ],
               "indexes": [
                 {
-                  "columns": ["accountId"],
+                  "columns": [
+                    "accountId"
+                  ],
                   "name": "ledgerEntry_accountId_idx_cbfb3085",
                   "prefix": "ledgerEntry_accountId_idx",
                   "unique": false
                 },
                 {
-                  "columns": ["transactionId"],
+                  "columns": [
+                    "transactionId"
+                  ],
                   "name": "ledgerEntry_transactionId_idx_d3180832",
                   "prefix": "ledgerEntry_transactionId_idx",
                   "unique": false
                 }
               ],
               "primaryKey": {
-                "columns": ["id"]
+                "columns": [
+                  "id"
+                ]
               },
               "uniques": []
             },
@@ -1244,24 +1522,32 @@
               "foreignKeys": [
                 {
                   "source": {
-                    "columns": ["sourceWalletId"],
+                    "columns": [
+                      "sourceWalletId"
+                    ],
                     "namespaceId": "public",
                     "tableName": "transaction"
                   },
                   "target": {
-                    "columns": ["id"],
+                    "columns": [
+                      "id"
+                    ],
                     "namespaceId": "public",
                     "tableName": "wallet"
                   }
                 },
                 {
                   "source": {
-                    "columns": ["destinationWalletId"],
+                    "columns": [
+                      "destinationWalletId"
+                    ],
                     "namespaceId": "public",
                     "tableName": "transaction"
                   },
                   "target": {
-                    "columns": ["id"],
+                    "columns": [
+                      "id"
+                    ],
                     "namespaceId": "public",
                     "tableName": "wallet"
                   }
@@ -1269,24 +1555,32 @@
               ],
               "indexes": [
                 {
-                  "columns": ["destinationWalletId"],
+                  "columns": [
+                    "destinationWalletId"
+                  ],
                   "name": "transaction_destinationWalletId_idx_b60ffc63",
                   "prefix": "transaction_destinationWalletId_idx",
                   "unique": false
                 },
                 {
-                  "columns": ["sourceWalletId"],
+                  "columns": [
+                    "sourceWalletId"
+                  ],
                   "name": "transaction_sourceWalletId_idx_2e316d30",
                   "prefix": "transaction_sourceWalletId_idx",
                   "unique": false
                 }
               ],
               "primaryKey": {
-                "columns": ["id"]
+                "columns": [
+                  "id"
+                ]
               },
               "uniques": [
                 {
-                  "columns": ["reference"]
+                  "columns": [
+                    "reference"
+                  ]
                 }
               ]
             },
@@ -1361,11 +1655,15 @@
               "foreignKeys": [],
               "indexes": [],
               "primaryKey": {
-                "columns": ["id"]
+                "columns": [
+                  "id"
+                ]
               },
               "uniques": [
                 {
-                  "columns": ["email"]
+                  "columns": [
+                    "email"
+                  ]
                 }
               ]
             },
@@ -1450,12 +1748,16 @@
               "foreignKeys": [
                 {
                   "source": {
-                    "columns": ["userId"],
+                    "columns": [
+                      "userId"
+                    ],
                     "namespaceId": "public",
                     "tableName": "wallet"
                   },
                   "target": {
-                    "columns": ["id"],
+                    "columns": [
+                      "id"
+                    ],
                     "namespaceId": "public",
                     "tableName": "user"
                   }
@@ -1463,18 +1765,25 @@
               ],
               "indexes": [
                 {
-                  "columns": ["userId"],
+                  "columns": [
+                    "userId"
+                  ],
                   "name": "wallet_userId_idx_a489d58a",
                   "prefix": "wallet_userId_idx",
                   "unique": false
                 }
               ],
               "primaryKey": {
-                "columns": ["id"]
+                "columns": [
+                  "id"
+                ]
               },
               "uniques": [
                 {
-                  "columns": ["userId", "currency"]
+                  "columns": [
+                    "userId",
+                    "currency"
+                  ]
                 }
               ]
             }
@@ -1482,11 +1791,30 @@
           "valueSet": {
             "AccountType": {
               "kind": "valueSet",
-              "values": ["ASSET", "LIABILITY", "REVENUE", "EXPENSE", "EQUITY"]
+              "values": [
+                "ASSET",
+                "LIABILITY",
+                "REVENUE",
+                "EXPENSE",
+                "EQUITY"
+              ]
+            },
+            "AdminStatus": {
+              "kind": "valueSet",
+              "values": [
+                "ACTIVE",
+                "SUSPENDED",
+                "DEACTIVATED"
+              ]
             },
             "Currency": {
               "kind": "valueSet",
-              "values": ["NGN", "USD", "EUR", "GBP"]
+              "values": [
+                "NGN",
+                "USD",
+                "EUR",
+                "GBP"
+              ]
             },
             "TransactionStatus": {
               "kind": "valueSet",
@@ -1500,15 +1828,27 @@
             },
             "TransactionType": {
               "kind": "valueSet",
-              "values": ["DEPOSIT", "WITHDRAWAL", "TRANSFER"]
+              "values": [
+                "DEPOSIT",
+                "WITHDRAWAL",
+                "TRANSFER"
+              ]
             },
             "UserStatus": {
               "kind": "valueSet",
-              "values": ["ACTIVE", "SUSPENDED", "DEACTIVATED"]
+              "values": [
+                "ACTIVE",
+                "SUSPENDED",
+                "DEACTIVATED"
+              ]
             },
             "WalletStatus": {
               "kind": "valueSet",
-              "values": ["ACTIVE", "FROZEN", "CLOSED"]
+              "values": [
+                "ACTIVE",
+                "FROZEN",
+                "CLOSED"
+              ]
             }
           }
         },
@@ -1516,12 +1856,27 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "7bb20ae7d6faceb6ed459a43ec456c84494821043da5c5280b2a602a617539c0"
+    "storageHash": "96549f10e6a2fa52a6a29d65d3152548e10ca4dc29d458ea0bcbb8ca13fea7f0"
   },
   "execution": {
-    "executionHash": "693cac251d65a948985f568356c79b8cd64103e8608ad390c20b0e1ebd6d857e",
+    "executionHash": "a0a81cd19691beb101773852380e27ea743eacee1072cb79d68c701dec9ba23e",
     "mutations": {
       "defaults": [
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "admin"
+          }
+        },
         {
           "onCreate": {
             "id": "timestampNow",

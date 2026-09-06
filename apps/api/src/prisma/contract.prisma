@@ -7,6 +7,12 @@ enum UserStatus {
   DEACTIVATED
 }
 
+enum AdminStatus {
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
 enum WalletStatus {
   ACTIVE
   FROZEN
@@ -57,19 +63,31 @@ model User {
   updatedAt    temporal.updatedAtString()
 }
 
-model Wallet {
-  id                 Int           @id @default(autoincrement())
-  userId             Int
-  currency           Currency
-  balance            BigInt        @default(0)
-  status             WalletStatus  @default(ACTIVE)
+model Admin {
+  id           Int         @id @default(autoincrement())
+  email        String      @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  status       AdminStatus @default(ACTIVE)
 
-  user               User          @relation(fields: [userId], references: [id])
-  sourceTransactions Transaction[] @relation("SourceWallet")
+  createdAt    TimestamptzString @default(now())
+  updatedAt    temporal.updatedAtString()
+}
+
+model Wallet {
+  id                      Int           @id @default(autoincrement())
+  userId                  Int
+  currency                Currency
+  balance                 BigInt        @default(0)
+  status                  WalletStatus  @default(ACTIVE)
+
+  user                    User          @relation(fields: [userId], references: [id])
+  sourceTransactions      Transaction[] @relation("SourceWallet")
   destinationTransactions Transaction[] @relation("DestinationWallet")
 
-  createdAt           TimestamptzString @default(now())
-  updatedAt           temporal.updatedAtString()
+  createdAt               TimestamptzString @default(now())
+  updatedAt               temporal.updatedAtString()
 
   @@unique([userId, currency])
   @@index([userId])

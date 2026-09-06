@@ -9,6 +9,7 @@ import { WalletsModule } from './wallets/wallets.module.js';
 import { LedgerModule } from './ledger/ledger.module.js';
 import { AuditModule } from './audit/audit.module.js';
 import { TransactionsModule } from './transactions/transactions.module.js';
+import { AdminsModule } from './admins/admins.module.js';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { TransactionsModule } from './transactions/transactions.module.js';
     PrismaModule,
     UsersModule,
     AuthModule,
+    AdminsModule,
     WalletsModule,
     LedgerModule,
     AuditModule,
