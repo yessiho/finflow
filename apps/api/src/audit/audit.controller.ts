@@ -3,11 +3,25 @@ import {
   Controller,
   Get,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 
+import type { Request } from 'express';
+
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { AuditService } from './audit.service.js';
+
+/*
+ * ==========================================
+ * JWT USER TYPE
+ * ==========================================
+ */
+interface AuthenticatedUser {
+  id: number;
+  email: string;
+  type: string;
+}
 
 @Controller('audit')
 @UseGuards(JwtAuthGuard)
@@ -16,7 +30,7 @@ export class AuditController {
 
   /*
    * ==========================================
-   * GET AUDIT LOGS
+   * GET CURRENT USER AUDIT LOGS
    *
    * GET /audit
    *
@@ -26,11 +40,19 @@ export class AuditController {
    * ?limit=20
    * ?action=DEPOSIT
    * ?entity=TRANSACTION
-   * ?userId=2
+   *
+   * IMPORTANT:
+   *
+   * The authenticated user's ID comes from
+   * the JWT token.
+   *
+   * Users cannot request another user's logs.
    * ==========================================
    */
   @Get()
   async findAll(
+    @Req() request: Request,
+
     @Query('page') page?: string,
 
     @Query('limit') limit?: string,
@@ -38,14 +60,12 @@ export class AuditController {
     @Query('action') action?: string,
 
     @Query('entity') entity?: string,
-
-    @Query('userId') userId?: string,
   ): Promise<unknown> {
+    const user = request.user as AuthenticatedUser;
+
     const parsedPage = page ? Number(page) : 1;
 
     const parsedLimit = limit ? Number(limit) : 20;
-
-    const parsedUserId = userId ? Number(userId) : undefined;
 
     /*
      * ==========================================
@@ -53,7 +73,9 @@ export class AuditController {
      * ==========================================
      */
     if (!Number.isInteger(parsedPage) || parsedPage < 1) {
-      throw new BadRequestException('Page must be a positive integer');
+      throw new BadRequestException(
+        'Page must be a positive integer',
+      );
     }
 
     /*
@@ -66,22 +88,21 @@ export class AuditController {
       parsedLimit < 1 ||
       parsedLimit > 100
     ) {
-      throw new BadRequestException('Limit must be between 1 and 100');
+      throw new BadRequestException(
+        'Limit must be between 1 and 100',
+      );
     }
 
     /*
      * ==========================================
-     * USER ID VALIDATION
+     * SECURITY:
+     *
+     * Always use the authenticated user's ID.
+     *
+     * Never accept userId from query parameters.
      * ==========================================
      */
-    if (
-      parsedUserId !== undefined &&
-      (!Number.isInteger(parsedUserId) || parsedUserId < 1)
-    ) {
-      throw new BadRequestException('User ID must be a positive integer');
-    }
-
-    return this.auditService.findAll({
+    return this.auditService.findByUser(user.id, {
       page: parsedPage,
 
       limit: parsedLimit,
@@ -89,8 +110,6 @@ export class AuditController {
       action: action?.trim() || undefined,
 
       entity: entity?.trim() || undefined,
-
-      userId: parsedUserId,
     });
   }
 }

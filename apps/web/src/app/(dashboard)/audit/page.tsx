@@ -51,7 +51,7 @@ type Pagination = {
   totalPages: number;
 };
 
-type NormalizedAuditResponse = {
+type AuditResponse = {
   data: AuditLog[];
   pagination: Pagination;
 };
@@ -86,97 +86,126 @@ function getErrorMessage(
   return fallback;
 }
 
-function isAuditLog(value: unknown): value is AuditLog {
-  if (
-    typeof value !== 'object' ||
-    value === null
-  ) {
-    return false;
+function normalizeAuditLog(
+  value: unknown,
+): AuditLog | null {
+  if (typeof value !== 'object' || value === null) {
+    return null;
   }
 
   const log = value as Record<string, unknown>;
 
-  return (
-    typeof log.id === 'number' &&
-    typeof log.action === 'string' &&
-    typeof log.entity === 'string' &&
-    typeof log.createdAt === 'string'
-  );
-}
-
-/* =====================================================
-   NORMALIZE API RESPONSE
-
-   Supports your actual backend response:
-
-   {
-     data: [...],
-     pagination: {
-       page,
-       limit,
-       total,
-       totalPages
-     }
-   }
-
-   Also supports alternative formats.
-===================================================== */
-
-function normalizeAuditResponse(
-  response: unknown,
-): NormalizedAuditResponse | null {
-  if (Array.isArray(response)) {
-    const data = response.filter(isAuditLog);
-
-    return {
-      data,
-      pagination: {
-        page: 1,
-        limit: PAGE_SIZE,
-        total: data.length,
-        totalPages: Math.max(
-          1,
-          Math.ceil(data.length / PAGE_SIZE),
-        ),
-      },
-    };
-  }
-
   if (
-    typeof response !== 'object' ||
-    response === null
+    typeof log.id !== 'number' ||
+    typeof log.action !== 'string' ||
+    typeof log.entity !== 'string' ||
+    typeof log.createdAt !== 'string'
   ) {
     return null;
   }
 
-  const result = response as Record<string, unknown>;
+  let userEmail: string | null = null;
 
-  if (!Array.isArray(result.data)) {
+  /*
+   * Support nested user object:
+   *
+   * user: {
+   *   email: 'user@example.com'
+   * }
+   */
+  if (
+    typeof log.user === 'object' &&
+    log.user !== null &&
+    'email' in log.user &&
+    typeof (log.user as Record<string, unknown>).email ===
+      'string'
+  ) {
+    userEmail = (
+      log.user as Record<string, unknown>
+    ).email as string;
+  }
+
+  /*
+   * Direct userEmail takes priority.
+   */
+  if (typeof log.userEmail === 'string') {
+    userEmail = log.userEmail;
+  }
+
+  const entityId =
+    typeof log.entityId === 'string'
+      ? log.entityId
+      : typeof log.entityId === 'number'
+        ? String(log.entityId)
+        : null;
+
+  return {
+    id: log.id,
+
+    action: log.action,
+
+    entity: log.entity,
+
+    entityId,
+
+    userId:
+      typeof log.userId === 'number'
+        ? log.userId
+        : null,
+
+    userEmail,
+
+    ipAddress:
+      typeof log.ipAddress === 'string'
+        ? log.ipAddress
+        : null,
+
+    metadata: log.metadata ?? null,
+
+    createdAt: log.createdAt,
+  };
+}
+
+function normalizeAuditResponse(
+  value: unknown,
+): AuditResponse | null {
+  if (typeof value !== 'object' || value === null) {
     return null;
   }
 
-  const data = result.data.filter(isAuditLog);
+  const response = value as Record<string, unknown>;
+
+  if (!Array.isArray(response.data)) {
+    return null;
+  }
+
+  const logs = response.data
+    .map(normalizeAuditLog)
+    .filter(
+      (log): log is AuditLog =>
+        log !== null,
+    );
 
   /*
-   * PRIMARY FORMAT
+   * FORMAT 1
    *
    * {
    *   data: [],
    *   pagination: {
-   *     page: 1,
-   *     limit: 20,
-   *     total: 100,
-   *     totalPages: 5
+   *     page,
+   *     limit,
+   *     total,
+   *     totalPages
    *   }
    * }
    */
 
   if (
-    typeof result.pagination === 'object' &&
-    result.pagination !== null
+    typeof response.pagination === 'object' &&
+    response.pagination !== null
   ) {
     const pagination =
-      result.pagination as Record<string, unknown>;
+      response.pagination as Record<string, unknown>;
 
     const page =
       typeof pagination.page === 'number'
@@ -191,7 +220,7 @@ function normalizeAuditResponse(
     const total =
       typeof pagination.total === 'number'
         ? pagination.total
-        : data.length;
+        : logs.length;
 
     const totalPages =
       typeof pagination.totalPages === 'number'
@@ -202,7 +231,8 @@ function normalizeAuditResponse(
           );
 
     return {
-      data,
+      data: logs,
+
       pagination: {
         page,
         limit,
@@ -213,7 +243,7 @@ function normalizeAuditResponse(
   }
 
   /*
-   * FALLBACK FORMAT
+   * FORMAT 2
    *
    * {
    *   data: [],
@@ -224,44 +254,43 @@ function normalizeAuditResponse(
    */
 
   const page =
-    typeof result.page === 'number'
-      ? result.page
+    typeof response.page === 'number'
+      ? response.page
       : 1;
 
   const limit =
-    typeof result.limit === 'number'
-      ? result.limit
+    typeof response.limit === 'number'
+      ? response.limit
       : PAGE_SIZE;
 
   const total =
-    typeof result.total === 'number'
-      ? result.total
-      : data.length;
-
-  const totalPages =
-    typeof result.totalPages === 'number'
-      ? result.totalPages
-      : Math.max(
-          1,
-          Math.ceil(total / limit),
-        );
+    typeof response.total === 'number'
+      ? response.total
+      : logs.length;
 
   return {
-    data,
+    data: logs,
+
     pagination: {
       page,
       limit,
       total,
-      totalPages,
+
+      totalPages: Math.max(
+        1,
+        Math.ceil(total / limit),
+      ),
     },
   };
 }
 
-function formatDate(dateString: string): string {
+function formatDate(
+  dateString: string,
+): string {
   const date = new Date(dateString);
 
   if (Number.isNaN(date.getTime())) {
-    return dateString;
+    return 'Invalid date';
   }
 
   return new Intl.DateTimeFormat('en-NG', {
@@ -270,17 +299,20 @@ function formatDate(dateString: string): string {
   }).format(date);
 }
 
-function formatAction(action: string): string {
+function formatAction(
+  action: string,
+): string {
   return action
     .replace(/_/g, ' ')
     .toLowerCase()
-    .replace(
-      /\b\w/g,
-      (character) => character.toUpperCase(),
+    .replace(/\b\w/g, (character) =>
+      character.toUpperCase(),
     );
 }
 
-function getActionClass(action: string): string {
+function getActionClass(
+  action: string,
+): string {
   const normalizedAction =
     action.toLowerCase();
 
@@ -298,6 +330,7 @@ function getActionClass(action: string): string {
     normalizedAction.includes('create') ||
     normalizedAction.includes('approve') ||
     normalizedAction.includes('success') ||
+    normalizedAction.includes('complete') ||
     normalizedAction.includes('login') ||
     normalizedAction.includes('deposit')
   ) {
@@ -387,13 +420,8 @@ export default function AuditPage() {
   const [page, setPage] =
     useState(1);
 
-  const [pagination, setPagination] =
-    useState<Pagination>({
-      page: 1,
-      limit: PAGE_SIZE,
-      total: 0,
-      totalPages: 0,
-    });
+  const [total, setTotal] =
+    useState(0);
 
   const [selectedLog, setSelectedLog] =
     useState<AuditLog | null>(null);
@@ -411,7 +439,9 @@ export default function AuditPage() {
         'access_token',
       );
 
-      localStorage.removeItem('user');
+      localStorage.removeItem(
+        'user',
+      );
 
       router.push('/login');
     }, [router]);
@@ -423,7 +453,7 @@ export default function AuditPage() {
   const loadAuditLogs =
     useCallback(
       async (
-        requestedPage: number,
+        requestedPage = 1,
         isRefresh = false,
       ) => {
         if (requestInProgress.current) {
@@ -443,13 +473,8 @@ export default function AuditPage() {
 
           const params =
             new URLSearchParams({
-              page: String(
-                requestedPage,
-              ),
-              limit: String(
-                pagination.limit ||
-                  PAGE_SIZE,
-              ),
+              page: String(requestedPage),
+              limit: String(PAGE_SIZE),
             });
 
           const response: unknown =
@@ -458,9 +483,7 @@ export default function AuditPage() {
             );
 
           const auditResponse =
-            normalizeAuditResponse(
-              response,
-            );
+            normalizeAuditResponse(response);
 
           if (!auditResponse) {
             console.error(
@@ -473,17 +496,21 @@ export default function AuditPage() {
             );
           }
 
-          setLogs(
-            auditResponse.data,
-          );
+          const {
+            data,
+            pagination,
+          } = auditResponse;
 
-          setPagination(
-            auditResponse.pagination,
+          setLogs(data);
+
+          setTotal(
+            pagination.total,
           );
         } catch (
           caughtError: unknown
         ) {
           console.error(
+            'Audit loading error:',
             caughtError,
           );
 
@@ -512,6 +539,10 @@ export default function AuditPage() {
             return;
           }
 
+          setLogs([]);
+
+          setTotal(0);
+
           setError(message);
         } finally {
           setLoading(false);
@@ -522,17 +553,17 @@ export default function AuditPage() {
             false;
         }
       },
-      [
-        handleUnauthorized,
-        pagination.limit,
-      ],
+      [handleUnauthorized],
     );
 
   /* =====================================================
      INITIAL LOAD + PAGE CHANGE
 
-     setTimeout prevents React ESLint error:
+     Using setTimeout prevents the React ESLint rule:
+
      react-hooks/set-state-in-effect
+
+     from detecting synchronous state updates.
   ===================================================== */
 
   useEffect(() => {
@@ -545,8 +576,8 @@ export default function AuditPage() {
       window.clearTimeout(timer);
     };
   }, [
-    loadAuditLogs,
     page,
+    loadAuditLogs,
   ]);
 
   /* =====================================================
@@ -556,48 +587,33 @@ export default function AuditPage() {
   const filteredLogs =
     useMemo(() => {
       const normalizedSearch =
-        search
-          .trim()
-          .toLowerCase();
+        search.trim().toLowerCase();
 
       return logs.filter((log) => {
         const matchesSearch =
           !normalizedSearch ||
           log.action
             .toLowerCase()
-            .includes(
-              normalizedSearch,
-            ) ||
+            .includes(normalizedSearch) ||
           log.entity
             .toLowerCase()
-            .includes(
-              normalizedSearch,
-            ) ||
+            .includes(normalizedSearch) ||
           log.entityId
             ?.toLowerCase()
-            .includes(
-              normalizedSearch,
-            ) ||
+            .includes(normalizedSearch) ||
           log.userEmail
             ?.toLowerCase()
-            .includes(
-              normalizedSearch,
-            ) ||
+            .includes(normalizedSearch) ||
           log.ipAddress
             ?.toLowerCase()
-            .includes(
-              normalizedSearch,
-            ) ||
-          String(
-            log.userId ?? '',
-          ).includes(
-            normalizedSearch,
-          );
+            .includes(normalizedSearch) ||
+          String(log.userId ?? '')
+            .toLowerCase()
+            .includes(normalizedSearch);
 
         const matchesAction =
           actionFilter === 'ALL' ||
-          log.action ===
-            actionFilter;
+          log.action === actionFilter;
 
         return (
           matchesSearch &&
@@ -652,9 +668,7 @@ export default function AuditPage() {
       const todayLogs =
         logs.filter((log) => {
           const logDate =
-            new Date(
-              log.createdAt,
-            );
+            new Date(log.createdAt);
 
           return (
             logDate.getFullYear() ===
@@ -674,11 +688,9 @@ export default function AuditPage() {
         );
 
       return {
-        totalLogs:
-          pagination.total,
+        totalLogs: total,
 
-        pageLogs:
-          logs.length,
+        pageLogs: logs.length,
 
         todayLogs:
           todayLogs.length,
@@ -689,10 +701,7 @@ export default function AuditPage() {
         uniqueActions:
           uniqueActions.size,
       };
-    }, [
-      logs,
-      pagination.total,
-    ]);
+    }, [logs, total]);
 
   /* =====================================================
      PAGINATION
@@ -701,11 +710,9 @@ export default function AuditPage() {
   const totalPages =
     Math.max(
       1,
-      pagination.totalPages ||
-        Math.ceil(
-          pagination.total /
-            pagination.limit,
-        ),
+      Math.ceil(
+        total / PAGE_SIZE,
+      ),
     );
 
   const canGoPrevious =
@@ -763,22 +770,26 @@ export default function AuditPage() {
 
   return (
     <div className="audit-page">
+
       {/* PAGE HEADER */}
 
       <div className="audit-header">
         <div>
           <div className="audit-title-row">
-            <ShieldCheck size={28} />
+            <div className="audit-header-icon">
+              <ShieldCheck size={25} />
+            </div>
 
-            <h1>Audit Logs</h1>
+            <div>
+              <h1>Audit Logs</h1>
+
+              <p>
+                Monitor important system activities,
+                user actions and security events
+                across FinFlow.
+              </p>
+            </div>
           </div>
-
-          <p>
-            Monitor important system
-            activities, user actions,
-            and security events across
-            FinFlow.
-          </p>
         </div>
 
         <button
@@ -809,7 +820,7 @@ export default function AuditPage() {
 
       {error && (
         <div className="audit-error">
-          <AlertCircle size={20} />
+          <AlertCircle size={21} />
 
           <div>
             <strong>
@@ -830,6 +841,94 @@ export default function AuditPage() {
         </div>
       )}
 
+      {/* STATISTICS */}
+
+      {!loading && (
+        <div className="audit-stats-grid">
+
+          <div className="audit-stat-card">
+            <div className="audit-stat-icon primary">
+              <Activity size={21} />
+            </div>
+
+            <div>
+              <span>
+                Total Audit Events
+              </span>
+
+              <strong>
+                {statistics.totalLogs}
+              </strong>
+
+              <small>
+                Recorded system activities
+              </small>
+            </div>
+          </div>
+
+          <div className="audit-stat-card">
+            <div className="audit-stat-icon success">
+              <CalendarDays size={21} />
+            </div>
+
+            <div>
+              <span>
+                Today&apos;s Events
+              </span>
+
+              <strong>
+                {statistics.todayLogs}
+              </strong>
+
+              <small>
+                Events recorded today
+              </small>
+            </div>
+          </div>
+
+          <div className="audit-stat-card">
+            <div className="audit-stat-icon warning">
+              <UserRound size={21} />
+            </div>
+
+            <div>
+              <span>
+                Active Users
+              </span>
+
+              <strong>
+                {statistics.uniqueUsers}
+              </strong>
+
+              <small>
+                Users on current page
+              </small>
+            </div>
+          </div>
+
+          <div className="audit-stat-card">
+            <div className="audit-stat-icon info">
+              <FileText size={21} />
+            </div>
+
+            <div>
+              <span>
+                Action Types
+              </span>
+
+              <strong>
+                {statistics.uniqueActions}
+              </strong>
+
+              <small>
+                {statistics.pageLogs} events loaded
+              </small>
+            </div>
+          </div>
+
+        </div>
+      )}
+
       {/* LOADING */}
 
       {loading ? (
@@ -845,105 +944,11 @@ export default function AuditPage() {
         </div>
       ) : (
         <>
-          {/* STATISTICS */}
-
-          <div className="audit-stats-grid">
-            <div className="audit-stat-card">
-              <div className="audit-stat-icon primary">
-                <Activity size={21} />
-              </div>
-
-              <div>
-                <span>
-                  Total Audit Events
-                </span>
-
-                <strong>
-                  {
-                    statistics.totalLogs
-                  }
-                </strong>
-
-                <small>
-                  Recorded system
-                  activities
-                </small>
-              </div>
-            </div>
-
-            <div className="audit-stat-card">
-              <div className="audit-stat-icon success">
-                <CalendarDays size={21} />
-              </div>
-
-              <div>
-                <span>
-                  Today&apos;s Events
-                </span>
-
-                <strong>
-                  {
-                    statistics.todayLogs
-                  }
-                </strong>
-
-                <small>
-                  Events on current page
-                </small>
-              </div>
-            </div>
-
-            <div className="audit-stat-card">
-              <div className="audit-stat-icon warning">
-                <UserRound size={21} />
-              </div>
-
-              <div>
-                <span>
-                  Active Users
-                </span>
-
-                <strong>
-                  {
-                    statistics.uniqueUsers
-                  }
-                </strong>
-
-                <small>
-                  Users on current page
-                </small>
-              </div>
-            </div>
-
-            <div className="audit-stat-card">
-              <div className="audit-stat-icon info">
-                <FileText size={21} />
-              </div>
-
-              <div>
-                <span>
-                  Action Types
-                </span>
-
-                <strong>
-                  {
-                    statistics.uniqueActions
-                  }
-                </strong>
-
-                <small>
-                  {
-                    statistics.pageLogs
-                  }{' '}
-                  events loaded
-                </small>
-              </div>
-            </div>
-          </div>
 
           {/* FILTERS */}
 
           <section className="audit-controls">
+
             <div className="audit-search">
               <Search size={19} />
 
@@ -985,11 +990,13 @@ export default function AuditPage() {
                 ),
               )}
             </select>
+
           </section>
 
           {/* TABLE */}
 
           <section className="audit-table-section">
+
             <div className="audit-table-header">
               <div>
                 <h2>
@@ -997,9 +1004,9 @@ export default function AuditPage() {
                 </h2>
 
                 <p>
-                  Detailed record of
-                  actions performed across
-                  the FinFlow platform.
+                  Detailed record of actions
+                  performed across the
+                  FinFlow platform.
                 </p>
               </div>
 
@@ -1009,8 +1016,7 @@ export default function AuditPage() {
               </span>
             </div>
 
-            {filteredLogs.length ===
-            0 ? (
+            {filteredLogs.length === 0 ? (
               <div className="audit-empty">
                 <ShieldCheck size={44} />
 
@@ -1026,28 +1032,16 @@ export default function AuditPage() {
               </div>
             ) : (
               <div className="audit-table-wrapper">
+
                 <table className="audit-table">
+
                   <thead>
                     <tr>
-                      <th>
-                        Action
-                      </th>
-
-                      <th>
-                        Entity
-                      </th>
-
-                      <th>
-                        User
-                      </th>
-
-                      <th>
-                        IP Address
-                      </th>
-
-                      <th>
-                        Date & Time
-                      </th>
+                      <th>Action</th>
+                      <th>Entity</th>
+                      <th>User</th>
+                      <th>IP Address</th>
+                      <th>Date &amp; Time</th>
 
                       <th className="audit-actions-column">
                         Details
@@ -1056,9 +1050,11 @@ export default function AuditPage() {
                   </thead>
 
                   <tbody>
+
                     {filteredLogs.map(
                       (log) => (
                         <tr key={log.id}>
+
                           <td>
                             <span
                               className={getActionClass(
@@ -1079,10 +1075,7 @@ export default function AuditPage() {
 
                               {log.entityId && (
                                 <span>
-                                  ID:{' '}
-                                  {
-                                    log.entityId
-                                  }
+                                  ID: {log.entityId}
                                 </span>
                               )}
                             </div>
@@ -1090,6 +1083,7 @@ export default function AuditPage() {
 
                           <td>
                             <div className="audit-user">
+
                               <div className="audit-user-avatar">
                                 <UserRound
                                   size={16}
@@ -1108,6 +1102,7 @@ export default function AuditPage() {
                                     : 'Automated action'}
                                 </span>
                               </div>
+
                             </div>
                           </td>
 
@@ -1127,43 +1122,47 @@ export default function AuditPage() {
                           </td>
 
                           <td className="audit-actions-column">
+
                             <button
                               type="button"
                               className="audit-view-button"
                               onClick={() =>
-                                setSelectedLog(
-                                  log,
-                                )
+                                setSelectedLog(log)
                               }
                             >
                               <Eye size={17} />
 
                               View
                             </button>
+
                           </td>
+
                         </tr>
                       ),
                     )}
+
                   </tbody>
+
                 </table>
+
               </div>
             )}
 
             {/* PAGINATION */}
 
-            {pagination.total > 0 && (
+            {total > 0 && (
               <div className="audit-pagination">
+
                 <div className="audit-pagination-info">
                   Page {page} of{' '}
                   {totalPages}
                 </div>
 
                 <div className="audit-pagination-actions">
+
                   <button
                     type="button"
-                    onClick={
-                      goToPreviousPage
-                    }
+                    onClick={goToPreviousPage}
                     disabled={
                       !canGoPrevious ||
                       loading ||
@@ -1188,14 +1187,18 @@ export default function AuditPage() {
 
                     <ChevronRight size={18} />
                   </button>
+
                 </div>
+
               </div>
             )}
+
           </section>
+
         </>
       )}
 
-      {/* DETAILS MODAL */}
+      {/* AUDIT DETAILS MODAL */}
 
       {selectedLog && (
         <div
@@ -1205,6 +1208,7 @@ export default function AuditPage() {
           }
           role="presentation"
         >
+
           <div
             className="audit-modal"
             onClick={(event) =>
@@ -1212,14 +1216,19 @@ export default function AuditPage() {
             }
             role="dialog"
             aria-modal="true"
+            aria-labelledby="audit-modal-title"
           >
+
+            {/* MODAL HEADER */}
+
             <div className="audit-modal-header">
+
               <div>
                 <span className="audit-modal-label">
                   Audit Record
                 </span>
 
-                <h2>
+                <h2 id="audit-modal-title">
                   Activity Details
                 </h2>
               </div>
@@ -1234,14 +1243,17 @@ export default function AuditPage() {
               >
                 <X size={20} />
               </button>
+
             </div>
 
+            {/* MODAL CONTENT */}
+
             <div className="audit-modal-content">
+
               <div className="audit-detail-grid">
+
                 <div className="audit-detail-item">
-                  <span>
-                    Action
-                  </span>
+                  <span>Action</span>
 
                   <strong>
                     {formatAction(
@@ -1251,21 +1263,15 @@ export default function AuditPage() {
                 </div>
 
                 <div className="audit-detail-item">
-                  <span>
-                    Entity
-                  </span>
+                  <span>Entity</span>
 
                   <strong>
-                    {
-                      selectedLog.entity
-                    }
+                    {selectedLog.entity}
                   </strong>
                 </div>
 
                 <div className="audit-detail-item">
-                  <span>
-                    Entity ID
-                  </span>
+                  <span>Entity ID</span>
 
                   <strong>
                     {selectedLog.entityId ||
@@ -1274,9 +1280,7 @@ export default function AuditPage() {
                 </div>
 
                 <div className="audit-detail-item">
-                  <span>
-                    User
-                  </span>
+                  <span>User</span>
 
                   <strong>
                     {selectedLog.userEmail ||
@@ -1285,9 +1289,7 @@ export default function AuditPage() {
                 </div>
 
                 <div className="audit-detail-item">
-                  <span>
-                    User ID
-                  </span>
+                  <span>User ID</span>
 
                   <strong>
                     {selectedLog.userId
@@ -1297,9 +1299,7 @@ export default function AuditPage() {
                 </div>
 
                 <div className="audit-detail-item">
-                  <span>
-                    IP Address
-                  </span>
+                  <span>IP Address</span>
 
                   <strong>
                     {selectedLog.ipAddress ||
@@ -1308,9 +1308,7 @@ export default function AuditPage() {
                 </div>
 
                 <div className="audit-detail-item full">
-                  <span>
-                    Date & Time
-                  </span>
+                  <span>Date &amp; Time</span>
 
                   <strong>
                     {formatDate(
@@ -1318,9 +1316,13 @@ export default function AuditPage() {
                     )}
                   </strong>
                 </div>
+
               </div>
 
+              {/* METADATA */}
+
               <div className="audit-metadata-section">
+
                 <div className="audit-metadata-header">
                   <FileText size={18} />
 
@@ -1344,10 +1346,15 @@ export default function AuditPage() {
                     record.
                   </div>
                 )}
+
               </div>
+
             </div>
 
+            {/* MODAL FOOTER */}
+
             <div className="audit-modal-footer">
+
               <button
                 type="button"
                 className="audit-close-button"
@@ -1357,10 +1364,14 @@ export default function AuditPage() {
               >
                 Close
               </button>
+
             </div>
+
           </div>
+
         </div>
       )}
+
     </div>
   );
 }

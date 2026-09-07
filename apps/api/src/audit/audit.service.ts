@@ -2,6 +2,11 @@ import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service.js';
 
+/*
+ * ==========================================
+ * CREATE AUDIT LOG INPUT
+ * ==========================================
+ */
 interface CreateAuditLogInput {
   userId?: number;
 
@@ -14,6 +19,11 @@ interface CreateAuditLogInput {
   metadata?: string;
 }
 
+/*
+ * ==========================================
+ * FIND AUDIT LOG OPTIONS
+ * ==========================================
+ */
 interface FindAuditLogsOptions {
   page?: number;
 
@@ -23,6 +33,10 @@ interface FindAuditLogsOptions {
 
   entity?: string;
 
+  /*
+   * Used internally to scope audit logs
+   * to a specific authenticated user.
+   */
   userId?: number;
 }
 
@@ -38,14 +52,18 @@ export class AuditService {
    *
    * - WalletsService
    * - TransactionsService
-   * - Ledger operations
-   * - Future admin operations
+   * - LedgerService
+   * - Future authenticated operations
    *
-   * Audit logs should be immutable records.
+   * Audit logs are immutable records.
    * ==========================================
    */
   async create(input: CreateAuditLogInput) {
     const auditLog = await this.prisma.client.orm.public.AuditLog.create({
+      /*
+       * Associate the audit log with the user
+       * performing the action.
+       */
       userId: input.userId ?? null,
 
       action: input.action,
@@ -62,7 +80,7 @@ export class AuditService {
 
   /*
    * ==========================================
-   * GET ALL AUDIT LOGS
+   * FIND AUDIT LOGS
    *
    * Supports:
    *
@@ -71,51 +89,74 @@ export class AuditService {
    * - Entity filtering
    * - User filtering
    *
-   * Examples:
+   * IMPORTANT:
    *
-   * GET /audit
-   * GET /audit?action=DEPOSIT_COMPLETED
-   * GET /audit?entity=TRANSACTION
-   * GET /audit?userId=2
-   * GET /audit?page=1&limit=20
+   * For user-facing endpoints, use findByUser()
+   * so records are always scoped to the
+   * authenticated user.
    * ==========================================
    */
-  async findAll(options: FindAuditLogsOptions = {}): Promise<any> {
-    const page = options.page && options.page > 0 ? options.page : 1;
+  async findAll(
+    options: FindAuditLogsOptions = {},
+  ): Promise<any> {
+    const page =
+      options.page && options.page > 0
+        ? options.page
+        : 1;
 
     const limit =
-      options.limit && options.limit > 0 ? Math.min(options.limit, 100) : 20;
+      options.limit && options.limit > 0
+        ? Math.min(options.limit, 100)
+        : 20;
 
     /*
-     * Get all audit logs.
+     * ==========================================
+     * GET AUDIT LOGS
      *
-     * Current Prisma ORM runtime does not
-     * use traditional skip/take pagination.
+     * Current Prisma ORM runtime uses .all(),
+     * therefore filtering and pagination are
+     * handled below.
+     * ==========================================
      */
-    const auditLogs = await this.prisma.client.orm.public.AuditLog.all();
+    const auditLogs =
+      await this.prisma.client.orm.public.AuditLog.all();
 
     /*
-     * Apply filters.
+     * ==========================================
+     * APPLY FILTERS
+     * ==========================================
      */
     let filteredLogs = auditLogs.filter((log: any) => {
       /*
        * ACTION FILTER
        */
-      if (options.action && log.action !== options.action) {
+      if (
+        options.action &&
+        log.action !== options.action
+      ) {
         return false;
       }
 
       /*
        * ENTITY FILTER
        */
-      if (options.entity && log.entity !== options.entity) {
+      if (
+        options.entity &&
+        log.entity !== options.entity
+      ) {
         return false;
       }
 
       /*
-       * USER FILTER
+       * USER SECURITY FILTER
+       *
+       * When userId is provided, only return
+       * records belonging to that user.
        */
-      if (options.userId !== undefined && log.userId !== options.userId) {
+      if (
+        options.userId !== undefined &&
+        log.userId !== options.userId
+      ) {
         return false;
       }
 
@@ -123,23 +164,46 @@ export class AuditService {
     });
 
     /*
-     * Sort newest first.
+     * ==========================================
+     * SORT NEWEST FIRST
+     * ==========================================
      */
     filteredLogs = filteredLogs.sort(
       (a: any, b: any) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        new Date(b.createdAt).getTime() -
+        new Date(a.createdAt).getTime(),
     );
 
+    /*
+     * ==========================================
+     * PAGINATION
+     * ==========================================
+     */
     const total = filteredLogs.length;
 
-    const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
+    const totalPages =
+      total === 0
+        ? 0
+        : Math.ceil(total / limit);
 
-    const startIndex = (page - 1) * limit;
+    const startIndex =
+      (page - 1) * limit;
 
-    const paginatedLogs = filteredLogs.slice(startIndex, startIndex + limit);
+    const paginatedLogs =
+      filteredLogs.slice(
+        startIndex,
+        startIndex + limit,
+      );
 
+    /*
+     * ==========================================
+     * RESPONSE
+     * ==========================================
+     */
     return {
-      data: paginatedLogs.map((log: any) => this.formatAuditLog(log)),
+      data: paginatedLogs.map((log: any) =>
+        this.formatAuditLog(log),
+      ),
 
       pagination: {
         page,
@@ -156,6 +220,9 @@ export class AuditService {
   /*
    * ==========================================
    * GET AUDIT LOGS FOR A SPECIFIC USER
+   *
+   * This is the primary method for
+   * authenticated user audit history.
    * ==========================================
    */
   async findByUser(
@@ -176,6 +243,9 @@ export class AuditService {
 
       entity: options.entity,
 
+      /*
+       * Always scope records to this user.
+       */
       userId,
     });
   }
@@ -184,7 +254,9 @@ export class AuditService {
    * ==========================================
    * GET AUDIT LOGS BY ENTITY
    *
-   * Example:
+   * Optionally scoped to a user.
+   *
+   * Examples:
    *
    * TRANSACTION
    * WALLET
@@ -192,31 +264,63 @@ export class AuditService {
    * LEDGER_ACCOUNT
    * ==========================================
    */
-  async findByEntity(entity: string, entityId?: string): Promise<any[]> {
-    const auditLogs = await this.prisma.client.orm.public.AuditLog.all();
+  async findByEntity(
+    entity: string,
+    entityId?: string,
+    userId?: number,
+  ): Promise<any[]> {
+    const auditLogs =
+      await this.prisma.client.orm.public.AuditLog.all();
 
     const logs = auditLogs
       .filter((log: any) => {
-        const entityMatches = log.entity === entity;
+        /*
+         * ENTITY FILTER
+         */
+        if (log.entity !== entity) {
+          return false;
+        }
 
-        const entityIdMatches =
-          entityId === undefined ? true : log.entityId === entityId;
+        /*
+         * ENTITY ID FILTER
+         */
+        if (
+          entityId !== undefined &&
+          log.entityId !== entityId
+        ) {
+          return false;
+        }
 
-        return entityMatches && entityIdMatches;
+        /*
+         * USER FILTER
+         */
+        if (
+          userId !== undefined &&
+          log.userId !== userId
+        ) {
+          return false;
+        }
+
+        return true;
       })
       .sort(
         (a: any, b: any) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+          new Date(b.createdAt).getTime() -
+          new Date(a.createdAt).getTime(),
       );
 
-    return logs.map((log: any) => this.formatAuditLog(log));
+    return logs.map((log: any) =>
+      this.formatAuditLog(log),
+    );
   }
 
   /*
    * ==========================================
    * GET AUDIT LOGS BY ACTION
    *
-   * Example:
+   * Optionally scoped to a user.
+   *
+   * Examples:
    *
    * DEPOSIT_COMPLETED
    * WITHDRAWAL_COMPLETED
@@ -224,17 +328,43 @@ export class AuditService {
    * TRANSACTION_REVERSED
    * ==========================================
    */
-  async findByAction(action: string): Promise<any[]> {
-    const auditLogs = await this.prisma.client.orm.public.AuditLog.all();
+  async findByAction(
+    action: string,
+    userId?: number,
+  ): Promise<any[]> {
+    const auditLogs =
+      await this.prisma.client.orm.public.AuditLog.all();
 
     const logs = auditLogs
-      .filter((log: any) => log.action === action)
+      .filter((log: any) => {
+        /*
+         * ACTION FILTER
+         */
+        if (log.action !== action) {
+          return false;
+        }
+
+        /*
+         * USER FILTER
+         */
+        if (
+          userId !== undefined &&
+          log.userId !== userId
+        ) {
+          return false;
+        }
+
+        return true;
+      })
       .sort(
         (a: any, b: any) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+          new Date(b.createdAt).getTime() -
+          new Date(a.createdAt).getTime(),
       );
 
-    return logs.map((log: any) => this.formatAuditLog(log));
+    return logs.map((log: any) =>
+      this.formatAuditLog(log),
+    );
   }
 
   /*
@@ -249,15 +379,17 @@ export class AuditService {
     let metadata = auditLog.metadata;
 
     /*
-     * Parse JSON metadata safely.
+     * ==========================================
+     * PARSE JSON METADATA SAFELY
+     * ==========================================
      */
     if (typeof metadata === 'string') {
       try {
         metadata = JSON.parse(metadata);
       } catch {
         /*
-         * Keep the original value when
-         * metadata is not valid JSON.
+         * Keep the original metadata value when
+         * it is not valid JSON.
          */
       }
     }
