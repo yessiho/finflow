@@ -1,4 +1,8 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleDestroy,
+} from '@nestjs/common';
+
 import { db } from './db.js';
 
 @Injectable()
@@ -8,6 +12,7 @@ export class PrismaService implements OnModuleDestroy {
   }
 
   async onModuleDestroy() {
-    // Prisma 8's postgres runtime manages the underlying connection.
+    // Prisma 8's postgres runtime manages
+    // the underlying connection.
   }
 }

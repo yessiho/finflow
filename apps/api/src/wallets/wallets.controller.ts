@@ -8,9 +8,11 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { Request } from 'express';
+
+import type { Request } from 'express';
 
 import { WalletsService } from './wallets.service.js';
+
 import { CreateWalletDto } from './dto/create-wallet.dto.js';
 import { DepositDto } from './dto/deposit.dto.js';
 import { WithdrawDto } from './dto/withdraw.dto.js';
@@ -32,27 +34,25 @@ interface AuthenticatedRequest extends Request {
 @Controller('wallets')
 @UseGuards(JwtAuthGuard)
 export class WalletsController {
-  constructor(private readonly walletsService: WalletsService) {}
+  constructor(
+    private readonly walletsService: WalletsService,
+  ) {}
 
   /*
    * ==========================================
    * GET AUTHENTICATED USER ID
-   *
-   * Supports either:
-   *
-   * req.user.id
-   *
-   * or:
-   *
-   * req.user.userId
-   *
    * ==========================================
    */
-  private getUserId(req: AuthenticatedRequest): number {
-    const userId = req.user.id ?? req.user.userId;
+  private getUserId(
+    req: AuthenticatedRequest,
+  ): number {
+    const userId =
+      req.user.id ?? req.user.userId;
 
     if (!userId) {
-      throw new Error('Authenticated user ID is missing');
+      throw new Error(
+        'Authenticated user ID is missing',
+      );
     }
 
     return userId;
@@ -67,12 +67,16 @@ export class WalletsController {
    */
   @Post()
   create(
-    @Req() req: AuthenticatedRequest,
+    @Req()
+    req: AuthenticatedRequest,
 
     @Body()
     createWalletDto: CreateWalletDto,
   ) {
-    return this.walletsService.create(this.getUserId(req), createWalletDto);
+    return this.walletsService.create(
+      this.getUserId(req),
+      createWalletDto,
+    );
   }
 
   /*
@@ -83,8 +87,58 @@ export class WalletsController {
    * ==========================================
    */
   @Get()
-  findMyWallets(@Req() req: AuthenticatedRequest) {
-    return this.walletsService.findMyWallets(this.getUserId(req));
+  findMyWallets(
+    @Req()
+    req: AuthenticatedRequest,
+  ) {
+    return this.walletsService.findMyWallets(
+      this.getUserId(req),
+    );
+  }
+
+  /*
+   * ==========================================
+   * GET WALLET ACCOUNT DETAILS
+   *
+   * GET /wallets/:id/account
+   *
+   * More specific route should come before
+   * GET /wallets/:id.
+   * ==========================================
+   */
+  @Get(':id/account')
+  getWalletAccount(
+    @Req()
+    req: AuthenticatedRequest,
+
+    @Param('id', ParseIntPipe)
+    walletId: number,
+  ) {
+    return this.walletsService.getWalletAccount(
+      this.getUserId(req),
+      walletId,
+    );
+  }
+
+  /*
+   * ==========================================
+   * GET SINGLE WALLET
+   *
+   * GET /wallets/:id
+   * ==========================================
+   */
+  @Get(':id')
+  findOne(
+    @Req()
+    req: AuthenticatedRequest,
+
+    @Param('id', ParseIntPipe)
+    walletId: number,
+  ) {
+    return this.walletsService.findOne(
+      this.getUserId(req),
+      walletId,
+    );
   }
 
   /*
@@ -96,7 +150,8 @@ export class WalletsController {
    */
   @Post(':id/deposit')
   deposit(
-    @Req() req: AuthenticatedRequest,
+    @Req()
+    req: AuthenticatedRequest,
 
     @Param('id', ParseIntPipe)
     walletId: number,
@@ -120,7 +175,8 @@ export class WalletsController {
    */
   @Post(':id/withdraw')
   withdraw(
-    @Req() req: AuthenticatedRequest,
+    @Req()
+    req: AuthenticatedRequest,
 
     @Param('id', ParseIntPipe)
     walletId: number,
@@ -140,15 +196,12 @@ export class WalletsController {
    * TRANSFER MONEY
    *
    * POST /wallets/:id/transfer
-   *
-   * Example:
-   *
-   * POST /wallets/1/transfer
    * ==========================================
    */
   @Post(':id/transfer')
   transfer(
-    @Req() req: AuthenticatedRequest,
+    @Req()
+    req: AuthenticatedRequest,
 
     @Param('id', ParseIntPipe)
     sourceWalletId: number,

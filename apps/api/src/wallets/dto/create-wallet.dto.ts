@@ -1,8 +1,13 @@
-import { IsIn, IsNotEmpty, IsString } from 'class-validator';
+import { IsEnum } from 'class-validator';
+
+export enum Currency {
+  NGN = 'NGN',
+  USD = 'USD',
+  EUR = 'EUR',
+  GBP = 'GBP',
+}
 
 export class CreateWalletDto {
-  @IsString()
-  @IsNotEmpty()
-  @IsIn(['NGN', 'USD', 'EUR', 'GBP'])
-  currency: string;
+  @IsEnum(Currency)
+  currency: Currency;
 }

@@ -1,13 +1,18 @@
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  process.env.NEXT_PUBLIC_API_URL ||
+  'http://localhost:3001';
 
 export async function apiFetch<T = unknown>(
   endpoint: string,
   options: RequestInit = {},
 ): Promise<T> {
   /*
-   * Get JWT token from browser localStorage.
-   * localStorage is only available in the browser.
+   * ==========================================
+   * GET JWT TOKEN
+   *
+   * localStorage is only available
+   * in the browser.
+   * ==========================================
    */
   const token =
     typeof window !== 'undefined'
@@ -15,11 +20,14 @@ export async function apiFetch<T = unknown>(
       : null;
 
   /*
-   * Build request headers.
+   * ==========================================
+   * BUILD REQUEST HEADERS
+   * ==========================================
    */
   const headers: HeadersInit = {
     /*
-     * Only add Content-Type when sending a request body.
+     * Only add Content-Type when
+     * sending a request body.
      */
     ...(options.body
       ? {
@@ -28,7 +36,8 @@ export async function apiFetch<T = unknown>(
       : {}),
 
     /*
-     * Automatically attach JWT token if available.
+     * Automatically attach JWT token
+     * when available.
      */
     ...(token
       ? {
@@ -37,23 +46,32 @@ export async function apiFetch<T = unknown>(
       : {}),
 
     /*
-     * Allow custom headers to override defaults.
+     * Allow custom headers to override
+     * the default headers.
      */
     ...options.headers,
   };
 
   /*
-   * Send request to NestJS API.
+   * ==========================================
+   * SEND REQUEST TO BACKEND API
+   * ==========================================
    */
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  const response = await fetch(
+    `${API_URL}${endpoint}`,
+    {
+      ...options,
+      headers,
+    },
+  );
 
   /*
-   * Check response content type before parsing JSON.
+   * ==========================================
+   * PARSE RESPONSE
+   * ==========================================
    */
-  const contentType = response.headers.get('content-type');
+  const contentType =
+    response.headers.get('content-type');
 
   const data =
     contentType?.includes('application/json')
@@ -61,22 +79,33 @@ export async function apiFetch<T = unknown>(
       : null;
 
   /*
-   * Handle API errors.
+   * ==========================================
+   * HANDLE API ERRORS
+   * ==========================================
    */
   if (!response.ok) {
-    let errorMessage = 'Something went wrong';
+    let errorMessage =
+      'Something went wrong';
 
     if (data?.message) {
-      errorMessage = Array.isArray(data.message)
+      errorMessage = Array.isArray(
+        data.message,
+      )
         ? data.message.join(', ')
         : data.message;
     }
 
     /*
-     * Optional handling for Unauthorized users.
+     * Remove invalid/expired session.
      */
-    if (response.status === 401 && typeof window !== 'undefined') {
-      localStorage.removeItem('access_token');
+    if (
+      response.status === 401 &&
+      typeof window !== 'undefined'
+    ) {
+      localStorage.removeItem(
+        'access_token',
+      );
+
       localStorage.removeItem('user');
     }
 
@@ -84,7 +113,9 @@ export async function apiFetch<T = unknown>(
   }
 
   /*
-   * Return typed API response.
+   * ==========================================
+   * RETURN API RESPONSE
+   * ==========================================
    */
   return data as T;
 }

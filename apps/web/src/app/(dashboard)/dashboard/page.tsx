@@ -18,11 +18,36 @@ import {
 
 import { apiFetch } from '@/lib/api';
 
+/* ============================================================
+   TYPES
+============================================================ */
+
+interface WalletAccount {
+  id: number;
+  walletId: number;
+  accountNumber: string;
+  accountName: string;
+  bankName: string;
+  bankCode: string | null;
+  accountType: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface WalletData {
   id: number;
+  userId: number;
   balance: string;
   currency: string;
   status: string;
+  createdAt: string;
+  updatedAt: string;
+
+  /*
+   * Account can be null for older wallets.
+   */
+  account: WalletAccount | null;
 }
 
 interface Transaction {
@@ -35,35 +60,38 @@ interface Transaction {
   createdAt: string;
 }
 
-interface ApiError {
-  message?: string;
-}
-
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  if (
-    typeof error === 'object' &&
-    error !== null &&
-    'message' in error &&
-    typeof (error as ApiError).message === 'string'
-  ) {
-    return (error as ApiError).message as string;
-  }
-
-  return 'Unable to load dashboard.';
-}
+/* ============================================================
+   COMPONENT
+============================================================ */
 
 export default function DashboardPage() {
   const router = useRouter();
 
   const [wallets, setWallets] = useState<WalletData[]>([]);
+
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+
   const [loading, setLoading] = useState(true);
+
   const [refreshing, setRefreshing] = useState(false);
+
   const [error, setError] = useState('');
+
+  /* ============================================================
+     ERROR MESSAGE HELPER
+  ============================================================ */
+
+  const getErrorMessage = (error: unknown): string => {
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    return 'Unable to load dashboard';
+  };
+
+  /* ============================================================
+     LOAD DASHBOARD
+  ============================================================ */
 
   const loadDashboard = useCallback(
     async (isRefresh = false) => {
@@ -76,6 +104,9 @@ export default function DashboardPage() {
 
         setError('');
 
+        /*
+         * Confirm user is authenticated.
+         */
         const token = localStorage.getItem('access_token');
 
         if (!token) {
@@ -83,26 +114,36 @@ export default function DashboardPage() {
           return;
         }
 
+        /*
+         * Load wallets and transactions simultaneously.
+         */
         const [walletsData, transactionsData] = await Promise.all([
-          apiFetch('/wallets'),
-          apiFetch('/transactions/recent?limit=5'),
+          apiFetch<WalletData[]>('/wallets'),
+          apiFetch<Transaction[]>('/transactions/recent?limit=5'),
         ]);
 
+        /*
+         * Protect against unexpected API responses.
+         */
         setWallets(Array.isArray(walletsData) ? walletsData : []);
 
         setTransactions(
           Array.isArray(transactionsData) ? transactionsData : [],
         );
       } catch (error: unknown) {
-        console.error(error);
+        console.error('Dashboard loading error:', error);
 
         const message = getErrorMessage(error);
 
+        /*
+         * Redirect unauthorized users.
+         */
         if (message === 'Unauthorized') {
           localStorage.removeItem('access_token');
           localStorage.removeItem('user');
 
           router.push('/login');
+
           return;
         }
 
@@ -115,42 +156,79 @@ export default function DashboardPage() {
     [router],
   );
 
-  useEffect(() => {
-    const initializeDashboard = async () => {
-      await loadDashboard();
-    };
+  /* ============================================================
+     INITIAL LOAD
+  ============================================================ */
 
-    void initializeDashboard();
+  useEffect(() => {
+    void loadDashboard();
   }, [loadDashboard]);
 
-  function formatAmount(amount: string, currency: string) {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: 2,
-    }).format(Number(amount));
+  /* ============================================================
+     FORMAT AMOUNT
+  ============================================================ */
+
+  function formatAmount(amount: string | number, currency: string) {
+    const numericAmount = Number(amount);
+
+    if (!Number.isFinite(numericAmount)) {
+      return `${currency} 0.00`;
+    }
+
+    try {
+      return new Intl.NumberFormat('en-NG', {
+        style: 'currency',
+        currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(numericAmount);
+    } catch {
+      return `${currency} ${numericAmount.toLocaleString('en-NG')}`;
+    }
   }
 
+  /* ============================================================
+     FORMAT NUMBER
+  ============================================================ */
+
   function formatNumber(amount: number) {
+    if (!Number.isFinite(amount)) {
+      return '0.00';
+    }
+
     return new Intl.NumberFormat('en-NG', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);
   }
 
+  /* ============================================================
+     FORMAT DATE
+  ============================================================ */
+
   function formatDate(date: string) {
     try {
+      const parsedDate = new Date(date);
+
+      if (Number.isNaN(parsedDate.getTime())) {
+        return date;
+      }
+
       return new Intl.DateTimeFormat('en-NG', {
         day: '2-digit',
         month: 'short',
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
-      }).format(new Date(date));
+      }).format(parsedDate);
     } catch {
       return date;
     }
   }
+
+  /* ============================================================
+     TRANSACTION ICON
+  ============================================================ */
 
   function getTransactionIcon(type: string) {
     switch (type) {
@@ -168,6 +246,10 @@ export default function DashboardPage() {
     }
   }
 
+  /* ============================================================
+     TRANSACTION CLASS
+  ============================================================ */
+
   function getTransactionClass(type: string) {
     switch (type) {
       case 'DEPOSIT':
@@ -184,18 +266,35 @@ export default function DashboardPage() {
     }
   }
 
+  /* ============================================================
+     STATUS CLASS
+  ============================================================ */
+
   function getStatusClass(status: string) {
     return status.toLowerCase();
   }
 
-  const totalBalance = wallets.reduce(
-    (total, wallet) => total + Number(wallet.balance),
-    0,
-  );
+  /* ============================================================
+     CALCULATIONS
+  ============================================================ */
+
+  const totalBalance = wallets.reduce((total, wallet) => {
+    const balance = Number(wallet.balance);
+
+    return total + (Number.isFinite(balance) ? balance : 0);
+  }, 0);
 
   const activeWallets = wallets.filter(
     (wallet) => wallet.status === 'ACTIVE',
   ).length;
+
+  const totalAccounts = wallets.filter(
+    (wallet) => wallet.account !== null,
+  ).length;
+
+  /* ============================================================
+     LOADING SCREEN
+  ============================================================ */
 
   if (loading) {
     return (
@@ -213,9 +312,15 @@ export default function DashboardPage() {
     );
   }
 
+  /* ============================================================
+     DASHBOARD
+  ============================================================ */
+
   return (
     <main className="dashboard-page">
-      {/* PAGE HEADER */}
+      {/* ========================================================
+          PAGE HEADER
+      ======================================================== */}
 
       <section className="dashboard-header">
         <div className="dashboard-header-content">
@@ -227,27 +332,33 @@ export default function DashboardPage() {
           <h1>Dashboard</h1>
 
           <p>
-            Monitor your wallets, transactions, and financial activity in one
-            place.
+            Monitor your wallets, virtual accounts, transactions, and financial
+            activity in one place.
           </p>
         </div>
 
         <button
           type="button"
           className="dashboard-refresh-button"
-          onClick={() => loadDashboard(true)}
+          onClick={() => void loadDashboard(true)}
           disabled={refreshing}
         >
           <RefreshCcw
             size={17}
-            className={refreshing ? 'refresh-icon spinning' : 'refresh-icon'}
+            className={
+              refreshing
+                ? 'refresh-icon spinning'
+                : 'refresh-icon'
+            }
           />
 
           {refreshing ? 'Refreshing...' : 'Refresh'}
         </button>
       </section>
 
-      {/* ERROR MESSAGE */}
+      {/* ========================================================
+          ERROR MESSAGE
+      ======================================================== */}
 
       {error && (
         <div className="dashboard-error" role="alert">
@@ -257,7 +368,9 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* OVERVIEW CARDS */}
+      {/* ========================================================
+          OVERVIEW CARDS
+      ======================================================== */}
 
       <section className="dashboard-overview-grid">
         {/* TOTAL BALANCE */}
@@ -269,49 +382,70 @@ export default function DashboardPage() {
             </div>
 
             <div className="dashboard-stat-trend">
-              <TrendingUp size={14} />
+              <TrendingUp size={15} />
               Overview
             </div>
           </div>
 
           <div className="dashboard-stat-content">
-            <span>Total Balance</span>
+            <span>Total Wallet Balance</span>
 
-            <h2>₦{formatNumber(totalBalance)}</h2>
+            <h2>{formatNumber(totalBalance)}</h2>
 
-            <p>Combined balance across all wallets</p>
+            <p>Combined balance across all currencies</p>
           </div>
         </div>
 
-        {/* TOTAL WALLETS */}
+        {/* ACTIVE WALLETS */}
 
         <div className="dashboard-stat-card">
           <div className="dashboard-stat-top">
-            <div className="dashboard-stat-icon neutral">
-              <Landmark size={22} />
+            <div className="dashboard-stat-icon">
+              <CircleDollarSign size={23} />
             </div>
           </div>
 
           <div className="dashboard-stat-content">
-            <span>Total Wallets</span>
+            <span>Active Wallets</span>
 
-            <h2>{wallets.length}</h2>
+            <h2>{activeWallets}</h2>
 
-            <p>{activeWallets} active financial wallets</p>
+            <p>
+              {wallets.length} total wallet
+              {wallets.length === 1 ? '' : 's'}
+            </p>
           </div>
         </div>
 
-        {/* RECENT TRANSACTIONS */}
+        {/* VIRTUAL ACCOUNTS */}
 
         <div className="dashboard-stat-card">
           <div className="dashboard-stat-top">
-            <div className="dashboard-stat-icon purple">
-              <Activity size={22} />
+            <div className="dashboard-stat-icon">
+              <Landmark size={23} />
             </div>
           </div>
 
           <div className="dashboard-stat-content">
-            <span>Recent Activity</span>
+            <span>Virtual Accounts</span>
+
+            <h2>{totalAccounts}</h2>
+
+            <p>Wallets with account numbers</p>
+          </div>
+        </div>
+
+        {/* TRANSACTIONS */}
+
+        <div className="dashboard-stat-card">
+          <div className="dashboard-stat-top">
+            <div className="dashboard-stat-icon">
+              <Activity size={23} />
+            </div>
+          </div>
+
+          <div className="dashboard-stat-content">
+            <span>Recent Transactions</span>
 
             <h2>{transactions.length}</h2>
 
@@ -320,7 +454,9 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* WALLETS SECTION */}
+      {/* ========================================================
+          WALLETS SECTION
+      ======================================================== */}
 
       <section className="dashboard-section">
         <div className="dashboard-section-header">
@@ -332,7 +468,10 @@ export default function DashboardPage() {
 
             <h2>My Wallets</h2>
 
-            <p>Manage and monitor your available currency wallets.</p>
+            <p>
+              Manage and monitor your available currency wallets and virtual
+              account details.
+            </p>
           </div>
 
           <button
@@ -353,7 +492,9 @@ export default function DashboardPage() {
 
             <h3>No wallets found</h3>
 
-            <p>Create your first wallet to begin managing your finances.</p>
+            <p>
+              Create your first wallet to begin managing your finances.
+            </p>
 
             <button
               type="button"
@@ -365,7 +506,12 @@ export default function DashboardPage() {
         ) : (
           <div className="dashboard-wallet-grid">
             {wallets.map((wallet) => (
-              <article key={wallet.id} className="dashboard-wallet-card">
+              <article
+                key={wallet.id}
+                className="dashboard-wallet-card"
+              >
+                {/* WALLET HEADER */}
+
                 <div className="dashboard-wallet-card-top">
                   <div className="dashboard-wallet-icon">
                     <Wallet size={21} />
@@ -382,13 +528,55 @@ export default function DashboardPage() {
 
                 <div className="dashboard-wallet-divider" />
 
+                {/* WALLET BALANCE */}
+
                 <div className="dashboard-wallet-content">
                   <span className="dashboard-wallet-currency">
                     {wallet.currency} Wallet
                   </span>
 
-                  <h3>{formatAmount(wallet.balance, wallet.currency)}</h3>
+                  <h3>
+                    {formatAmount(
+                      wallet.balance,
+                      wallet.currency,
+                    )}
+                  </h3>
                 </div>
+
+                {/* ================================================
+                    VIRTUAL ACCOUNT DETAILS
+                ================================================= */}
+
+                <div className="dashboard-wallet-account">
+                  <div className="dashboard-account-row">
+                    <span>Account Number</span>
+
+                    <strong>
+                      {wallet.account?.accountNumber ??
+                        'Not available'}
+                    </strong>
+                  </div>
+
+                  <div className="dashboard-account-row">
+                    <span>Account Name</span>
+
+                    <strong>
+                      {wallet.account?.accountName ??
+                        'Not available'}
+                    </strong>
+                  </div>
+
+                  <div className="dashboard-account-row">
+                    <span>Bank</span>
+
+                    <strong>
+                      {wallet.account?.bankName ??
+                        'Not available'}
+                    </strong>
+                  </div>
+                </div>
+
+                {/* WALLET FOOTER */}
 
                 <div className="dashboard-wallet-footer">
                   <span>Wallet ID</span>
@@ -401,7 +589,9 @@ export default function DashboardPage() {
         )}
       </section>
 
-      {/* RECENT TRANSACTIONS */}
+      {/* ========================================================
+          RECENT TRANSACTIONS
+      ======================================================== */}
 
       <section className="dashboard-section">
         <div className="dashboard-section-header">
@@ -447,7 +637,11 @@ export default function DashboardPage() {
                   key={transaction.id}
                   className="dashboard-transaction-row"
                 >
-                  <div className={getTransactionClass(transaction.type)}>
+                  <div
+                    className={getTransactionClass(
+                      transaction.type,
+                    )}
+                  >
                     {getTransactionIcon(transaction.type)}
                   </div>
 

@@ -33,7 +33,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'19034b4cd0d95cfbd47f7e07a64c406b0c63f42d5e59d88b52edbaf854d89c47'>;
+  StorageHashBase<'f8b5af3f83e193e7feac891085ac924751b433fe460f5df4f00f67ba5fd20f3a'>;
 export type ExecutionHash =
   ExecutionHashBase<'6b0167d419988c21414caa42d1dda3166f282cdcf8c09b849b97f2de7513ffc2'>;
 export type ProfileHash =
@@ -297,8 +297,6 @@ export type FieldOutputTypes = {
       readonly firstName: CodecTypes['pg/text@1']['output'];
       readonly lastName: CodecTypes['pg/text@1']['output'];
       readonly status: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
-      readonly passwordResetToken: CodecTypes['pg/text@1']['output'] | null;
-      readonly passwordResetExpires: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
@@ -383,8 +381,6 @@ export type FieldInputTypes = {
       readonly firstName: CodecTypes['pg/text@1']['input'];
       readonly lastName: CodecTypes['pg/text@1']['input'];
       readonly status: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
-      readonly passwordResetToken: CodecTypes['pg/text@1']['input'] | null;
-      readonly passwordResetExpires: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
@@ -469,8 +465,6 @@ export type StorageColumnTypes = {
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly lastName: CodecTypes['pg/text@1']['output'];
       readonly passwordHash: CodecTypes['pg/text@1']['output'];
-      readonly passwordResetExpires: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-      readonly passwordResetToken: CodecTypes['pg/text@1']['output'] | null;
       readonly status: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
@@ -555,8 +549,6 @@ export type StorageColumnInputTypes = {
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly lastName: CodecTypes['pg/text@1']['input'];
       readonly passwordHash: CodecTypes['pg/text@1']['input'];
-      readonly passwordResetExpires: CodecTypes['pg/timestamptz-string@1']['input'] | null;
-      readonly passwordResetToken: CodecTypes['pg/text@1']['input'] | null;
       readonly status: 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
@@ -1022,16 +1014,6 @@ type ContractBase = Omit<
                     readonly kind: 'literal';
                     readonly value: DefaultLiteralValue<'pg/text@1', 'ACTIVE'>;
                   };
-                };
-                readonly passwordResetToken: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly passwordResetExpires: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: true;
                 };
                 readonly createdAt: {
                   readonly nativeType: 'timestamptz';
@@ -1678,17 +1660,6 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly passwordResetToken: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly passwordResetExpires: {
-                readonly nullable: true;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
               readonly createdAt: {
                 readonly nullable: false;
                 readonly type: {
@@ -1738,8 +1709,6 @@ type ContractBase = Omit<
                 readonly firstName: { readonly column: 'firstName' };
                 readonly lastName: { readonly column: 'lastName' };
                 readonly status: { readonly column: 'status' };
-                readonly passwordResetToken: { readonly column: 'passwordResetToken' };
-                readonly passwordResetExpires: { readonly column: 'passwordResetExpires' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
               };

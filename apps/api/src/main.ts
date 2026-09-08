@@ -13,7 +13,7 @@ async function bootstrap() {
    * ==========================================
    */
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:3001'],
+    origin: ['http://localhost:3000'],
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
@@ -39,7 +39,9 @@ async function bootstrap() {
    */
   const config = new DocumentBuilder()
     .setTitle('FinFlow API')
-    .setDescription('API documentation for the FinFlow financial platform')
+    .setDescription(
+      'API documentation for the FinFlow financial platform',
+    )
     .setVersion('1.0')
     .addBearerAuth(
       {
@@ -60,9 +62,12 @@ async function bootstrap() {
   /*
    * ==========================================
    * START APPLICATION
+   *
+   * Backend API runs on port 3001.
+   * Frontend Next.js runs on port 3000.
    * ==========================================
    */
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3001);
 }
 
 bootstrap();

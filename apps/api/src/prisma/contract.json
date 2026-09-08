@@ -31,6 +31,10 @@
     "wallet": {
       "model": "Wallet",
       "namespace": "public"
+    },
+    "walletAccount": {
+      "model": "WalletAccount",
+      "namespace": "public"
     }
   },
   "domain": {
@@ -156,6 +160,44 @@
               {
                 "name": "DEACTIVATED",
                 "value": "DEACTIVATED"
+              }
+            ]
+          },
+          "WalletAccountStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "ACTIVE",
+                "value": "ACTIVE"
+              },
+              {
+                "name": "FROZEN",
+                "value": "FROZEN"
+              },
+              {
+                "name": "SUSPENDED",
+                "value": "SUSPENDED"
+              },
+              {
+                "name": "CLOSED",
+                "value": "CLOSED"
+              }
+            ]
+          },
+          "WalletAccountType": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "SAVINGS",
+                "value": "SAVINGS"
+              },
+              {
+                "name": "CURRENT",
+                "value": "CURRENT"
+              },
+              {
+                "name": "VIRTUAL",
+                "value": "VIRTUAL"
               }
             ]
           },
@@ -812,6 +854,20 @@
                   "kind": "scalar"
                 }
               },
+              "passwordResetExpires": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "passwordResetToken": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "status": {
                 "nullable": false,
                 "type": {
@@ -884,6 +940,12 @@
                 },
                 "passwordHash": {
                   "column": "passwordHash"
+                },
+                "passwordResetExpires": {
+                  "column": "passwordResetExpires"
+                },
+                "passwordResetToken": {
+                  "column": "passwordResetToken"
                 },
                 "status": {
                   "column": "status"
@@ -961,6 +1023,21 @@
               }
             },
             "relations": {
+              "account": {
+                "cardinality": "1:1",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "walletId"
+                  ]
+                },
+                "to": {
+                  "model": "WalletAccount",
+                  "namespace": "public"
+                }
+              },
               "destinationTransactions": {
                 "cardinality": "1:N",
                 "on": {
@@ -1033,6 +1110,145 @@
               },
               "namespaceId": "public",
               "table": "wallet"
+            }
+          },
+          "WalletAccount": {
+            "fields": {
+              "accountName": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "accountNumber": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "accountType": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "WalletAccountType",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "bankCode": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "bankName": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "WalletAccountStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "walletId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "wallet": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "walletId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Wallet",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "accountName": {
+                  "column": "accountName"
+                },
+                "accountNumber": {
+                  "column": "accountNumber"
+                },
+                "accountType": {
+                  "column": "accountType"
+                },
+                "bankCode": {
+                  "column": "bankCode"
+                },
+                "bankName": {
+                  "column": "bankName"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "walletId": {
+                  "column": "walletId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "walletAccount"
             }
           }
         }
@@ -1631,6 +1847,16 @@
                   "nativeType": "text",
                   "nullable": false
                 },
+                "passwordResetExpires": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "passwordResetToken": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "status": {
                   "codecId": "pg/text@1",
                   "default": {
@@ -1786,6 +2012,145 @@
                   ]
                 }
               ]
+            },
+            "walletAccount": {
+              "checks": [
+                {
+                  "expression": "\"accountType\" IN ('SAVINGS', 'CURRENT', 'VIRTUAL')",
+                  "name": "walletAccount_accountType_check_d5cd5637",
+                  "prefix": "walletAccount_accountType_check"
+                },
+                {
+                  "expression": "\"status\" IN ('ACTIVE', 'FROZEN', 'SUSPENDED', 'CLOSED')",
+                  "name": "walletAccount_status_check_a25ed46d",
+                  "prefix": "walletAccount_status_check"
+                }
+              ],
+              "columns": {
+                "accountName": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "accountNumber": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "accountType": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "VIRTUAL"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "WalletAccountType",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "bankCode": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "bankName": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "ACTIVE"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "WalletAccountStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "walletId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "walletId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "walletAccount"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "wallet"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "accountNumber"
+                  ],
+                  "name": "walletAccount_accountNumber_idx_27a6ed59",
+                  "prefix": "walletAccount_accountNumber_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "walletId"
+                  ]
+                },
+                {
+                  "columns": [
+                    "accountNumber"
+                  ]
+                }
+              ]
             }
           },
           "valueSet": {
@@ -1842,6 +2207,23 @@
                 "DEACTIVATED"
               ]
             },
+            "WalletAccountStatus": {
+              "kind": "valueSet",
+              "values": [
+                "ACTIVE",
+                "FROZEN",
+                "SUSPENDED",
+                "CLOSED"
+              ]
+            },
+            "WalletAccountType": {
+              "kind": "valueSet",
+              "values": [
+                "SAVINGS",
+                "CURRENT",
+                "VIRTUAL"
+              ]
+            },
             "WalletStatus": {
               "kind": "valueSet",
               "values": [
@@ -1856,10 +2238,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "96549f10e6a2fa52a6a29d65d3152548e10ca4dc29d458ea0bcbb8ca13fea7f0"
+    "storageHash": "19034b4cd0d95cfbd47f7e07a64c406b0c63f42d5e59d88b52edbaf854d89c47"
   },
   "execution": {
-    "executionHash": "a0a81cd19691beb101773852380e27ea743eacee1072cb79d68c701dec9ba23e",
+    "executionHash": "6b0167d419988c21414caa42d1dda3166f282cdcf8c09b849b97f2de7513ffc2",
     "mutations": {
       "defaults": [
         {
@@ -1935,6 +2317,21 @@
             "column": "updatedAt",
             "namespace": "public",
             "table": "wallet"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "walletAccount"
           }
         }
       ]

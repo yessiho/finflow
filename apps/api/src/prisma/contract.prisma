@@ -1,5 +1,12 @@
+// ============================================================
 // FinFlow - Financial Technology Platform
-// Database contract v1
+// Database Contract
+// ============================================================
+
+
+// ============================================================
+// ENUMS
+// ============================================================
 
 enum UserStatus {
   ACTIVE
@@ -16,6 +23,19 @@ enum AdminStatus {
 enum WalletStatus {
   ACTIVE
   FROZEN
+  CLOSED
+}
+
+enum WalletAccountType {
+  SAVINGS
+  CURRENT
+  VIRTUAL
+}
+
+enum WalletAccountStatus {
+  ACTIVE
+  FROZEN
+  SUSPENDED
   CLOSED
 }
 
@@ -48,20 +68,48 @@ enum AccountType {
   EQUITY
 }
 
+
+// ============================================================
+// USER
+// ============================================================
+
 model User {
   id           Int        @id @default(autoincrement())
+
   email        String     @unique
   passwordHash String
+
   firstName    String
   lastName     String
+
   status       UserStatus @default(ACTIVE)
+
+  // ============================================================
+  // PASSWORD RESET
+  // ============================================================
+
+  passwordResetToken   String?
+  passwordResetExpires TimestamptzString?
+
+  // ============================================================
+  // RELATIONSHIPS
+  // ============================================================
 
   wallets      Wallet[]
   auditLogs    AuditLog[]
 
+  // ============================================================
+  // TIMESTAMPS
+  // ============================================================
+
   createdAt    TimestamptzString @default(now())
   updatedAt    temporal.updatedAtString()
 }
+
+
+// ============================================================
+// ADMIN
+// ============================================================
 
 model Admin {
   id           Int         @id @default(autoincrement())
@@ -75,14 +123,28 @@ model Admin {
   updatedAt    temporal.updatedAtString()
 }
 
+
+// ============================================================
+// WALLET
+// ============================================================
+
 model Wallet {
-  id                      Int           @id @default(autoincrement())
+  id                      Int          @id @default(autoincrement())
   userId                  Int
   currency                Currency
-  balance                 BigInt        @default(0)
-  status                  WalletStatus  @default(ACTIVE)
+  balance                 BigInt       @default(0)
+  status                  WalletStatus @default(ACTIVE)
 
-  user                    User          @relation(fields: [userId], references: [id])
+  // Wallet owner
+  user                    User         @relation(
+    fields: [userId],
+    references: [id]
+  )
+
+  // Banking / virtual account details
+  account                 WalletAccount?
+
+  // Transactions
   sourceTransactions      Transaction[] @relation("SourceWallet")
   destinationTransactions Transaction[] @relation("DestinationWallet")
 
@@ -93,19 +155,80 @@ model Wallet {
   @@index([userId])
 }
 
+
+// ============================================================
+// WALLET ACCOUNT
+//
+// Banking-style account attached to a wallet.
+// Each wallet can have one account.
+// ============================================================
+
+model WalletAccount {
+  id              Int                 @id @default(autoincrement())
+
+  // One account belongs to one wallet
+  walletId        Int                 @unique
+
+  // Account details
+  accountNumber   String              @unique
+  accountName     String
+
+  // Financial institution
+  bankName        String
+  bankCode        String?
+
+  // Account classification
+  accountType     WalletAccountType   @default(VIRTUAL)
+  status          WalletAccountStatus @default(ACTIVE)
+
+  // Wallet relationship
+  wallet          Wallet              @relation(
+    fields: [walletId],
+    references: [id]
+  )
+
+  createdAt       TimestamptzString   @default(now())
+  updatedAt       temporal.updatedAtString()
+
+  @@index([accountNumber])
+}
+
+
+// ============================================================
+// TRANSACTION
+// ============================================================
+
 model Transaction {
   id                  Int               @id @default(autoincrement())
+
   reference           String            @unique
+
   type                TransactionType
+
   amount              BigInt
   currency            Currency
+
   status              TransactionStatus @default(PENDING)
 
+  // Source wallet
   sourceWalletId      Int?
+
+  // Destination wallet
   destinationWalletId Int?
 
-  sourceWallet        Wallet? @relation("SourceWallet", fields: [sourceWalletId], references: [id])
-  destinationWallet   Wallet? @relation("DestinationWallet", fields: [destinationWalletId], references: [id])
+  sourceWallet        Wallet?
+    @relation(
+      "SourceWallet",
+      fields: [sourceWalletId],
+      references: [id]
+    )
+
+  destinationWallet   Wallet?
+    @relation(
+      "DestinationWallet",
+      fields: [destinationWalletId],
+      references: [id]
+    )
 
   ledgerEntries       LedgerEntry[]
 
@@ -116,12 +239,20 @@ model Transaction {
   @@index([destinationWalletId])
 }
 
+
+// ============================================================
+// LEDGER ACCOUNT
+// ============================================================
+
 model LedgerAccount {
   id          Int         @id @default(autoincrement())
+
   code        String      @unique
   name        String
+
   type        AccountType
   currency    Currency
+
   active      Boolean     @default(true)
 
   entries     LedgerEntry[]
@@ -130,15 +261,31 @@ model LedgerAccount {
   updatedAt   temporal.updatedAtString()
 }
 
+
+// ============================================================
+// LEDGER ENTRY
+// ============================================================
+
 model LedgerEntry {
-  id            Int           @id @default(autoincrement())
+  id            Int      @id @default(autoincrement())
+
   transactionId Int
   accountId     Int
-  debit         BigInt        @default(0)
-  credit        BigInt        @default(0)
 
-  transaction   Transaction   @relation(fields: [transactionId], references: [id])
-  account       LedgerAccount @relation(fields: [accountId], references: [id])
+  debit         BigInt   @default(0)
+  credit        BigInt   @default(0)
+
+  transaction   Transaction
+    @relation(
+      fields: [transactionId],
+      references: [id]
+    )
+
+  account       LedgerAccount
+    @relation(
+      fields: [accountId],
+      references: [id]
+    )
 
   createdAt     TimestamptzString @default(now())
 
@@ -146,15 +293,27 @@ model LedgerEntry {
   @@index([accountId])
 }
 
+
+// ============================================================
+// AUDIT LOG
+// ============================================================
+
 model AuditLog {
-  id          Int        @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
+
   userId      Int?
+
   action      String
   entity      String
   entityId    String?
+
   metadata    String?
 
-  user        User?      @relation(fields: [userId], references: [id])
+  user        User?
+    @relation(
+      fields: [userId],
+      references: [id]
+    )
 
   createdAt   TimestamptzString @default(now())
 

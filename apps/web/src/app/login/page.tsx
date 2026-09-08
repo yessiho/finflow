@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
+
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -18,17 +19,18 @@ import {
 import { apiFetch } from '@/lib/api';
 
 interface ApiError {
-  message?: string;
+  message?: string | string[];
 }
 
 interface LoginResponse {
   accessToken: string;
+
   user: {
     id: number;
     email: string;
     firstName?: string;
     lastName?: string;
-    type?: string;
+    status?: string;
   };
 }
 
@@ -40,10 +42,17 @@ function getErrorMessage(error: unknown): string {
   if (
     typeof error === 'object' &&
     error !== null &&
-    'message' in error &&
-    typeof (error as ApiError).message === 'string'
+    'message' in error
   ) {
-    return (error as ApiError).message as string;
+    const message = (error as ApiError).message;
+
+    if (Array.isArray(message)) {
+      return message.join(', ');
+    }
+
+    if (typeof message === 'string') {
+      return message;
+    }
   }
 
   return 'Unable to sign in. Please check your credentials.';
@@ -52,37 +61,58 @@ function getErrorMessage(error: unknown): string {
 export default function LoginPage() {
   const router = useRouter();
 
-  const [email, setEmail] = useState('john@test.com');
-  const [password, setPassword] = useState('Password123');
+  /*
+   * Keep credentials empty by default.
+   *
+   * This is better than hardcoding demo credentials,
+   * especially after password reset testing.
+   */
+  const [email, setEmail] = useState('');
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [password, setPassword] = useState('');
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  const [showPassword, setShowPassword] =
+    useState(false);
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [error, setError] =
+    useState('');
+
+  // ============================================================
+  // LOGIN SUBMIT
+  // ============================================================
+
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
+
+    if (loading) {
+      return;
+    }
 
     try {
       setLoading(true);
+
       setError('');
 
-      /*
-       * Backend endpoint:
-       * POST /auth/user/login
-       */
-      const response = await apiFetch<LoginResponse>(
-        '/auth/user/login',
-        {
-          method: 'POST',
-          body: JSON.stringify({
-            email,
-            password,
-          }),
-        },
-      );
+      const response =
+        await apiFetch<LoginResponse>(
+          '/auth/user/login',
+          {
+            method: 'POST',
+
+            body: JSON.stringify({
+              email: email.trim().toLowerCase(),
+              password,
+            }),
+          },
+        );
 
       /*
-       * Save authentication details
+       * Save authentication details.
        */
       localStorage.setItem(
         'access_token',
@@ -95,13 +125,18 @@ export default function LoginPage() {
       );
 
       /*
-       * Redirect to dashboard
+       * Redirect authenticated user.
        */
       router.push('/dashboard');
-    } catch (error: unknown) {
-      console.error('Login error:', error);
+    } catch (caughtError: unknown) {
+      console.error(
+        'Login error:',
+        caughtError,
+      );
 
-      setError(getErrorMessage(error));
+      setError(
+        getErrorMessage(caughtError),
+      );
     } finally {
       setLoading(false);
     }
@@ -109,20 +144,31 @@ export default function LoginPage() {
 
   return (
     <main className="login-page">
-      {/* BACKGROUND DECORATION */}
+
+      {/* ====================================================== */}
+      {/* BACKGROUND */}
+      {/* ====================================================== */}
+
       <div className="login-background">
         <div className="login-orb login-orb-one" />
+
         <div className="login-orb login-orb-two" />
+
         <div className="login-grid-pattern" />
       </div>
 
-      {/* LOGIN WRAPPER */}
+      {/* ====================================================== */}
+      {/* MAIN WRAPPER */}
+      {/* ====================================================== */}
+
       <div className="login-wrapper">
 
-        {/* ========================================= */}
-        {/* BRAND / INFORMATION SIDE */}
-        {/* ========================================= */}
+        {/* ==================================================== */}
+        {/* BRAND PANEL */}
+        {/* ==================================================== */}
+
         <section className="login-brand-panel">
+
           <div className="login-brand-content">
 
             <div className="login-brand-logo">
@@ -140,15 +186,16 @@ export default function LoginPage() {
             </h1>
 
             <p>
-              Manage wallets, transactions, and financial records from one
-              secure platform.
+              Manage wallets, transactions, and financial records
+              from one secure platform.
             </p>
 
             {/* FEATURES */}
+
             <div className="login-features">
 
-              {/* FEATURE ONE */}
               <div className="login-feature">
+
                 <div className="login-feature-icon">
                   <ShieldCheck size={18} />
                 </div>
@@ -162,10 +209,11 @@ export default function LoginPage() {
                     Built with security and accountability in mind.
                   </span>
                 </div>
+
               </div>
 
-              {/* FEATURE TWO */}
               <div className="login-feature">
+
                 <div className="login-feature-icon">
                   <Landmark size={18} />
                 </div>
@@ -179,26 +227,32 @@ export default function LoginPage() {
                     Manage NGN, USD, GBP and EUR balances in one place.
                   </span>
                 </div>
+
               </div>
 
             </div>
+
           </div>
 
-          {/* FOOTER */}
           <div className="login-brand-footer">
-            © {new Date().getFullYear()} FinFlow. Financial Management
-            Platform.
+            © {new Date().getFullYear()} FinFlow.
+            Financial Management Platform.
           </div>
+
         </section>
 
-        {/* ========================================= */}
-        {/* LOGIN FORM */}
-        {/* ========================================= */}
+        {/* ==================================================== */}
+        {/* LOGIN PANEL */}
+        {/* ==================================================== */}
+
         <section className="login-form-panel">
+
           <div className="login-form-container">
 
             {/* MOBILE BRAND */}
+
             <div className="login-mobile-brand">
+
               <div className="login-mobile-logo">
                 <Landmark size={24} />
               </div>
@@ -206,10 +260,13 @@ export default function LoginPage() {
               <span>
                 FinFlow
               </span>
+
             </div>
 
             {/* HEADING */}
+
             <div className="login-heading">
+
               <span className="login-welcome">
                 Welcome back
               </span>
@@ -221,9 +278,11 @@ export default function LoginPage() {
               <p>
                 Enter your credentials to access your financial workspace.
               </p>
+
             </div>
 
-            {/* ERROR MESSAGE */}
+            {/* ERROR */}
+
             {error && (
               <div
                 className="login-error"
@@ -233,21 +292,25 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* ========================================= */}
+            {/* ================================================= */}
             {/* LOGIN FORM */}
-            {/* ========================================= */}
+            {/* ================================================= */}
+
             <form
               onSubmit={handleSubmit}
               className="login-form"
             >
 
               {/* EMAIL */}
+
               <div className="login-field">
+
                 <label htmlFor="email">
                   Email Address
                 </label>
 
                 <div className="login-input-wrapper">
+
                   <Mail
                     size={19}
                     className="login-input-icon"
@@ -265,16 +328,34 @@ export default function LoginPage() {
                     autoComplete="email"
                     disabled={loading}
                   />
+
                 </div>
+
               </div>
 
               {/* PASSWORD */}
+
               <div className="login-field">
-                <label htmlFor="password">
-                  Password
-                </label>
+
+                <div className="login-password-label-row">
+
+                  <label htmlFor="password">
+                    Password
+                  </label>
+
+                  {/* FORGOT PASSWORD */}
+
+                  <Link
+                    href="/forgot-password"
+                    className="forgot-password-link"
+                  >
+                    Forgot password?
+                  </Link>
+
+                </div>
 
                 <div className="login-input-wrapper">
+
                   <Lock
                     size={19}
                     className="login-input-icon"
@@ -282,7 +363,11 @@ export default function LoginPage() {
 
                   <input
                     id="password"
-                    type={showPassword ? 'text' : 'password'}
+                    type={
+                      showPassword
+                        ? 'text'
+                        : 'password'
+                    }
                     value={password}
                     onChange={(event) =>
                       setPassword(event.target.value)
@@ -293,12 +378,13 @@ export default function LoginPage() {
                     disabled={loading}
                   />
 
-                  {/* PASSWORD VISIBILITY */}
                   <button
                     type="button"
                     className="password-toggle"
                     onClick={() =>
-                      setShowPassword(!showPassword)
+                      setShowPassword(
+                        !showPassword,
+                      )
                     }
                     aria-label={
                       showPassword
@@ -313,15 +399,19 @@ export default function LoginPage() {
                       <Eye size={19} />
                     )}
                   </button>
+
                 </div>
+
               </div>
 
-              {/* SUBMIT BUTTON */}
+              {/* SUBMIT */}
+
               <button
                 type="submit"
                 className="login-submit-button"
                 disabled={loading}
               >
+
                 {loading ? (
                   <>
                     <Loader2
@@ -338,14 +428,15 @@ export default function LoginPage() {
                     <ArrowRight size={19} />
                   </>
                 )}
+
               </button>
 
             </form>
 
-            {/* ========================================= */}
-            {/* REGISTER LINK */}
-            {/* ========================================= */}
+            {/* REGISTER */}
+
             <div className="login-register-link">
+
               <span>
                 Don&apos;t have an account?
               </span>
@@ -353,49 +444,25 @@ export default function LoginPage() {
               <Link href="/register">
                 Create an account
               </Link>
+
             </div>
 
-            {/* ========================================= */}
-            {/* DEMO ACCOUNT */}
-            {/* ========================================= */}
-            <div className="demo-account">
+            {/* SECURITY */}
 
-              <div className="demo-account-header">
-                Demo Account
-              </div>
-
-              <div className="demo-account-details">
-
-                <div>
-                  <span>Email</span>
-
-                  <strong>
-                    john@test.com
-                  </strong>
-                </div>
-
-                <div>
-                  <span>Password</span>
-
-                  <strong>
-                    Password123
-                  </strong>
-                </div>
-
-              </div>
-            </div>
-
-            {/* SECURITY TEXT */}
             <p className="login-security-text">
+
               <ShieldCheck size={15} />
 
               Your connection is secure and encrypted.
+
             </p>
 
           </div>
+
         </section>
 
       </div>
+
     </main>
   );
 }
