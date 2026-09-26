@@ -1,9 +1,19 @@
+
 'use client';
 
-import { FormEvent, useState } from 'react';
+import type { FormEvent } from 'react';
+
+import {
+  useEffect,
+  useState,
+} from 'react';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+
+import {
+  useRouter,
+  useSearchParams,
+} from 'next/navigation';
 
 import {
   ArrowRight,
@@ -18,23 +28,39 @@ import {
 
 import { apiFetch } from '@/lib/api';
 
+import {
+  clearAuthSession,
+  getAccessToken,
+  getAuthUser,
+  saveAuthSession,
+} from '@/lib/auth';
+
+import type { User } from '@/types';
+
+// ============================================================
+// API ERROR TYPE
+// ============================================================
+
 interface ApiError {
   message?: string | string[];
 }
 
+// ============================================================
+// LOGIN RESPONSE
+// ============================================================
+
 interface LoginResponse {
   accessToken: string;
-
-  user: {
-    id: number;
-    email: string;
-    firstName?: string;
-    lastName?: string;
-    status?: string;
-  };
+  user: User;
 }
 
-function getErrorMessage(error: unknown): string {
+// ============================================================
+// ERROR MESSAGE HELPER
+// ============================================================
+
+function getErrorMessage(
+  error: unknown,
+): string {
   if (error instanceof Error) {
     return error.message;
   }
@@ -44,7 +70,8 @@ function getErrorMessage(error: unknown): string {
     error !== null &&
     'message' in error
   ) {
-    const message = (error as ApiError).message;
+    const message =
+      (error as ApiError).message;
 
     if (Array.isArray(message)) {
       return message.join(', ');
@@ -58,18 +85,56 @@ function getErrorMessage(error: unknown): string {
   return 'Unable to sign in. Please check your credentials.';
 }
 
+// ============================================================
+// SAFE REDIRECT PATH
+//
+// Prevent external redirects.
+//
+// Only internal application routes are allowed.
+// ============================================================
+
+function getSafeRedirectPath(
+  redirect: string | null,
+): string {
+  if (
+    !redirect ||
+    !redirect.startsWith('/') ||
+    redirect.startsWith('//')
+  ) {
+    return '/dashboard';
+  }
+
+  return redirect;
+}
+
+// ============================================================
+// LOGIN PAGE
+// ============================================================
+
 export default function LoginPage() {
   const router = useRouter();
 
-  /*
-   * Keep credentials empty by default.
-   *
-   * This is better than hardcoding demo credentials,
-   * especially after password reset testing.
-   */
-  const [email, setEmail] = useState('');
+  const searchParams =
+    useSearchParams();
 
-  const [password, setPassword] = useState('');
+  // ==========================================================
+  // REDIRECT DESTINATION
+  // ==========================================================
+
+  const redirectPath =
+    getSafeRedirectPath(
+      searchParams.get('redirect'),
+    );
+
+  // ==========================================================
+  // FORM STATE
+  // ==========================================================
+
+  const [email, setEmail] =
+    useState('');
+
+  const [password, setPassword] =
+    useState('');
 
   const [showPassword, setShowPassword] =
     useState(false);
@@ -80,16 +145,91 @@ export default function LoginPage() {
   const [error, setError] =
     useState('');
 
-  // ============================================================
+  const [checkingSession, setCheckingSession] =
+    useState(true);
+
+  // ==========================================================
+  // CHECK EXISTING SESSION
+  //
+  // Only clean incomplete/corrupted sessions.
+  //
+  // IMPORTANT:
+  //
+  // Do NOT automatically redirect simply because a token exists.
+  //
+  // Token validity is confirmed by protected API requests.
+  // ==========================================================
+
+  useEffect(() => {
+    try {
+      const token =
+        getAccessToken();
+
+      const user =
+        getAuthUser();
+
+      /*
+       * If only one authentication value exists,
+       * the session is incomplete.
+       */
+      if (
+        (token && !user) ||
+        (!token && user)
+      ) {
+        clearAuthSession();
+      }
+    } catch (error) {
+      console.error(
+        'Session check error:',
+        error,
+      );
+
+      clearAuthSession();
+    } finally {
+      setCheckingSession(false);
+    }
+  }, []);
+
+  // ==========================================================
   // LOGIN SUBMIT
-  // ============================================================
+  // ==========================================================
 
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
 
+    /*
+     * Prevent duplicate submissions.
+     */
     if (loading) {
+      return;
+    }
+
+    // ========================================================
+    // NORMALIZE INPUT
+    // ========================================================
+
+    const normalizedEmail =
+      email.trim().toLowerCase();
+
+    // ========================================================
+    // FRONTEND VALIDATION
+    // ========================================================
+
+    if (!normalizedEmail) {
+      setError(
+        'Email address is required.',
+      );
+
+      return;
+    }
+
+    if (!password) {
+      setError(
+        'Password is required.',
+      );
+
       return;
     }
 
@@ -98,6 +238,24 @@ export default function LoginPage() {
 
       setError('');
 
+      // ======================================================
+      // LOGIN REQUEST
+      //
+      // IMPORTANT:
+      //
+      // Do NOT save anything before this request succeeds.
+      //
+      // api.ts will throw an error for:
+      //
+      // - 400 Bad Request
+      // - 401 Invalid credentials
+      // - 403 Forbidden
+      // - 500 Server errors
+      //
+      // The redirect below will only happen when this request
+      // successfully resolves.
+      // ======================================================
+
       const response =
         await apiFetch<LoginResponse>(
           '/auth/user/login',
@@ -105,34 +263,72 @@ export default function LoginPage() {
             method: 'POST',
 
             body: JSON.stringify({
-              email: email.trim().toLowerCase(),
+              email: normalizedEmail,
               password,
             }),
           },
         );
 
-      /*
-       * Save authentication details.
-       */
-      localStorage.setItem(
-        'access_token',
+      // ======================================================
+      // VALIDATE BACKEND RESPONSE
+      // ======================================================
+
+      if (
+        !response ||
+        typeof response.accessToken !==
+          'string' ||
+        !response.accessToken ||
+        !response.user
+      ) {
+        throw new Error(
+          'Invalid login response from server.',
+        );
+      }
+
+      // ======================================================
+      // SAVE AUTH SESSION
+      //
+      // This is the FIRST point where authentication data
+      // is written to localStorage.
+      //
+      // auth.ts handles:
+      //
+      // - finflow_access_token
+      // - finflow_user
+      // - auth-session-updated event
+      // - user-profile-updated event
+      //
+      // Do NOT manually dispatch auth events here.
+      // ======================================================
+
+      saveAuthSession(
         response.accessToken,
+        response.user,
       );
 
-      localStorage.setItem(
-        'user',
-        JSON.stringify(response.user),
-      );
+      // ======================================================
+      // REDIRECT AFTER SUCCESSFUL LOGIN
+      //
+      // This only executes after:
+      //
+      // 1. API request succeeds
+      // 2. accessToken exists
+      // 3. user exists
+      // 4. Session is successfully saved
+      // ======================================================
 
-      /*
-       * Redirect authenticated user.
-       */
-      router.push('/dashboard');
+      router.replace(redirectPath);
     } catch (caughtError: unknown) {
       console.error(
         'Login error:',
         caughtError,
       );
+
+      /*
+       * Failed authentication must never leave
+       * a partial session behind.
+       */
+      clearAuthSession();
 
       setError(
         getErrorMessage(caughtError),
@@ -142,12 +338,32 @@ export default function LoginPage() {
     }
   }
 
+  // ==========================================================
+  // SESSION CHECK LOADING
+  // ==========================================================
+
+  if (checkingSession) {
+    return (
+      <main className="auth-loading">
+        <div className="auth-loading-spinner" />
+
+        <p>
+          Checking your session...
+        </p>
+      </main>
+    );
+  }
+
+  // ==========================================================
+  // PAGE UI
+  // ==========================================================
+
   return (
     <main className="login-page">
 
-      {/* ====================================================== */}
-      {/* BACKGROUND */}
-      {/* ====================================================== */}
+      {/* ======================================================
+          BACKGROUND
+      ====================================================== */}
 
       <div className="login-background">
         <div className="login-orb login-orb-one" />
@@ -157,18 +373,17 @@ export default function LoginPage() {
         <div className="login-grid-pattern" />
       </div>
 
-      {/* ====================================================== */}
-      {/* MAIN WRAPPER */}
-      {/* ====================================================== */}
+      {/* ======================================================
+          MAIN WRAPPER
+      ====================================================== */}
 
       <div className="login-wrapper">
 
-        {/* ==================================================== */}
-        {/* BRAND PANEL */}
-        {/* ==================================================== */}
+        {/* ====================================================
+            BRAND PANEL
+        ==================================================== */}
 
         <section className="login-brand-panel">
-
           <div className="login-brand-content">
 
             <div className="login-brand-logo">
@@ -186,8 +401,8 @@ export default function LoginPage() {
             </h1>
 
             <p>
-              Manage wallets, transactions, and financial records
-              from one secure platform.
+              Manage wallets, transactions, and financial
+              records from one secure platform.
             </p>
 
             {/* FEATURES */}
@@ -195,7 +410,6 @@ export default function LoginPage() {
             <div className="login-features">
 
               <div className="login-feature">
-
                 <div className="login-feature-icon">
                   <ShieldCheck size={18} />
                 </div>
@@ -206,14 +420,13 @@ export default function LoginPage() {
                   </strong>
 
                   <span>
-                    Built with security and accountability in mind.
+                    Built with security and accountability
+                    in mind.
                   </span>
                 </div>
-
               </div>
 
               <div className="login-feature">
-
                 <div className="login-feature-icon">
                   <Landmark size={18} />
                 </div>
@@ -224,35 +437,31 @@ export default function LoginPage() {
                   </strong>
 
                   <span>
-                    Manage NGN, USD, GBP and EUR balances in one place.
+                    Manage NGN, USD, GBP and EUR balances
+                    in one place.
                   </span>
                 </div>
-
               </div>
 
             </div>
-
           </div>
 
           <div className="login-brand-footer">
             © {new Date().getFullYear()} FinFlow.
             Financial Management Platform.
           </div>
-
         </section>
 
-        {/* ==================================================== */}
-        {/* LOGIN PANEL */}
-        {/* ==================================================== */}
+        {/* ====================================================
+            LOGIN PANEL
+        ==================================================== */}
 
         <section className="login-form-panel">
-
           <div className="login-form-container">
 
             {/* MOBILE BRAND */}
 
             <div className="login-mobile-brand">
-
               <div className="login-mobile-logo">
                 <Landmark size={24} />
               </div>
@@ -260,13 +469,11 @@ export default function LoginPage() {
               <span>
                 FinFlow
               </span>
-
             </div>
 
             {/* HEADING */}
 
             <div className="login-heading">
-
               <span className="login-welcome">
                 Welcome back
               </span>
@@ -276,9 +483,9 @@ export default function LoginPage() {
               </h2>
 
               <p>
-                Enter your credentials to access your financial workspace.
+                Enter your credentials to access your
+                financial workspace.
               </p>
-
             </div>
 
             {/* ERROR */}
@@ -287,14 +494,15 @@ export default function LoginPage() {
               <div
                 className="login-error"
                 role="alert"
+                aria-live="polite"
               >
                 {error}
               </div>
             )}
 
-            {/* ================================================= */}
-            {/* LOGIN FORM */}
-            {/* ================================================= */}
+            {/* =================================================
+                LOGIN FORM
+            ================================================= */}
 
             <form
               onSubmit={handleSubmit}
@@ -304,13 +512,11 @@ export default function LoginPage() {
               {/* EMAIL */}
 
               <div className="login-field">
-
                 <label htmlFor="email">
                   Email Address
                 </label>
 
                 <div className="login-input-wrapper">
-
                   <Mail
                     size={19}
                     className="login-input-icon"
@@ -328,9 +534,7 @@ export default function LoginPage() {
                     autoComplete="email"
                     disabled={loading}
                   />
-
                 </div>
-
               </div>
 
               {/* PASSWORD */}
@@ -338,12 +542,9 @@ export default function LoginPage() {
               <div className="login-field">
 
                 <div className="login-password-label-row">
-
                   <label htmlFor="password">
                     Password
                   </label>
-
-                  {/* FORGOT PASSWORD */}
 
                   <Link
                     href="/forgot-password"
@@ -351,11 +552,9 @@ export default function LoginPage() {
                   >
                     Forgot password?
                   </Link>
-
                 </div>
 
                 <div className="login-input-wrapper">
-
                   <Lock
                     size={19}
                     className="login-input-icon"
@@ -383,7 +582,7 @@ export default function LoginPage() {
                     className="password-toggle"
                     onClick={() =>
                       setShowPassword(
-                        !showPassword,
+                        (previous) => !previous,
                       )
                     }
                     aria-label={
@@ -399,9 +598,7 @@ export default function LoginPage() {
                       <Eye size={19} />
                     )}
                   </button>
-
                 </div>
-
               </div>
 
               {/* SUBMIT */}
@@ -411,7 +608,6 @@ export default function LoginPage() {
                 className="login-submit-button"
                 disabled={loading}
               >
-
                 {loading ? (
                   <>
                     <Loader2
@@ -428,7 +624,6 @@ export default function LoginPage() {
                     <ArrowRight size={19} />
                   </>
                 )}
-
               </button>
 
             </form>
@@ -436,7 +631,6 @@ export default function LoginPage() {
             {/* REGISTER */}
 
             <div className="login-register-link">
-
               <span>
                 Don&apos;t have an account?
               </span>
@@ -444,25 +638,20 @@ export default function LoginPage() {
               <Link href="/register">
                 Create an account
               </Link>
-
             </div>
 
             {/* SECURITY */}
 
             <p className="login-security-text">
-
               <ShieldCheck size={15} />
 
               Your connection is secure and encrypted.
-
             </p>
 
           </div>
-
         </section>
 
       </div>
-
     </main>
   );
 }

@@ -1,6 +1,13 @@
+
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+
 import { useRouter } from 'next/navigation';
 
 import {
@@ -20,11 +27,25 @@ import {
 
 import { apiFetch } from '@/lib/api';
 
-type Currency = 'NGN' | 'USD' | 'EUR' | 'GBP';
+// ============================================================
+// TYPES
+// ============================================================
 
-type WalletStatus = 'ACTIVE' | 'FROZEN' | 'CLOSED';
+type Currency =
+  | 'NGN'
+  | 'USD'
+  | 'EUR'
+  | 'GBP';
 
-type WalletAccountType = 'SAVINGS' | 'CURRENT' | 'VIRTUAL';
+type WalletStatus =
+  | 'ACTIVE'
+  | 'FROZEN'
+  | 'CLOSED';
+
+type WalletAccountType =
+  | 'SAVINGS'
+  | 'CURRENT'
+  | 'VIRTUAL';
 
 type WalletAccountStatus =
   | 'ACTIVE'
@@ -56,6 +77,16 @@ type Wallet = {
   account: WalletAccount | null;
 };
 
+type TransferRecipient = {
+  walletId: number;
+  userId: number;
+  accountNumber: string;
+  accountName: string;
+  bankName: string;
+  currency: Currency;
+  status: WalletStatus;
+};
+
 type ModalType =
   | 'CREATE'
   | 'DEPOSIT'
@@ -64,12 +95,50 @@ type ModalType =
   | null;
 
 type ApiError = {
-  message?: string;
+  message?: string | string[];
+  error?: string;
+  statusCode?: number;
 };
 
-const CURRENCIES: Currency[] = ['NGN', 'USD', 'EUR', 'GBP'];
+// ============================================================
+// CONSTANTS
+// ============================================================
 
-function getErrorMessage(error: unknown, fallback: string): string {
+const CURRENCIES: Currency[] = [
+  'NGN',
+  'USD',
+  'EUR',
+  'GBP',
+];
+
+const CURRENCY_NAMES: Record<
+  Currency,
+  string
+> = {
+  NGN: 'Nigerian Naira',
+  USD: 'US Dollar',
+  EUR: 'Euro',
+  GBP: 'British Pound',
+};
+
+const CURRENCY_SYMBOLS: Record<
+  Currency,
+  string
+> = {
+  NGN: '₦',
+  USD: '$',
+  EUR: '€',
+  GBP: '£',
+};
+
+// ============================================================
+// ERROR HELPER
+// ============================================================
+
+function getErrorMessage(
+  error: unknown,
+  fallback: string,
+): string {
   if (error instanceof Error) {
     return error.message;
   }
@@ -77,59 +146,134 @@ function getErrorMessage(error: unknown, fallback: string): string {
   if (
     typeof error === 'object' &&
     error !== null &&
-    'message' in error &&
-    typeof (error as ApiError).message === 'string'
+    'message' in error
   ) {
-    return (error as ApiError).message;
+    const message =
+      (error as ApiError).message;
+
+    if (Array.isArray(message)) {
+      return message.join(', ');
+    }
+
+    if (typeof message === 'string') {
+      return message;
+    }
   }
 
   return fallback;
 }
 
+// ============================================================
+// NUMBER HELPERS
+// ============================================================
+
+function parseAmount(
+  value: string,
+): number {
+  const amount = Number(value);
+
+  return Number.isFinite(amount)
+    ? amount
+    : 0;
+}
+
+function isValidAmount(
+  value: string,
+): boolean {
+  const amount = parseAmount(value);
+
+  return (
+    Number.isFinite(amount) &&
+    amount > 0
+  );
+}
+
+// ============================================================
+// COMPONENT
+// ============================================================
+
 export default function WalletsPage() {
   const router = useRouter();
 
-  const [wallets, setWallets] = useState<Wallet[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  // ============================================================
+  // STATE
+  // ============================================================
 
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [wallets, setWallets] =
+    useState<Wallet[]>([]);
 
-  const [modal, setModal] = useState<ModalType>(null);
+  const [loading, setLoading] =
+    useState(true);
+
+  const [refreshing, setRefreshing] =
+    useState(false);
+
+  const [error, setError] =
+    useState('');
+
+  const [success, setSuccess] =
+    useState('');
+
+  const [modal, setModal] =
+    useState<ModalType>(null);
 
   const [selectedWallet, setSelectedWallet] =
     useState<Wallet | null>(null);
 
-  const [currency, setCurrency] = useState<Currency>('NGN');
+  const [currency, setCurrency] =
+    useState<Currency>('NGN');
 
-  const [amount, setAmount] = useState('');
-
-  const [destinationWalletId, setDestinationWalletId] =
+  const [amount, setAmount] =
     useState('');
 
-  const [submitting, setSubmitting] = useState(false);
+  const [recipientAccountNumber, setRecipientAccountNumber] =
+    useState('');
 
-  /*
-   * ============================================================
-   * LOAD WALLETS
-   * ============================================================
-   */
+  const [transferRecipient, setTransferRecipient] =
+    useState<TransferRecipient | null>(null);
+
+  const [recipientLoading, setRecipientLoading] =
+    useState(false);
+
+  const [submitting, setSubmitting] =
+    useState(false);
+
+  // ============================================================
+  // LOAD WALLETS
+  // ============================================================
 
   const loadWallets = useCallback(
-    async (isRefresh = false) => {
+    async (
+      isRefresh = false,
+    ) => {
       try {
         if (isRefresh) {
           setRefreshing(true);
+        } else {
+          setLoading(true);
         }
 
         setError('');
 
-        const data = await apiFetch<Wallet[]>('/wallets');
+        const data =
+          await apiFetch<Wallet[]>(
+            '/wallets',
+          );
 
-        setWallets(Array.isArray(data) ? data : []);
+        if (!Array.isArray(data)) {
+          setWallets([]);
+
+          throw new Error(
+            'The wallet service returned an invalid response.',
+          );
+        }
+
+        setWallets(data);
       } catch (error: unknown) {
-        console.error('LOAD WALLETS ERROR:', error);
+        console.error(
+          'LOAD WALLETS ERROR:',
+          error,
+        );
 
         setError(
           getErrorMessage(
@@ -145,46 +289,51 @@ export default function WalletsPage() {
     [],
   );
 
-  /*
-   * ============================================================
-   * INITIAL LOAD
-   * ============================================================
-   */
+  // ============================================================
+  // INITIAL LOAD
+  // ============================================================
 
   useEffect(() => {
     void loadWallets();
   }, [loadWallets]);
 
-  /*
-   * ============================================================
-   * REFRESH
-   * ============================================================
-   */
+  // ============================================================
+  // REFRESH
+  // ============================================================
 
   function handleRefresh() {
     void loadWallets(true);
   }
 
-  /*
-   * ============================================================
-   * MODAL FUNCTIONS
-   * ============================================================
-   */
+  // ============================================================
+  // MODAL
+  // ============================================================
 
-  function openModal(type: ModalType, wallet?: Wallet) {
-    setSelectedWallet(wallet ?? null);
+  function openModal(
+    type: ModalType,
+    wallet?: Wallet,
+  ) {
+    setSelectedWallet(
+      wallet ?? null,
+    );
 
     setAmount('');
-    setDestinationWalletId('');
+
+    setRecipientAccountNumber('');
+
+    setTransferRecipient(null);
 
     setError('');
+
     setSuccess('');
 
     setModal(type);
   }
 
   function closeModal() {
-    if (submitting) return;
+    if (submitting) {
+      return;
+    }
 
     setModal(null);
 
@@ -192,112 +341,222 @@ export default function WalletsPage() {
 
     setAmount('');
 
-    setDestinationWalletId('');
+    setRecipientAccountNumber('');
+
+    setTransferRecipient(null);
 
     setError('');
+
+    setSuccess('');
   }
 
-  /*
-   * ============================================================
-   * COPY ACCOUNT NUMBER
-   * ============================================================
-   */
+  // ============================================================
+  // COPY ACCOUNT NUMBER
+  // ============================================================
 
-  async function copyAccountNumber(accountNumber?: string) {
-    if (!accountNumber) return;
+  async function copyAccountNumber(
+    accountNumber?: string,
+  ) {
+    if (!accountNumber) {
+      return;
+    }
 
     try {
-      await navigator.clipboard.writeText(accountNumber);
+      await navigator.clipboard.writeText(
+        accountNumber,
+      );
 
-      setSuccess('Account number copied successfully.');
+      setSuccess(
+        'Account number copied successfully.',
+      );
 
-      setTimeout(() => {
+      window.setTimeout(() => {
         setSuccess('');
       }, 2500);
     } catch {
-      setError('Unable to copy account number.');
+      setError(
+        'Unable to copy account number.',
+      );
     }
   }
 
-  /*
-   * ============================================================
-   * FORMATTERS
-   * ============================================================
-   */
+  // ============================================================
+  // FORMATTERS
+  // ============================================================
 
-  function formatBalance(wallet: Wallet) {
-    const value = Number(wallet.balance) || 0;
-
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: wallet.currency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value);
+  function getCurrencySymbol(
+    walletCurrency: Currency,
+  ) {
+    return CURRENCY_SYMBOLS[
+      walletCurrency
+    ];
   }
 
-  function formatNumber(value: number) {
-    return new Intl.NumberFormat('en-NG', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value);
+  function getCurrencyName(
+    walletCurrency: Currency,
+  ) {
+    return CURRENCY_NAMES[
+      walletCurrency
+    ];
   }
 
-  function getCurrencySymbol(walletCurrency: Currency) {
-    const symbols: Record<Currency, string> = {
-      NGN: '₦',
-      USD: '$',
-      EUR: '€',
-      GBP: '£',
-    };
-
-    return symbols[walletCurrency];
-  }
-
-  function getCurrencyName(walletCurrency: Currency) {
-    const names: Record<Currency, string> = {
-      NGN: 'Nigerian Naira',
-      USD: 'US Dollar',
-      EUR: 'Euro',
-      GBP: 'British Pound',
-    };
-
-    return names[walletCurrency];
-  }
-
-  function getCurrencyClass(walletCurrency: Currency) {
+  function getCurrencyClass(
+    walletCurrency: Currency,
+  ) {
     return `currency-${walletCurrency.toLowerCase()}`;
   }
 
-  /*
-   * ============================================================
-   * CREATE WALLET
-   * ============================================================
-   */
+  function formatBalance(
+    wallet: Wallet,
+  ) {
+    const value =
+      parseAmount(wallet.balance);
+
+    try {
+      return new Intl.NumberFormat(
+        'en-NG',
+        {
+          style: 'currency',
+          currency: wallet.currency,
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        },
+      ).format(value);
+    } catch {
+      return `${getCurrencySymbol(
+        wallet.currency,
+      )}${value.toFixed(2)}`;
+    }
+  }
+
+  function formatCurrencyAmount(
+    amountValue: number,
+    walletCurrency: Currency,
+  ) {
+    try {
+      return new Intl.NumberFormat(
+        'en-NG',
+        {
+          style: 'currency',
+          currency: walletCurrency,
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        },
+      ).format(amountValue);
+    } catch {
+      return `${getCurrencySymbol(
+        walletCurrency,
+      )}${amountValue.toFixed(2)}`;
+    }
+  }
+
+  function formatNumber(
+    value: number,
+  ) {
+    return new Intl.NumberFormat(
+      'en-NG',
+      {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      },
+    ).format(value);
+  }
+
+  function formatDate(
+    value: string,
+  ) {
+    const date = new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime(),
+      )
+    ) {
+      return '—';
+    }
+
+    return date.toLocaleDateString(
+      'en-NG',
+      {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      },
+    );
+  }
+
+  // ============================================================
+  // CREATE WALLET
+  // ============================================================
+
+  const existingCurrencies =
+    useMemo(
+      () =>
+        new Set(
+          wallets.map(
+            (wallet) =>
+              wallet.currency,
+          ),
+        ),
+      [wallets],
+    );
+
+  const availableCurrencies =
+    useMemo(
+      () =>
+        CURRENCIES.filter(
+          (item) =>
+            !existingCurrencies.has(
+              item,
+            ),
+        ),
+      [existingCurrencies],
+    );
 
   async function createWallet() {
+    if (
+      existingCurrencies.has(
+        currency,
+      )
+    ) {
+      setError(
+        `You already have a ${currency} wallet.`,
+      );
+
+      return;
+    }
+
     try {
       setSubmitting(true);
 
       setError('');
 
-      await apiFetch('/wallets', {
-        method: 'POST',
-        body: JSON.stringify({
-          currency,
-        }),
-      });
+      await apiFetch(
+        '/wallets',
+        {
+          method: 'POST',
+
+          body: JSON.stringify({
+            currency,
+          }),
+        },
+      );
 
       setSuccess(
-        `${currency} wallet created successfully with a virtual account.`,
+        `${currency} wallet created successfully.`,
       );
 
       await loadWallets();
 
-      setTimeout(() => {
+      window.setTimeout(() => {
         closeModal();
       }, 1000);
     } catch (error: unknown) {
+      console.error(
+        'CREATE WALLET ERROR:',
+        error,
+      );
+
       setError(
         getErrorMessage(
           error,
@@ -309,42 +568,73 @@ export default function WalletsPage() {
     }
   }
 
-  /*
-   * ============================================================
-   * DEPOSIT
-   * ============================================================
-   */
+  // ============================================================
+  // DEPOSIT
+  // ============================================================
 
   async function depositMoney() {
-    if (!selectedWallet) return;
+    if (!selectedWallet) {
+      return;
+    }
 
-    if (Number(amount) <= 0) {
-      setError('Please enter a valid deposit amount.');
+    if (
+      selectedWallet.status !==
+      'ACTIVE'
+    ) {
+      setError(
+        'This wallet is not active.',
+      );
 
       return;
     }
+
+    if (
+      !isValidAmount(amount)
+    ) {
+      setError(
+        'Please enter a valid deposit amount greater than zero.',
+      );
+
+      return;
+    }
+
+    const depositAmount =
+      parseAmount(amount);
 
     try {
       setSubmitting(true);
 
       setError('');
 
-      await apiFetch(`/wallets/${selectedWallet.id}/deposit`, {
-        method: 'POST',
+      await apiFetch(
+        `/wallets/${selectedWallet.id}/deposit`,
+        {
+          method: 'POST',
 
-        body: JSON.stringify({
-          amount: Number(amount),
-        }),
-      });
+          body: JSON.stringify({
+            amount: depositAmount,
+          }),
+        },
+      );
 
-      setSuccess('Deposit completed successfully.');
+      setSuccess(
+        `${formatCurrencyAmount(
+          depositAmount,
+          selectedWallet.currency,
+        )} deposited successfully.`,
+      );
 
       await loadWallets();
 
-      setTimeout(() => {
+      window.setTimeout(() => {
         closeModal();
       }, 1000);
     } catch (error: unknown) {
+      console.error(
+        'DEPOSIT ERROR:',
+        error,
+      );
+
       setError(
         getErrorMessage(
           error,
@@ -356,17 +646,53 @@ export default function WalletsPage() {
     }
   }
 
-  /*
-   * ============================================================
-   * WITHDRAW
-   * ============================================================
-   */
+  // ============================================================
+  // WITHDRAW
+  // ============================================================
 
   async function withdrawMoney() {
-    if (!selectedWallet) return;
+    if (!selectedWallet) {
+      return;
+    }
 
-    if (Number(amount) <= 0) {
-      setError('Please enter a valid withdrawal amount.');
+    if (
+      selectedWallet.status !==
+      'ACTIVE'
+    ) {
+      setError(
+        'This wallet is not active.',
+      );
+
+      return;
+    }
+
+    if (
+      !isValidAmount(amount)
+    ) {
+      setError(
+        'Please enter a valid withdrawal amount greater than zero.',
+      );
+
+      return;
+    }
+
+    const withdrawalAmount =
+      parseAmount(amount);
+
+    const availableBalance =
+      parseAmount(
+        selectedWallet.balance,
+      );
+
+    if (
+      withdrawalAmount >
+      availableBalance
+    ) {
+      setError(
+        `Insufficient balance. Available balance is ${formatBalance(
+          selectedWallet,
+        )}.`,
+      );
 
       return;
     }
@@ -376,22 +702,35 @@ export default function WalletsPage() {
 
       setError('');
 
-      await apiFetch(`/wallets/${selectedWallet.id}/withdraw`, {
-        method: 'POST',
+      await apiFetch(
+        `/wallets/${selectedWallet.id}/withdraw`,
+        {
+          method: 'POST',
 
-        body: JSON.stringify({
-          amount: Number(amount),
-        }),
-      });
+          body: JSON.stringify({
+            amount: withdrawalAmount,
+          }),
+        },
+      );
 
-      setSuccess('Withdrawal completed successfully.');
+      setSuccess(
+        `${formatCurrencyAmount(
+          withdrawalAmount,
+          selectedWallet.currency,
+        )} withdrawn successfully.`,
+      );
 
       await loadWallets();
 
-      setTimeout(() => {
+      window.setTimeout(() => {
         closeModal();
       }, 1000);
     } catch (error: unknown) {
+      console.error(
+        'WITHDRAW ERROR:',
+        error,
+      );
+
       setError(
         getErrorMessage(
           error,
@@ -403,23 +742,131 @@ export default function WalletsPage() {
     }
   }
 
-  /*
-   * ============================================================
-   * TRANSFER
-   * ============================================================
-   */
+  // ============================================================
+  // TRANSFER
+  // ============================================================
 
-  async function transferMoney() {
-    if (!selectedWallet) return;
+  async function findTransferRecipient() {
+    const accountNumber =
+      recipientAccountNumber.trim();
 
-    if (!destinationWalletId) {
-      setError('Please select a destination wallet.');
+    if (!/^\d{10}$/.test(accountNumber)) {
+      setTransferRecipient(null);
+
+      setError(
+        'Enter a valid 10-digit recipient account number.',
+      );
 
       return;
     }
 
-    if (Number(amount) <= 0) {
-      setError('Please enter a valid transfer amount.');
+    try {
+      setRecipientLoading(true);
+
+      setError('');
+
+      const recipient =
+        await apiFetch<TransferRecipient>(
+          `/wallets/recipient?accountNumber=${encodeURIComponent(
+            accountNumber,
+          )}`,
+        );
+
+      if (
+        recipient.currency !==
+        selectedWallet?.currency
+      ) {
+        setTransferRecipient(null);
+
+        setError(
+          `Recipient has a ${recipient.currency} wallet. You can only transfer ${selectedWallet?.currency} from this wallet.`,
+        );
+
+        return;
+      }
+
+      setTransferRecipient(recipient);
+    } catch (error: unknown) {
+      console.error(
+        'RECIPIENT LOOKUP ERROR:',
+        error,
+      );
+
+      setTransferRecipient(null);
+
+      setError(
+        getErrorMessage(
+          error,
+          'Unable to find recipient.',
+        ),
+      );
+    } finally {
+      setRecipientLoading(false);
+    }
+  }
+
+  async function transferMoney() {
+    if (!selectedWallet) {
+      return;
+    }
+
+    if (
+      selectedWallet.status !==
+      'ACTIVE'
+    ) {
+      setError(
+        'This wallet is not active.',
+      );
+
+      return;
+    }
+
+    if (!transferRecipient) {
+      setError(
+        'Find and confirm a recipient before transferring.',
+      );
+
+      return;
+    }
+
+    if (
+      transferRecipient.currency !==
+      selectedWallet.currency
+    ) {
+      setError(
+        `Recipient has a ${transferRecipient.currency} wallet. You can only transfer ${selectedWallet.currency} from this wallet.`,
+      );
+
+      return;
+    }
+
+    if (
+      !isValidAmount(amount)
+    ) {
+      setError(
+        'Please enter a valid transfer amount greater than zero.',
+      );
+
+      return;
+    }
+
+    const transferAmount =
+      parseAmount(amount);
+
+    const availableBalance =
+      parseAmount(
+        selectedWallet.balance,
+      );
+
+    if (
+      transferAmount >
+      availableBalance
+    ) {
+      setError(
+        `Insufficient balance. Available balance is ${formatBalance(
+          selectedWallet,
+        )}.`,
+      );
 
       return;
     }
@@ -436,21 +883,32 @@ export default function WalletsPage() {
 
           body: JSON.stringify({
             destinationWalletId:
-              Number(destinationWalletId),
+              transferRecipient.walletId,
 
-            amount: Number(amount),
+            amount:
+              transferAmount,
           }),
         },
       );
 
-      setSuccess('Transfer completed successfully.');
+      setSuccess(
+        `${formatCurrencyAmount(
+          transferAmount,
+          selectedWallet.currency,
+        )} sent to ${transferRecipient.accountName}.`,
+      );
 
       await loadWallets();
 
-      setTimeout(() => {
+      window.setTimeout(() => {
         closeModal();
       }, 1000);
     } catch (error: unknown) {
+      console.error(
+        'TRANSFER ERROR:',
+        error,
+      );
+
       setError(
         getErrorMessage(
           error,
@@ -462,13 +920,15 @@ export default function WalletsPage() {
     }
   }
 
-  /*
-   * ============================================================
-   * SUBMIT HANDLER
-   * ============================================================
-   */
+  // ============================================================
+  // SUBMIT
+  // ============================================================
 
   function handleSubmit() {
+    if (submitting) {
+      return;
+    }
+
     switch (modal) {
       case 'CREATE':
         void createWallet();
@@ -485,70 +945,111 @@ export default function WalletsPage() {
       case 'TRANSFER':
         void transferMoney();
         break;
+
+      default:
+        break;
     }
   }
 
-  /*
-   * ============================================================
-   * DESTINATION WALLETS
-   *
-   * Important:
-   * Only same-currency wallets can be transferred between.
-   * ============================================================
-   */
+  // ============================================================
+  // MULTI-CURRENCY SUMMARY
+  //
+  // IMPORTANT:
+  //
+  // Never add NGN + USD + EUR + GBP together.
+  // Each currency is displayed independently.
+  // ============================================================
 
-  const availableDestinationWallets = useMemo(() => {
-    return wallets.filter(
+  const balancesByCurrency =
+    useMemo(() => {
+      return CURRENCIES.map(
+        (item) => {
+          const wallet =
+            wallets.find(
+              (entry) =>
+                entry.currency ===
+                item,
+            );
+
+          return {
+            currency: item,
+            wallet,
+            balance: wallet
+              ? parseAmount(
+                  wallet.balance,
+                )
+              : 0,
+          };
+        },
+      );
+    }, [wallets]);
+
+  const activeWallets =
+    wallets.filter(
       (wallet) =>
-        wallet.id !== selectedWallet?.id &&
-        wallet.currency === selectedWallet?.currency &&
-        wallet.status === 'ACTIVE',
-    );
-  }, [wallets, selectedWallet]);
+        wallet.status ===
+        'ACTIVE',
+    ).length;
 
-  /*
-   * ============================================================
-   * STATISTICS
-   * ============================================================
-   */
+  const currenciesAvailable =
+    new Set(
+      wallets.map(
+        (wallet) =>
+          wallet.currency,
+      ),
+    ).size;
 
-  const totalWalletBalance = wallets.reduce(
-    (total, wallet) =>
-      total + (Number(wallet.balance) || 0),
-    0,
-  );
+  const walletsWithAccounts =
+    wallets.filter(
+      (wallet) =>
+        wallet.account !== null,
+    ).length;
 
-  const activeWallets = wallets.filter(
-    (wallet) => wallet.status === 'ACTIVE',
-  ).length;
+  // ============================================================
+  // FORM VALIDATION
+  // ============================================================
 
-  const currenciesAvailable = new Set(
-    wallets.map((wallet) => wallet.currency),
-  ).size;
+  const amountValue =
+    parseAmount(amount);
 
-  const walletsWithAccounts = wallets.filter(
-    (wallet) => wallet.account !== null,
-  ).length;
+  const selectedBalance =
+    selectedWallet
+      ? parseAmount(
+          selectedWallet.balance,
+        )
+      : 0;
 
-  /*
-   * ============================================================
-   * FORM VALIDATION
-   * ============================================================
-   */
+  const amountExceedsBalance =
+    (modal === 'WITHDRAW' ||
+      modal === 'TRANSFER') &&
+    amountValue >
+      selectedBalance;
 
   const canSubmit =
     modal === 'CREATE'
-      ? true
+      ? !existingCurrencies.has(
+          currency,
+        )
       : modal === 'TRANSFER'
-        ? Number(amount) > 0 &&
-          Boolean(destinationWalletId)
-        : Number(amount) > 0;
+        ? isValidAmount(
+            amount,
+          ) &&
+          Boolean(
+            transferRecipient,
+          ) &&
+          !amountExceedsBalance
+        : isValidAmount(
+            amount,
+          ) &&
+          !(
+            modal ===
+              'WITHDRAW' &&
+            amountExceedsBalance
+          );
 
-  /*
-   * ============================================================
-   * UI
-   * ============================================================
-   */
+  // ============================================================
+  // UI
+  // ============================================================
 
   return (
     <div className="wallets-page">
@@ -562,7 +1063,9 @@ export default function WalletsPage() {
         <div className="wallets-header-content">
 
           <div className="wallets-header-icon">
-            <WalletCards size={26} />
+            <WalletCards
+              size={26}
+            />
           </div>
 
           <div>
@@ -570,11 +1073,16 @@ export default function WalletsPage() {
               Financial Management
             </div>
 
-            <h1>My Wallets</h1>
+            <h1>
+              My Wallets
+            </h1>
 
             <p>
-              Manage your balances, virtual accounts, deposits,
-              withdrawals and transfers from one secure place.
+              Manage your balances,
+              virtual accounts,
+              deposits, withdrawals
+              and transfers from one
+              secure place.
             </p>
           </div>
 
@@ -585,12 +1093,20 @@ export default function WalletsPage() {
           <button
             type="button"
             className="wallet-secondary-button"
-            onClick={handleRefresh}
-            disabled={refreshing}
+            onClick={
+              handleRefresh
+            }
+            disabled={
+              refreshing
+            }
           >
             <RefreshCw
               size={18}
-              className={refreshing ? 'spin' : ''}
+              className={
+                refreshing
+                  ? 'spin'
+                  : ''
+              }
             />
 
             <span>
@@ -603,11 +1119,21 @@ export default function WalletsPage() {
           <button
             type="button"
             className="wallet-primary-button"
-            onClick={() => openModal('CREATE')}
+            onClick={() =>
+              openModal(
+                'CREATE',
+              )
+            }
+            disabled={
+              availableCurrencies.length ===
+              0
+            }
           >
             <Plus size={18} />
 
-            <span>Create Wallet</span>
+            <span>
+              Create Wallet
+            </span>
           </button>
 
         </div>
@@ -615,113 +1141,204 @@ export default function WalletsPage() {
       </section>
 
       {/* ======================================================
-          STATUS MESSAGES
+          GLOBAL ERROR
       ======================================================= */}
 
       {error && !modal && (
-        <div className="wallet-alert wallet-alert-error">
-
-          <span>{error}</span>
+        <div
+          className="wallet-alert wallet-alert-error"
+          role="alert"
+        >
+          <span>
+            {error}
+          </span>
 
           <button
             type="button"
-            onClick={() => setError('')}
+            onClick={() =>
+              setError('')
+            }
             aria-label="Close error"
           >
             <X size={17} />
           </button>
-
-        </div>
-      )}
-
-      {success && !modal && (
-        <div className="wallet-alert wallet-alert-success">
-
-          <span>{success}</span>
-
-          <button
-            type="button"
-            onClick={() => setSuccess('')}
-            aria-label="Close success"
-          >
-            <X size={17} />
-          </button>
-
         </div>
       )}
 
       {/* ======================================================
-          SUMMARY CARDS
+          GLOBAL SUCCESS
+      ======================================================= */}
+
+      {success && !modal && (
+        <div
+          className="wallet-alert wallet-alert-success"
+          role="status"
+        >
+          <span>
+            {success}
+          </span>
+
+          <button
+            type="button"
+            onClick={() =>
+              setSuccess('')
+            }
+            aria-label="Close success"
+          >
+            <X size={17} />
+          </button>
+        </div>
+      )}
+
+      {/* ======================================================
+          SUMMARY
       ======================================================= */}
 
       {!loading && (
         <section className="wallet-summary-grid">
 
+          {/* MULTI-CURRENCY BALANCES */}
+
           <div className="wallet-summary-card wallet-summary-primary">
 
             <div className="wallet-summary-icon">
-              <Landmark size={22} />
+              <Landmark
+                size={22}
+              />
             </div>
 
             <div className="wallet-summary-content">
-              <span>Total Wallet Balance</span>
 
-              <strong>
-                ₦{formatNumber(totalWalletBalance)}
-              </strong>
+              <span>
+                Currency Balances
+              </span>
 
-              <small>Combined balance overview</small>
+              <div className="wallet-currency-summary-list">
+
+                {balancesByCurrency.map(
+                  ({
+                    currency: item,
+                    wallet,
+                    balance,
+                  }) => (
+                    <div
+                      key={item}
+                      className="wallet-currency-summary-item"
+                    >
+                      <span>
+                        {item}
+                      </span>
+
+                      <strong>
+                        {wallet
+                          ? formatCurrencyAmount(
+                              balance,
+                              item,
+                            )
+                          : '—'}
+                      </strong>
+                    </div>
+                  ),
+                )}
+
+              </div>
+
+              <small>
+                Balances are shown
+                separately by currency.
+              </small>
+
             </div>
 
           </div>
+
+          {/* TOTAL WALLETS */}
 
           <div className="wallet-summary-card">
 
             <div className="wallet-summary-icon summary-blue">
-              <WalletCards size={21} />
+              <WalletCards
+                size={21}
+              />
             </div>
 
             <div className="wallet-summary-content">
-              <span>Total Wallets</span>
 
-              <strong>{wallets.length}</strong>
+              <span>
+                Total Wallets
+              </span>
 
-              <small>Financial wallets created</small>
+              <strong>
+                {wallets.length}
+              </strong>
+
+              <small>
+                Financial wallets
+                created
+              </small>
+
             </div>
 
           </div>
+
+          {/* VIRTUAL ACCOUNTS */}
 
           <div className="wallet-summary-card">
 
             <div className="wallet-summary-icon summary-green">
-              <CreditCard size={21} />
+              <CreditCard
+                size={21}
+              />
             </div>
 
             <div className="wallet-summary-content">
-              <span>Virtual Accounts</span>
 
-              <strong>{walletsWithAccounts}</strong>
+              <span>
+                Virtual Accounts
+              </span>
 
-              <small>Accounts successfully assigned</small>
+              <strong>
+                {walletsWithAccounts}
+              </strong>
+
+              <small>
+                Accounts successfully
+                assigned
+              </small>
+
             </div>
 
           </div>
 
+          {/* ACTIVE WALLETS */}
+
           <div className="wallet-summary-card">
 
             <div className="wallet-summary-icon summary-purple">
-              <CircleDollarSign size={21} />
+              <CircleDollarSign
+                size={21}
+              />
             </div>
 
             <div className="wallet-summary-content">
-              <span>Supported Currencies</span>
 
-              <strong>{currenciesAvailable}</strong>
+              <span>
+                Active Wallets
+              </span>
+
+              <strong>
+                {activeWallets}
+              </strong>
 
               <small>
-                {activeWallets} active wallet
-                {activeWallets === 1 ? '' : 's'}
+                {currenciesAvailable}{' '}
+                {currenciesAvailable ===
+                1
+                  ? 'currency'
+                  : 'currencies'}{' '}
+                available
               </small>
+
             </div>
 
           </div>
@@ -730,7 +1347,7 @@ export default function WalletsPage() {
       )}
 
       {/* ======================================================
-          WALLETS CONTENT
+          WALLET CONTENT
       ======================================================= */}
 
       <section className="wallets-content-section">
@@ -738,17 +1355,26 @@ export default function WalletsPage() {
         <div className="wallets-section-header">
 
           <div>
-            <h2>Your Financial Wallets</h2>
+
+            <h2>
+              Your Financial
+              Wallets
+            </h2>
 
             <p>
-              View balances, virtual account details and manage
-              your available wallets.
+              View balances,
+              virtual account
+              details and manage
+              your available
+              wallets.
             </p>
+
           </div>
 
           <div className="wallet-count-badge">
             {wallets.length}{' '}
-            {wallets.length === 1
+            {wallets.length ===
+            1
               ? 'Wallet'
               : 'Wallets'}
           </div>
@@ -763,39 +1389,57 @@ export default function WalletsPage() {
 
             <div className="wallet-loading-spinner" />
 
-            <h3>Loading your wallets</h3>
+            <h3>
+              Loading your
+              wallets
+            </h3>
 
             <p>
-              Please wait while we retrieve your financial accounts.
+              Please wait while
+              we retrieve your
+              financial accounts.
             </p>
 
           </div>
 
-        ) : wallets.length === 0 ? (
+        ) : wallets.length ===
+          0 ? (
 
           /* EMPTY STATE */
 
           <div className="wallets-empty-state">
 
             <div className="empty-wallet-icon">
-              <WalletCards size={42} />
+              <WalletCards
+                size={42}
+              />
             </div>
 
-            <h3>No wallets available yet</h3>
+            <h3>
+              No wallets
+              available yet
+            </h3>
 
             <p>
-              Create your first wallet and start managing your
+              Create your first
+              wallet and start
+              managing your
               finances securely.
             </p>
 
             <button
               type="button"
               className="wallet-primary-button"
-              onClick={() => openModal('CREATE')}
+              onClick={() =>
+                openModal(
+                  'CREATE',
+                )
+              }
             >
               <Plus size={18} />
 
-              Create Your First Wallet
+              Create Your First
+              Wallet
             </button>
 
           </div>
@@ -806,278 +1450,379 @@ export default function WalletsPage() {
 
           <div className="fin-wallet-grid">
 
-            {wallets.map((wallet) => (
+            {wallets.map(
+              (wallet) => (
 
-              <article
-                key={wallet.id}
-                className="fin-wallet-card"
-              >
+                <article
+                  key={
+                    wallet.id
+                  }
+                  className="fin-wallet-card"
+                >
 
-                {/* CARD TOP */}
+                  {/* CARD TOP */}
 
-                <div className="fin-wallet-card-top">
+                  <div className="fin-wallet-card-top">
 
-                  <div className="fin-wallet-identity">
+                    <div className="fin-wallet-identity">
 
-                    <div
-                      className={`fin-wallet-currency-icon ${getCurrencyClass(
-                        wallet.currency,
-                      )}`}
-                    >
-                      {getCurrencySymbol(wallet.currency)}
-                    </div>
-
-                    <div>
-
-                      <h3>
-                        {wallet.currency} Wallet
-                      </h3>
-
-                      <span>
-                        {getCurrencyName(wallet.currency)}
-                      </span>
-
-                    </div>
-
-                  </div>
-
-                  <span
-                    className={`fin-wallet-status ${wallet.status.toLowerCase()}`}
-                  >
-
-                    <span className="status-dot" />
-
-                    {wallet.status}
-
-                  </span>
-
-                </div>
-
-                {/* BALANCE */}
-
-                <div className="fin-wallet-balance">
-
-                  <span>Available Balance</span>
-
-                  <h2>
-                    {formatBalance(wallet)}
-                  </h2>
-
-                </div>
-
-                {/* ==================================================
-                    VIRTUAL ACCOUNT DETAILS
-                =================================================== */}
-
-                {wallet.account ? (
-
-                  <div className="wallet-account-details">
-
-                    <div className="wallet-account-header">
+                      <div
+                        className={`fin-wallet-currency-icon ${getCurrencyClass(
+                          wallet.currency,
+                        )}`}
+                      >
+                        {getCurrencySymbol(
+                          wallet.currency,
+                        )}
+                      </div>
 
                       <div>
 
-                        <span className="wallet-account-label">
-                          Virtual Account
+                        <h3>
+                          {
+                            wallet.currency
+                          }{' '}
+                          Wallet
+                        </h3>
+
+                        <span>
+                          {
+                            getCurrencyName(
+                              wallet.currency,
+                            )
+                          }
                         </span>
 
-                        <strong>
-                          {wallet.account.bankName}
-                        </strong>
-
-                      </div>
-
-                      <CreditCard size={20} />
-
-                    </div>
-
-                    <div className="wallet-account-number-row">
-
-                      <div>
-
-                        <span>Account Number</span>
-
-                        <strong className="wallet-account-number">
-                          {wallet.account.accountNumber}
-                        </strong>
-
-                      </div>
-
-                      <button
-                        type="button"
-                        className="copy-account-button"
-                        onClick={() =>
-                          void copyAccountNumber(
-                            wallet.account?.accountNumber,
-                          )
-                        }
-                        title="Copy account number"
-                        aria-label="Copy account number"
-                      >
-                        <Copy size={17} />
-                      </button>
-
-                    </div>
-
-                    <div className="wallet-account-info">
-
-                      <div>
-
-                        <span>Account Name</span>
-
-                        <strong>
-                          {wallet.account.accountName}
-                        </strong>
-
-                      </div>
-
-                      <div>
-
-                        <span>Account Type</span>
-
-                        <strong>
-                          {wallet.account.accountType}
-                        </strong>
-
                       </div>
 
                     </div>
+
+                    <span
+                      className={`fin-wallet-status ${wallet.status.toLowerCase()}`}
+                    >
+                      <span className="status-dot" />
+
+                      {
+                        wallet.status
+                      }
+                    </span>
 
                   </div>
 
-                ) : (
+                  {/* BALANCE */}
 
-                  <div className="wallet-no-account">
+                  <div className="fin-wallet-balance">
 
-                    <CreditCard size={18} />
+                    <span>
+                      Available Balance
+                    </span>
 
-                    <div>
+                    <h2>
+                      {
+                        formatBalance(
+                          wallet,
+                        )
+                      }
+                    </h2>
 
-                      <strong>
-                        Account number pending
-                      </strong>
+                  </div>
+
+                  {/* VIRTUAL ACCOUNT */}
+
+                  {wallet.account ? (
+
+                    <div className="wallet-account-details">
+
+                      <div className="wallet-account-header">
+
+                        <div>
+
+                          <span className="wallet-account-label">
+                            Virtual
+                            Account
+                          </span>
+
+                          <strong>
+                            {
+                              wallet
+                                .account
+                                .bankName
+                            }
+                          </strong>
+
+                        </div>
+
+                        <CreditCard
+                          size={
+                            20
+                          }
+                        />
+
+                      </div>
+
+                      <div className="wallet-account-number-row">
+
+                        <div>
+
+                          <span>
+                            Account
+                            Number
+                          </span>
+
+                          <strong className="wallet-account-number">
+                            {
+                              wallet
+                                .account
+                                .accountNumber
+                            }
+                          </strong>
+
+                        </div>
+
+                        <button
+                          type="button"
+                          className="copy-account-button"
+                          onClick={() =>
+                            void copyAccountNumber(
+                              wallet
+                                .account
+                                ?.accountNumber,
+                            )
+                          }
+                          title="Copy account number"
+                          aria-label="Copy account number"
+                        >
+                          <Copy
+                            size={
+                              17
+                            }
+                          />
+                        </button>
+
+                      </div>
+
+                      <div className="wallet-account-info">
+
+                        <div>
+
+                          <span>
+                            Account
+                            Name
+                          </span>
+
+                          <strong>
+                            {
+                              wallet
+                                .account
+                                .accountName
+                            }
+                          </strong>
+
+                        </div>
+
+                        <div>
+
+                          <span>
+                            Account
+                            Type
+                          </span>
+
+                          <strong>
+                            {
+                              wallet
+                                .account
+                                .accountType
+                            }
+                          </strong>
+
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                  ) : (
+
+                    <div className="wallet-no-account">
+
+                      <CreditCard
+                        size={
+                          18
+                        }
+                      />
+
+                      <div>
+
+                        <strong>
+                          Account
+                          number
+                          pending
+                        </strong>
+
+                        <span>
+                          Refresh to
+                          retrieve
+                          account
+                          details.
+                        </span>
+
+                      </div>
+
+                    </div>
+
+                  )}
+
+                  {/* META */}
+
+                  <div className="fin-wallet-meta">
+
+                    <div className="fin-wallet-meta-item">
 
                       <span>
-                        Refresh to retrieve account details.
+                        Wallet ID
                       </span>
+
+                      <strong>
+                        #
+                        {
+                          wallet.id
+                        }
+                      </strong>
+
+                    </div>
+
+                    <div className="fin-wallet-meta-item">
+
+                      <span>
+                        Created
+                      </span>
+
+                      <strong>
+                        {
+                          formatDate(
+                            wallet.createdAt,
+                          )
+                        }
+                      </strong>
 
                     </div>
 
                   </div>
 
-                )}
+                  <div className="wallet-card-divider" />
 
-                {/* WALLET META */}
+                  {/* ACTIONS */}
 
-                <div className="fin-wallet-meta">
+                  <div className="fin-wallet-actions">
 
-                  <div className="fin-wallet-meta-item">
+                    <button
+                      type="button"
+                      className="fin-wallet-action"
+                      onClick={() =>
+                        router.push(
+                          `/wallets/${wallet.id}`,
+                        )
+                      }
+                    >
+                      <Eye
+                        size={
+                          17
+                        }
+                      />
 
-                    <span>Wallet ID</span>
+                      <span>
+                        View
+                      </span>
+                    </button>
 
-                    <strong>
-                      #{wallet.id}
-                    </strong>
+                    <button
+                      type="button"
+                      className="fin-wallet-action"
+                      onClick={() =>
+                        openModal(
+                          'DEPOSIT',
+                          wallet,
+                        )
+                      }
+                      disabled={
+                        wallet.status !==
+                        'ACTIVE'
+                      }
+                    >
+                      <ArrowDownToLine
+                        size={
+                          17
+                        }
+                      />
+
+                      <span>
+                        Deposit
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="fin-wallet-action"
+                      onClick={() =>
+                        openModal(
+                          'WITHDRAW',
+                          wallet,
+                        )
+                      }
+                      disabled={
+                        wallet.status !==
+                        'ACTIVE'
+                      }
+                    >
+                      <ArrowUpFromLine
+                        size={
+                          17
+                        }
+                      />
+
+                      <span>
+                        Withdraw
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="fin-wallet-action"
+                      onClick={() =>
+                        openModal(
+                          'TRANSFER',
+                          wallet,
+                        )
+                      }
+                      disabled={
+                        wallet.status !==
+                        'ACTIVE'
+                      }
+                    >
+                      <ArrowLeftRight
+                        size={
+                          17
+                        }
+                      />
+
+                      <span>
+                        Transfer
+                      </span>
+                    </button>
 
                   </div>
 
-                  <div className="fin-wallet-meta-item">
-
-                    <span>Created</span>
-
-                    <strong>
-                      {new Date(
-                        wallet.createdAt,
-                      ).toLocaleDateString('en-NG', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </strong>
-
-                  </div>
-
-                </div>
-
-                <div className="wallet-card-divider" />
-
-                {/* ACTIONS */}
-
-                <div className="fin-wallet-actions">
-
-                  <button
-                    type="button"
-                    className="fin-wallet-action"
-                    onClick={() =>
-                      router.push(`/wallets/${wallet.id}`)
-                    }
-                  >
-
-                    <Eye size={17} />
-
-                    <span>View</span>
-
-                  </button>
-
-                  <button
-                    type="button"
-                    className="fin-wallet-action"
-                    onClick={() =>
-                      openModal('DEPOSIT', wallet)
-                    }
-                    disabled={wallet.status !== 'ACTIVE'}
-                  >
-
-                    <ArrowDownToLine size={17} />
-
-                    <span>Deposit</span>
-
-                  </button>
-
-                  <button
-                    type="button"
-                    className="fin-wallet-action"
-                    onClick={() =>
-                      openModal('WITHDRAW', wallet)
-                    }
-                    disabled={wallet.status !== 'ACTIVE'}
-                  >
-
-                    <ArrowUpFromLine size={17} />
-
-                    <span>Withdraw</span>
-
-                  </button>
-
-                  <button
-                    type="button"
-                    className="fin-wallet-action"
-                    onClick={() =>
-                      openModal('TRANSFER', wallet)
-                    }
-                    disabled={wallet.status !== 'ACTIVE'}
-                  >
-
-                    <ArrowLeftRight size={17} />
-
-                    <span>Transfer</span>
-
-                  </button>
-
-                </div>
-
-              </article>
-
-            ))}
+                </article>
+              ),
+            )}
 
           </div>
-
         )}
 
       </section>
 
       {/* ======================================================
-          MODAL
+          WALLET MODAL
       ======================================================= */}
 
       {modal && (
@@ -1089,7 +1834,9 @@ export default function WalletsPage() {
 
           <div
             className="wallet-management-modal"
-            onClick={(event) =>
+            onClick={(
+              event,
+            ) =>
               event.stopPropagation()
             }
           >
@@ -1106,32 +1853,40 @@ export default function WalletsPage() {
 
                 <h2>
 
-                  {modal === 'CREATE' &&
+                  {modal ===
+                    'CREATE' &&
                     'Create New Wallet'}
 
-                  {modal === 'DEPOSIT' &&
+                  {modal ===
+                    'DEPOSIT' &&
                     'Deposit Money'}
 
-                  {modal === 'WITHDRAW' &&
+                  {modal ===
+                    'WITHDRAW' &&
                     'Withdraw Money'}
 
-                  {modal === 'TRANSFER' &&
+                  {modal ===
+                    'TRANSFER' &&
                     'Transfer Money'}
 
                 </h2>
 
                 <p>
 
-                  {modal === 'CREATE' &&
+                  {modal ===
+                    'CREATE' &&
                     'Select the currency for your new financial wallet.'}
 
-                  {modal === 'DEPOSIT' &&
+                  {modal ===
+                    'DEPOSIT' &&
                     'Add funds securely to your selected wallet.'}
 
-                  {modal === 'WITHDRAW' &&
+                  {modal ===
+                    'WITHDRAW' &&
                     'Withdraw funds from your selected wallet.'}
 
-                  {modal === 'TRANSFER' &&
+                  {modal ===
+                    'TRANSFER' &&
                     'Move funds between wallets of the same currency.'}
 
                 </p>
@@ -1141,11 +1896,17 @@ export default function WalletsPage() {
               <button
                 type="button"
                 className="wallet-modal-close"
-                onClick={closeModal}
-                disabled={submitting}
+                onClick={
+                  closeModal
+                }
+                disabled={
+                  submitting
+                }
                 aria-label="Close modal"
               >
-                <X size={20} />
+                <X
+                  size={20}
+                />
               </button>
 
             </div>
@@ -1161,9 +1922,11 @@ export default function WalletsPage() {
                     selectedWallet.currency,
                   )}`}
                 >
-                  {getCurrencySymbol(
-                    selectedWallet.currency,
-                  )}
+                  {
+                    getCurrencySymbol(
+                      selectedWallet.currency,
+                    )
+                  }
                 </div>
 
                 <div>
@@ -1173,31 +1936,44 @@ export default function WalletsPage() {
                   </span>
 
                   <strong>
-                    {selectedWallet.currency} Wallet #
-                    {selectedWallet.id}
+                    {
+                      selectedWallet.currency
+                    }{' '}
+                    Wallet #
+                    {
+                      selectedWallet.id
+                    }
                   </strong>
 
                 </div>
 
                 <div className="modal-wallet-balance">
 
-                  <span>Available</span>
+                  <span>
+                    Available
+                  </span>
 
                   <strong>
-                    {formatBalance(selectedWallet)}
+                    {
+                      formatBalance(
+                        selectedWallet,
+                      )
+                    }
                   </strong>
 
                 </div>
 
               </div>
-
             )}
 
             {/* MODAL ERROR */}
 
             {error && (
 
-              <div className="wallet-modal-alert error">
+              <div
+                className="wallet-modal-alert error"
+                role="alert"
+              >
                 {error}
               </div>
 
@@ -1207,7 +1983,10 @@ export default function WalletsPage() {
 
             {success && (
 
-              <div className="wallet-modal-alert success">
+              <div
+                className="wallet-modal-alert success"
+                role="status"
+              >
                 {success}
               </div>
 
@@ -1215,185 +1994,388 @@ export default function WalletsPage() {
 
             {/* CREATE WALLET */}
 
-            {modal === 'CREATE' && (
+            {modal ===
+              'CREATE' && (
 
               <div className="wallet-modal-body">
 
                 <div className="wallet-form-group">
 
-                  <label>
+                  <label
+                    htmlFor="wallet-currency"
+                  >
                     Wallet Currency
                   </label>
 
                   <select
-                    value={currency}
-                    onChange={(event) =>
+                    id="wallet-currency"
+                    value={
+                      currency
+                    }
+                    onChange={(
+                      event,
+                    ) =>
                       setCurrency(
-                        event.target.value as Currency,
+                        event
+                          .target
+                          .value as Currency,
                       )
+                    }
+                    disabled={
+                      submitting
                     }
                   >
 
-                    {CURRENCIES.map((item) => (
+                    {CURRENCIES.map(
+                      (item) => {
 
-                      <option
-                        key={item}
-                        value={item}
-                      >
-                        {item} — {getCurrencyName(item)}
-                      </option>
+                        const exists =
+                          existingCurrencies.has(
+                            item,
+                          );
 
-                    ))}
+                        return (
+                          <option
+                            key={
+                              item
+                            }
+                            value={
+                              item
+                            }
+                            disabled={
+                              exists
+                            }
+                          >
+                            {
+                              item
+                            }{' '}
+                            —{' '}
+                            {
+                              getCurrencyName(
+                                item,
+                              )
+                            }
+                            {exists
+                              ? ' — Already created'
+                              : ''}
+                          </option>
+                        );
+                      },
+                    )}
 
                   </select>
 
-                  <small>
-                    A virtual account will automatically be created
-                    for the new wallet.
-                  </small>
+                  {availableCurrencies.length ===
+                  0 ? (
+
+                    <small className="wallet-form-warning">
+                      You already
+                      have wallets
+                      for all
+                      supported
+                      currencies.
+                    </small>
+
+                  ) : (
+
+                    <small>
+                      Each currency
+                      can have one
+                      wallet.
+                    </small>
+
+                  )}
 
                 </div>
 
               </div>
-
             )}
 
             {/* DEPOSIT / WITHDRAW */}
 
-            {(modal === 'DEPOSIT' ||
-              modal === 'WITHDRAW') &&
+            {(modal ===
+              'DEPOSIT' ||
+              modal ===
+                'WITHDRAW') &&
               selectedWallet && (
 
                 <div className="wallet-modal-body">
 
                   <div className="wallet-form-group">
 
-                    <label>
-                      Amount ({selectedWallet.currency})
+                    <label
+                      htmlFor="wallet-amount"
+                    >
+                      Amount (
+                      {
+                        selectedWallet.currency
+                      })
                     </label>
 
                     <div className="wallet-amount-input">
 
                       <span>
-                        {getCurrencySymbol(
-                          selectedWallet.currency,
-                        )}
+                        {
+                          getCurrencySymbol(
+                            selectedWallet.currency,
+                          )
+                        }
                       </span>
 
                       <input
+                        id="wallet-amount"
                         type="number"
-                        min="1"
+                        min="0.01"
                         step="0.01"
+                        inputMode="decimal"
                         placeholder="0.00"
-                        value={amount}
-                        onChange={(event) =>
-                          setAmount(event.target.value)
+                        value={
+                          amount
+                        }
+                        onChange={(
+                          event,
+                        ) =>
+                          setAmount(
+                            event
+                              .target
+                              .value,
+                          )
+                        }
+                        disabled={
+                          submitting
                         }
                       />
 
                     </div>
 
-                    <small>
-                      Enter the amount you want to{' '}
-                      {modal === 'DEPOSIT'
-                        ? 'deposit'
-                        : 'withdraw'}.
-                    </small>
+                    {modal ===
+                      'WITHDRAW' && (
 
-                  </div>
+                      <small>
+                        Available
+                        balance:{' '}
+                        <strong>
+                          {
+                            formatBalance(
+                              selectedWallet,
+                            )
+                          }
+                        </strong>
+                      </small>
 
-                </div>
+                    )}
 
-              )}
+                    {modal ===
+                      'DEPOSIT' && (
 
-            {/* TRANSFER */}
-
-            {modal === 'TRANSFER' &&
-              selectedWallet && (
-
-                <div className="wallet-modal-body">
-
-                  <div className="wallet-form-group">
-
-                    <label>
-                      Destination Wallet
-                    </label>
-
-                    <select
-                      value={destinationWalletId}
-                      onChange={(event) =>
-                        setDestinationWalletId(
-                          event.target.value,
-                        )
-                      }
-                    >
-
-                      <option value="">
-                        Select destination wallet
-                      </option>
-
-                      {availableDestinationWallets.map(
-                        (wallet) => (
-
-                          <option
-                            key={wallet.id}
-                            value={wallet.id}
-                          >
-                            Wallet #{wallet.id} —{' '}
-                            {wallet.currency}
-                          </option>
-
-                        ),
-                      )}
-
-                    </select>
-
-                    {availableDestinationWallets.length === 0 && (
-
-                      <small className="wallet-form-warning">
-
-                        No other{' '}
-                        {selectedWallet.currency} wallet is
-                        available for transfer.
-
+                      <small>
+                        Enter the
+                        amount you
+                        want to
+                        deposit.
                       </small>
 
                     )}
 
                   </div>
 
+                </div>
+              )}
+
+            {/* TRANSFER */}
+
+            {modal ===
+              'TRANSFER' &&
+              selectedWallet && (
+
+                <div className="wallet-modal-body">
+
                   <div className="wallet-form-group">
 
-                    <label>
-                      Transfer Amount (
-                      {selectedWallet.currency})
+                    <label
+                      htmlFor="recipient-account-number"
+                    >
+                      Recipient Account Number
+                    </label>
+
+                    <div
+                      className="wallet-amount-input"
+                      style={{
+                        gap: '10px',
+                      }}
+                    >
+
+                      <input
+                        id="recipient-account-number"
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="off"
+                        maxLength={10}
+                        placeholder="Enter 10-digit account number"
+                        value={
+                          recipientAccountNumber
+                        }
+                        onChange={(
+                          event,
+                        ) => {
+                          const value =
+                            event.target.value
+                              .replace(
+                                /\D/g,
+                                '',
+                              )
+                              .slice(
+                                0,
+                                10,
+                              );
+
+                          setRecipientAccountNumber(
+                            value,
+                          );
+
+                          setTransferRecipient(
+                            null,
+                          );
+
+                          setError('');
+                        }}
+                        disabled={
+                          submitting ||
+                          recipientLoading
+                        }
+                      />
+
+                      <button
+                        type="button"
+                        className="wallet-secondary-button"
+                        onClick={() =>
+                          void findTransferRecipient()
+                        }
+                        disabled={
+                          submitting ||
+                          recipientLoading ||
+                          recipientAccountNumber.length !==
+                            10
+                        }
+                      >
+                        {
+                          recipientLoading
+                            ? 'Finding...'
+                            : 'Find Recipient'
+                        }
+                      </button>
+
+                    </div>
+
+                    <small>
+                      Enter the recipient's FinFlow virtual account number.
+                    </small>
+
+                  </div>
+
+                  {transferRecipient && (
+
+                    <div
+                      className="selected-wallet-box"
+                      style={{
+                        marginTop: '14px',
+                      }}
+                    >
+
+                      <span>
+                        Recipient
+                      </span>
+
+                      <strong>
+                        {
+                          transferRecipient.accountName
+                        }
+                      </strong>
+
+                      <small>
+                        {
+                          transferRecipient.bankName
+                        }{' '}
+                        • Account{' '}
+                        {
+                          transferRecipient.accountNumber
+                        }
+                      </small>
+
+                      <small>
+                        Currency:{' '}
+                        {
+                          transferRecipient.currency
+                        }
+                      </small>
+
+                    </div>
+
+                  )}
+
+                  <div className="wallet-form-group">
+
+                    <label
+                      htmlFor="transfer-amount"
+                    >
+                      Transfer
+                      Amount (
+                      {
+                        selectedWallet.currency
+                      })
                     </label>
 
                     <div className="wallet-amount-input">
 
                       <span>
-                        {getCurrencySymbol(
-                          selectedWallet.currency,
-                        )}
+                        {
+                          getCurrencySymbol(
+                            selectedWallet.currency,
+                          )
+                        }
                       </span>
 
                       <input
+                        id="transfer-amount"
                         type="number"
                         min="1"
-                        step="0.01"
-                        placeholder="0.00"
-                        value={amount}
-                        onChange={(event) =>
-                          setAmount(event.target.value)
+                        step="1"
+                        inputMode="numeric"
+                        placeholder="0"
+                        value={
+                          amount
+                        }
+                        onChange={(
+                          event,
+                        ) =>
+                          setAmount(
+                            event
+                              .target
+                              .value,
+                          )
+                        }
+                        disabled={
+                          submitting
                         }
                       />
 
                     </div>
 
+                    <small>
+                      Available
+                      balance:{' '}
+                      <strong>
+                        {
+                          formatBalance(
+                            selectedWallet,
+                          )
+                        }
+                      </strong>
+                    </small>
+
                   </div>
 
                 </div>
-
               )}
 
             {/* MODAL FOOTER */}
@@ -1403,8 +2385,12 @@ export default function WalletsPage() {
               <button
                 type="button"
                 className="wallet-secondary-button"
-                onClick={closeModal}
-                disabled={submitting}
+                onClick={
+                  closeModal
+                }
+                disabled={
+                  submitting
+                }
               >
                 Cancel
               </button>
@@ -1412,17 +2398,25 @@ export default function WalletsPage() {
               <button
                 type="button"
                 className="wallet-primary-button"
-                onClick={handleSubmit}
-                disabled={submitting || !canSubmit}
+                onClick={
+                  handleSubmit
+                }
+                disabled={
+                  submitting ||
+                  !canSubmit
+                }
               >
 
                 {submitting
                   ? 'Processing...'
-                  : modal === 'CREATE'
+                  : modal ===
+                      'CREATE'
                     ? 'Create Wallet'
-                    : modal === 'DEPOSIT'
+                    : modal ===
+                        'DEPOSIT'
                       ? 'Confirm Deposit'
-                      : modal === 'WITHDRAW'
+                      : modal ===
+                          'WITHDRAW'
                         ? 'Confirm Withdrawal'
                         : 'Confirm Transfer'}
 
@@ -1433,7 +2427,6 @@ export default function WalletsPage() {
           </div>
 
         </div>
-
       )}
 
     </div>

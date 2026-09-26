@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { nowInstant } from '../prisma/temporal.js';
 import { CreateAdminDto } from './dto/create-admin.dto.js';
 
 @Injectable()
@@ -29,6 +30,7 @@ export class AdminsService {
       passwordHash,
       firstName,
       lastName,
+      updatedAt: nowInstant(),
     });
 
     return this.toPublicAdmin(admin);

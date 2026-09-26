@@ -15,6 +15,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 
 import { CreateAdminDto } from './dto/create-admin.dto.js';
 import { LoginDto } from './dto/login.dto.js';
+import { nowInstant, toInstant } from '../prisma/temporal.js';
 
 @Injectable()
 export class AuthService {
@@ -320,6 +321,7 @@ export class AuthService {
         passwordHash,
         firstName,
         lastName,
+        updatedAt: nowInstant(),
       });
 
     return {

@@ -5,12 +5,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
+import { LedgerService } from '../ledger/ledger.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 import { CreateWalletDto } from './dto/create-wallet.dto.js';
 import { DepositDto } from './dto/deposit.dto.js';
 import { WithdrawDto } from './dto/withdraw.dto.js';
 import { TransferDto } from './dto/transfer.dto.js';
+import { nowInstant } from '../prisma/temporal.js';
 
 type WalletCurrency = 'NGN' | 'USD' | 'EUR' | 'GBP';
 
@@ -18,6 +20,7 @@ type WalletCurrency = 'NGN' | 'USD' | 'EUR' | 'GBP';
 export class WalletsService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly ledgerService: LedgerService,
   ) {}
 
   /*
@@ -40,6 +43,88 @@ export class WalletsService {
           ? value.toString()
           : value,
       ),
+    );
+  }
+
+  private static readonly MAX_BIGINT =
+    9223372036854775807n;
+
+  private parseAmount(
+    value: unknown,
+    fieldName: string,
+  ): bigint {
+    if (typeof value === 'bigint') {
+      if (
+        value <= 0n ||
+        value > WalletsService.MAX_BIGINT
+      ) {
+        throw new BadRequestException(
+          `${fieldName} must be greater than 0 and within the supported amount range`,
+        );
+      }
+
+      return value;
+    }
+
+    if (typeof value === 'number') {
+      if (
+        !Number.isFinite(value) ||
+        !Number.isInteger(value) ||
+        !Number.isSafeInteger(value) ||
+        value <= 0
+      ) {
+        throw new BadRequestException(
+          `${fieldName} must be a positive whole number`,
+        );
+      }
+
+      const amount = BigInt(value);
+
+      if (amount > WalletsService.MAX_BIGINT) {
+        throw new BadRequestException(
+          `${fieldName} exceeds the maximum supported amount`,
+        );
+      }
+
+      return amount;
+    }
+
+    if (typeof value === 'string') {
+      const normalized = value.trim();
+
+      if (!/^\d+$/.test(normalized)) {
+        throw new BadRequestException(
+          `${fieldName} must be a positive whole number`,
+        );
+      }
+
+      let amount: bigint;
+
+      try {
+        amount = BigInt(normalized);
+      } catch {
+        throw new BadRequestException(
+          `${fieldName} is invalid`,
+        );
+      }
+
+      if (amount <= 0n) {
+        throw new BadRequestException(
+          `${fieldName} must be greater than 0`,
+        );
+      }
+
+      if (amount > WalletsService.MAX_BIGINT) {
+        throw new BadRequestException(
+          `${fieldName} exceeds the maximum supported amount`,
+        );
+      }
+
+      return amount;
+    }
+
+    throw new BadRequestException(
+      `${fieldName} must be a positive whole number`,
     );
   }
 
@@ -231,6 +316,8 @@ export class WalletsService {
 
           status:
             'ACTIVE',
+          updatedAt:
+            nowInstant(),
         });
 
       console.log(
@@ -261,6 +348,86 @@ export class WalletsService {
 
       throw error;
     }
+  }
+
+  /*
+   * ==========================================
+   * FIND TRANSFER RECIPIENT
+   *
+   * Resolve a FinFlow wallet using its virtual
+   * account number.
+   *
+   * This supports user-to-user transfers without
+   * exposing wallet IDs in the UI.
+   * ==========================================
+   */
+  async findTransferRecipient(
+    userId: number,
+    accountNumber: string,
+  ) {
+    const normalizedAccountNumber =
+      String(accountNumber ?? '').trim();
+
+    if (
+      !/^\d{10}$/.test(
+        normalizedAccountNumber,
+      )
+    ) {
+      throw new BadRequestException(
+        'Enter a valid 10-digit recipient account number',
+      );
+    }
+
+    const account =
+      await this.prisma.client.orm.public.WalletAccount.first({
+        accountNumber:
+          normalizedAccountNumber,
+      });
+
+    if (!account) {
+      throw new NotFoundException(
+        'Recipient account not found',
+      );
+    }
+
+    if (account.status !== 'ACTIVE') {
+      throw new BadRequestException(
+        'Recipient account is not active',
+      );
+    }
+
+    const destinationWallet =
+      await this.prisma.client.orm.public.Wallet.first({
+        id: account.walletId,
+      });
+
+    if (!destinationWallet) {
+      throw new NotFoundException(
+        'Recipient wallet not found',
+      );
+    }
+
+    if (destinationWallet.status !== 'ACTIVE') {
+      throw new BadRequestException(
+        'Recipient wallet is not active',
+      );
+    }
+
+    if (destinationWallet.userId === userId) {
+      throw new BadRequestException(
+        'You cannot transfer money to your own wallet',
+      );
+    }
+
+    return this.serialize({
+      walletId: destinationWallet.id,
+      userId: destinationWallet.userId,
+      accountNumber: account.accountNumber,
+      accountName: account.accountName,
+      bankName: account.bankName,
+      currency: destinationWallet.currency,
+      status: destinationWallet.status,
+    });
   }
 
   /*
@@ -318,6 +485,7 @@ export class WalletsService {
           currency,
           balance: 0n,
           status: 'ACTIVE',
+          updatedAt: nowInstant(),
         });
 
       /*
@@ -593,85 +761,99 @@ export class WalletsService {
     depositDto: DepositDto,
   ) {
     try {
-      const wallet =
-        await this.prisma.client.orm.public.Wallet.first({
-          id: walletId,
-          userId,
-        });
+      const amount = this.parseAmount(
+        depositDto.amount,
+        'Deposit amount',
+      );
 
-      if (!wallet) {
-        throw new NotFoundException(
-          'Wallet not found',
+      const result =
+        await this.prisma.client.transaction(
+          async (tx: any) => {
+            const wallet =
+              await tx.orm.public.Wallet.first({
+                id: walletId,
+              });
+
+            if (!wallet) {
+              throw new NotFoundException(
+                'Wallet not found',
+              );
+            }
+
+            if (wallet.userId !== userId) {
+              throw new NotFoundException(
+                'Wallet not found',
+              );
+            }
+
+            if (wallet.status !== 'ACTIVE') {
+              throw new BadRequestException(
+                'Wallet is not active',
+              );
+            }
+
+            if (
+              wallet.balance >
+              WalletsService.MAX_BIGINT - amount
+            ) {
+              throw new BadRequestException(
+                'Deposit would exceed the maximum wallet balance',
+              );
+            }
+
+            const newBalance =
+              wallet.balance + amount;
+
+            /*
+             * IMPORTANT:
+             * The transaction record is created before
+             * LedgerEntry records because LedgerEntry
+             * has a foreign key to Transaction.
+             */
+            const transaction =
+              await tx.orm.public.Transaction.create({
+                reference:
+                  this.generateReference('DEP'),
+                _type: 'DEPOSIT',
+                amount,
+                currency: wallet.currency,
+                status: 'COMPLETED',
+                updatedAt: nowInstant(),
+                sourceWalletId: null,
+                destinationWalletId:
+                  wallet.id,
+              });
+
+            await this.ledgerService.postDeposit(
+              tx,
+              transaction.id,
+              amount,
+              wallet.currency as WalletCurrency,
+            );
+
+            const updatedWallet =
+              await tx.orm.public.Wallet
+                .where({
+                  id: wallet.id,
+                })
+                .update({
+                  balance: newBalance,
+                });
+
+            return {
+              transaction,
+              wallet: updatedWallet,
+            };
+          },
         );
-      }
-
-      if (
-        wallet.status !== 'ACTIVE'
-      ) {
-        throw new BadRequestException(
-          'Wallet is not active',
-        );
-      }
-
-      const amount =
-        BigInt(depositDto.amount);
-
-      if (amount <= 0n) {
-        throw new BadRequestException(
-          'Deposit amount must be greater than zero',
-        );
-      }
-
-      const newBalance =
-        wallet.balance + amount;
-
-      /*
-       * Create transaction.
-       */
-      const transaction =
-        await this.prisma.client.orm.public.Transaction.create({
-          reference:
-            this.generateReference('DEP'),
-
-          type:
-            'DEPOSIT',
-
-          amount,
-
-          currency:
-            wallet.currency,
-
-          status:
-            'COMPLETED',
-
-          sourceWalletId:
-            null,
-
-          destinationWalletId:
-            wallet.id,
-        });
-
-      /*
-       * Update balance.
-       */
-      const updatedWallet =
-        await this.prisma.client.orm.public.Wallet
-          .where({
-            id: wallet.id,
-          })
-          .update({
-            balance:
-              newBalance,
-          });
 
       return this.serialize({
         message:
           'Deposit completed successfully',
-
-        transaction,
-
+        transaction:
+          result.transaction,
         wallet:
-          updatedWallet,
+          result.wallet,
       });
     } catch (error) {
       console.error(
@@ -705,93 +887,101 @@ export class WalletsService {
     withdrawDto: WithdrawDto,
   ) {
     try {
-      const wallet =
-        await this.prisma.client.orm.public.Wallet.first({
-          id: walletId,
-          userId,
-        });
+      const amount = this.parseAmount(
+        withdrawDto.amount,
+        'Withdrawal amount',
+      );
 
-      if (!wallet) {
-        throw new NotFoundException(
-          'Wallet not found',
+      const result =
+        await this.prisma.client.transaction(
+          async (tx: any) => {
+            // IMPORTANT: scope the wallet lookup to the authenticated user.
+            // This prevents an authenticated user from operating on another
+            // user's wallet even when they know the wallet ID.
+            const wallet =
+              await tx.orm.public.Wallet.first({
+                id: walletId,
+                userId,
+              });
+
+            if (!wallet) {
+              throw new NotFoundException(
+                'Wallet not found',
+              );
+            }
+
+            if (wallet.userId !== userId) {
+              throw new NotFoundException(
+                'Wallet not found',
+              );
+            }
+
+            if (wallet.status !== 'ACTIVE') {
+              throw new BadRequestException(
+                'Wallet is not active',
+              );
+            }
+
+            if (wallet.balance < amount) {
+              throw new BadRequestException(
+                'Insufficient wallet balance',
+              );
+            }
+
+            const newBalance =
+              wallet.balance - amount;
+
+            /*
+             * Create Transaction first, then LedgerEntry,
+             * then update the wallet, all inside one DB
+             * transaction.
+             */
+            const transaction =
+              await tx.orm.public.Transaction.create({
+                reference:
+                  this.generateReference('WDR'),
+                _type: 'WITHDRAWAL',
+                amount,
+                currency: wallet.currency,
+                status: 'COMPLETED',
+                updatedAt: nowInstant(),
+                sourceWalletId:
+                  wallet.id,
+                destinationWalletId: null,
+              });
+
+            await this.ledgerService.postWithdrawal(
+              tx,
+              transaction.id,
+              amount,
+              wallet.currency as WalletCurrency,
+            );
+
+            const updatedWallet =
+              await tx.orm.public.Wallet
+                .where({
+                  id: wallet.id,
+                  userId,
+                })
+                .update({
+                  balance: newBalance,
+                  updatedAt: nowInstant(),
+                });
+
+            return {
+              transaction,
+              wallet: updatedWallet,
+            };
+          },
         );
-      }
-
-      if (
-        wallet.status !== 'ACTIVE'
-      ) {
-        throw new BadRequestException(
-          'Wallet is not active',
-        );
-      }
-
-      const amount =
-        BigInt(withdrawDto.amount);
-
-      if (amount <= 0n) {
-        throw new BadRequestException(
-          'Withdrawal amount must be greater than zero',
-        );
-      }
-
-      if (
-        wallet.balance < amount
-      ) {
-        throw new BadRequestException(
-          'Insufficient wallet balance',
-        );
-      }
-
-      const newBalance =
-        wallet.balance - amount;
-
-      /*
-       * Create transaction.
-       */
-      const transaction =
-        await this.prisma.client.orm.public.Transaction.create({
-          reference:
-            this.generateReference('WDL'),
-
-          type:
-            'WITHDRAWAL',
-
-          amount,
-
-          currency:
-            wallet.currency,
-
-          status:
-            'COMPLETED',
-
-          sourceWalletId:
-            wallet.id,
-
-          destinationWalletId:
-            null,
-        });
-
-      /*
-       * Update balance.
-       */
-      const updatedWallet =
-        await this.prisma.client.orm.public.Wallet
-          .where({
-            id: wallet.id,
-          })
-          .update({
-            balance:
-              newBalance,
-          });
 
       return this.serialize({
         message:
           'Withdrawal completed successfully',
-
-        transaction,
-
+        transaction:
+          result.transaction,
         wallet:
-          updatedWallet,
+          result.wallet,
       });
     } catch (error) {
       console.error(
@@ -825,172 +1015,189 @@ export class WalletsService {
     transferDto: TransferDto,
   ) {
     try {
-      /*
-       * Find source wallet.
-       */
-      const sourceWallet =
-        await this.prisma.client.orm.public.Wallet.first({
-          id:
-            sourceWalletId,
+      const amount = this.parseAmount(
+        transferDto.amount,
+        'Transfer amount',
+      );
 
-          userId,
-        });
-
-      if (!sourceWallet) {
-        throw new NotFoundException(
-          'Source wallet not found',
-        );
-      }
-
-      /*
-       * Find destination wallet.
-       */
-      const destinationWallet =
-        await this.prisma.client.orm.public.Wallet.first({
-          id:
-            transferDto.destinationWalletId,
-        });
-
-      if (!destinationWallet) {
-        throw new NotFoundException(
-          'Destination wallet not found',
-        );
-      }
-
-      /*
-       * Prevent same wallet transfer.
-       */
-      if (
-        sourceWallet.id ===
-        destinationWallet.id
-      ) {
-        throw new BadRequestException(
-          'Cannot transfer to the same wallet',
-        );
-      }
-
-      /*
-       * Validate wallet status.
-       */
-      if (
-        sourceWallet.status !== 'ACTIVE'
-      ) {
-        throw new BadRequestException(
-          'Source wallet is not active',
-        );
-      }
+      const destinationWalletId = Number(
+        transferDto.destinationWalletId,
+      );
 
       if (
-        destinationWallet.status !== 'ACTIVE'
+        !Number.isSafeInteger(
+          destinationWalletId,
+        ) ||
+        destinationWalletId <= 0
       ) {
         throw new BadRequestException(
-          'Destination wallet is not active',
+          'Destination wallet is invalid',
         );
       }
 
-      /*
-       * Currency validation.
-       */
-      if (
-        sourceWallet.currency !==
-        destinationWallet.currency
-      ) {
-        throw new BadRequestException(
-          'Cross-currency transfers are not supported yet',
+      const result =
+        await this.prisma.client.transaction(
+          async (tx: any) => {
+            const sourceWallet =
+              await tx.orm.public.Wallet.first({
+                id: sourceWalletId,
+              });
+
+            if (!sourceWallet) {
+              throw new NotFoundException(
+                'Source wallet not found',
+              );
+            }
+
+            if (
+              sourceWallet.userId !== userId
+            ) {
+              throw new NotFoundException(
+                'Source wallet not found',
+              );
+            }
+
+            if (
+              sourceWallet.status !== 'ACTIVE'
+            ) {
+              throw new BadRequestException(
+                'Source wallet is not active',
+              );
+            }
+
+            const destinationWallet =
+              await tx.orm.public.Wallet.first({
+                id: destinationWalletId,
+              });
+
+            if (!destinationWallet) {
+              throw new NotFoundException(
+                'Destination wallet not found',
+              );
+            }
+
+            if (
+              destinationWallet.status !==
+              'ACTIVE'
+            ) {
+              throw new BadRequestException(
+                'Destination wallet is not active',
+              );
+            }
+
+            if (
+              sourceWallet.id ===
+              destinationWallet.id
+            ) {
+              throw new BadRequestException(
+                'Cannot transfer to the same wallet',
+              );
+            }
+
+            if (
+              sourceWallet.currency !==
+              destinationWallet.currency
+            ) {
+              throw new BadRequestException(
+                'Wallet currencies do not match',
+              );
+            }
+
+            if (
+              sourceWallet.balance <
+              amount
+            ) {
+              throw new BadRequestException(
+                'Insufficient wallet balance',
+              );
+            }
+
+            if (
+              destinationWallet.balance >
+              WalletsService.MAX_BIGINT -
+                amount
+            ) {
+              throw new BadRequestException(
+                'Transfer would exceed the maximum destination wallet balance',
+              );
+            }
+
+            const sourceNewBalance =
+              sourceWallet.balance -
+              amount;
+
+            const destinationNewBalance =
+              destinationWallet.balance +
+              amount;
+
+            /*
+             * Create the Transaction before LedgerEntry.
+             * Everything below executes inside the same
+             * database transaction.
+             */
+            const transaction =
+              await tx.orm.public.Transaction.create({
+                reference:
+                  this.generateReference('TRF'),
+                _type: 'TRANSFER',
+                amount,
+                currency:
+                  sourceWallet.currency,
+                status: 'COMPLETED',
+                updatedAt: nowInstant(),
+                sourceWalletId:
+                  sourceWallet.id,
+                destinationWalletId:
+                  destinationWallet.id,
+              });
+
+            await this.ledgerService.postTransfer(
+              tx,
+              transaction.id,
+              amount,
+              sourceWallet.currency as WalletCurrency,
+            );
+
+            const updatedSourceWallet =
+              await tx.orm.public.Wallet
+                .where({
+                  id: sourceWallet.id,
+                })
+                .update({
+                  balance:
+                    sourceNewBalance,
+                });
+
+            const updatedDestinationWallet =
+              await tx.orm.public.Wallet
+                .where({
+                  id:
+                    destinationWallet.id,
+                })
+                .update({
+                  balance:
+                    destinationNewBalance,
+                });
+
+            return {
+              transaction,
+              sourceWallet:
+                updatedSourceWallet,
+              destinationWallet:
+                updatedDestinationWallet,
+            };
+          },
         );
-      }
-
-      const amount =
-        BigInt(transferDto.amount);
-
-      if (amount <= 0n) {
-        throw new BadRequestException(
-          'Transfer amount must be greater than zero',
-        );
-      }
-
-      /*
-       * Check balance.
-       */
-      if (
-        sourceWallet.balance < amount
-      ) {
-        throw new BadRequestException(
-          'Insufficient wallet balance',
-        );
-      }
-
-      const sourceNewBalance =
-        sourceWallet.balance - amount;
-
-      const destinationNewBalance =
-        destinationWallet.balance + amount;
-
-      /*
-       * Create transaction.
-       */
-      const transaction =
-        await this.prisma.client.orm.public.Transaction.create({
-          reference:
-            this.generateReference('TRF'),
-
-          type:
-            'TRANSFER',
-
-          amount,
-
-          currency:
-            sourceWallet.currency,
-
-          status:
-            'COMPLETED',
-
-          sourceWalletId:
-            sourceWallet.id,
-
-          destinationWalletId:
-            destinationWallet.id,
-        });
-
-      /*
-       * Update source wallet.
-       */
-      const updatedSourceWallet =
-        await this.prisma.client.orm.public.Wallet
-          .where({
-            id:
-              sourceWallet.id,
-          })
-          .update({
-            balance:
-              sourceNewBalance,
-          });
-
-      /*
-       * Update destination wallet.
-       */
-      const updatedDestinationWallet =
-        await this.prisma.client.orm.public.Wallet
-          .where({
-            id:
-              destinationWallet.id,
-          })
-          .update({
-            balance:
-              destinationNewBalance,
-          });
 
       return this.serialize({
         message:
           'Transfer completed successfully',
-
-        transaction,
-
+        transaction:
+          result.transaction,
         sourceWallet:
-          updatedSourceWallet,
-
+          result.sourceWallet,
         destinationWallet:
-          updatedDestinationWallet,
+          result.destinationWallet,
       });
     } catch (error) {
       console.error(

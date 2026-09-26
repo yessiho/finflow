@@ -1,37 +1,56 @@
 'use client';
 
-import {
-  FormEvent,
-  useState,
-} from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 
 import Link from 'next/link';
-
 import {
   useRouter,
   useSearchParams,
 } from 'next/navigation';
 
 import {
-  ArrowLeft,
-  CheckCircle2,
+  ArrowRight,
   Eye,
   EyeOff,
   Landmark,
   Loader2,
   Lock,
+  Mail,
   ShieldCheck,
 } from 'lucide-react';
 
 import { apiFetch } from '@/lib/api';
 
-interface ResetPasswordResponse {
-  message: string;
-}
+import {
+  clearAuthSession,
+  getAccessToken,
+  getAuthUser,
+  saveAuthSession,
+} from '@/lib/auth';
+
+import type { User } from '@/types';
+
+// ============================================================
+// API ERROR TYPE
+// ============================================================
 
 interface ApiError {
   message?: string | string[];
 }
+
+// ============================================================
+// LOGIN RESPONSE
+// ============================================================
+
+interface LoginResponse {
+  accessToken: string;
+
+  user: User;
+}
+
+// ============================================================
+// ERROR MESSAGE HELPER
+// ============================================================
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -43,8 +62,7 @@ function getErrorMessage(error: unknown): string {
     error !== null &&
     'message' in error
   ) {
-    const message =
-      (error as ApiError).message;
+    const message = (error as ApiError).message;
 
     if (Array.isArray(message)) {
       return message.join(', ');
@@ -55,35 +73,57 @@ function getErrorMessage(error: unknown): string {
     }
   }
 
-  return 'Unable to reset your password.';
+  return 'Unable to sign in. Please check your credentials.';
 }
 
-export default function ResetPasswordPage() {
+// ============================================================
+// SAFE REDIRECT PATH
+//
+// Prevent external redirects.
+// Only internal application routes are allowed.
+// ============================================================
+
+function getSafeRedirectPath(
+  redirect: string | null,
+): string {
+  if (
+    !redirect ||
+    !redirect.startsWith('/') ||
+    redirect.startsWith('//')
+  ) {
+    return '/dashboard';
+  }
+
+  return redirect;
+}
+
+// ============================================================
+// LOGIN PAGE
+// ============================================================
+
+export default function LoginPage() {
   const router = useRouter();
 
-  const searchParams =
-    useSearchParams();
+  const searchParams = useSearchParams();
 
-  const token =
-    searchParams.get('token') ?? '';
+  // ============================================================
+  // REDIRECT DESTINATION
+  // ============================================================
 
-  const [newPassword, setNewPassword] =
-    useState('');
+  const redirectPath = getSafeRedirectPath(
+    searchParams.get('redirect'),
+  );
 
-  const [
-    confirmPassword,
-    setConfirmPassword,
-  ] = useState('');
+  // ============================================================
+  // FORM STATE
+  // ============================================================
 
-  const [
-    showNewPassword,
-    setShowNewPassword,
-  ] = useState(false);
+  const [email, setEmail] = useState('');
 
-  const [
-    showConfirmPassword,
-    setShowConfirmPassword,
-  ] = useState(false);
+  const [password, setPassword] = useState('');
+
+  const [showPassword, setShowPassword] =
+    useState(false);
 
   const [loading, setLoading] =
     useState(false);
@@ -91,11 +131,58 @@ export default function ResetPasswordPage() {
   const [error, setError] =
     useState('');
 
-  const [success, setSuccess] =
-    useState('');
+  const [checkingSession, setCheckingSession] =
+    useState(true);
 
   // ============================================================
-  // PASSWORD SUBMIT
+  // CHECK EXISTING SESSION
+  //
+  // Uses centralized authentication utilities.
+  //
+  // IMPORTANT:
+  // Do not use old localStorage keys directly.
+  // ============================================================
+
+  useEffect(() => {
+    function checkExistingSession() {
+      try {
+        const token = getAccessToken();
+
+        const user = getAuthUser();
+
+        /*
+         * Both token and user are required
+         * for a valid client-side session.
+         */
+        if (token && user) {
+          router.replace(redirectPath);
+          return;
+        }
+
+        /*
+         * If only one exists, the session is incomplete.
+         * Clear everything to avoid inconsistent auth state.
+         */
+        if (token || user) {
+          clearAuthSession();
+        }
+      } catch (error) {
+        console.error(
+          'Session check error:',
+          error,
+        );
+
+        clearAuthSession();
+      } finally {
+        setCheckingSession(false);
+      }
+    }
+
+    checkExistingSession();
+  }, [redirectPath, router]);
+
+  // ============================================================
+  // LOGIN SUBMIT
   // ============================================================
 
   async function handleSubmit(
@@ -107,27 +194,19 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    if (!token) {
-      setError(
-        'Password reset token is missing or invalid.',
-      );
+    const normalizedEmail =
+      email.trim().toLowerCase();
 
+    /*
+     * Basic frontend validation.
+     */
+    if (!normalizedEmail) {
+      setError('Email address is required.');
       return;
     }
 
-    if (newPassword.length < 8) {
-      setError(
-        'Password must be at least 8 characters long.',
-      );
-
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setError(
-        'Passwords do not match.',
-      );
-
+    if (!password) {
+      setError('Password is required.');
       return;
     }
 
@@ -136,35 +215,86 @@ export default function ResetPasswordPage() {
 
       setError('');
 
-      setSuccess('');
+      /*
+       * Clear any previous incomplete or expired session
+       * before creating a new one.
+       */
+      clearAuthSession();
+
+      // ========================================================
+      // LOGIN REQUEST
+      // ========================================================
 
       const response =
-        await apiFetch<ResetPasswordResponse>(
-          '/auth/user/reset-password',
+        await apiFetch<LoginResponse>(
+          '/auth/user/login',
           {
             method: 'POST',
 
             body: JSON.stringify({
-              token,
-              newPassword,
-              confirmPassword,
+              email: normalizedEmail,
+              password,
             }),
           },
         );
 
-      setSuccess(response.message);
+      /*
+       * Validate backend response.
+       */
+      if (
+        !response ||
+        !response.accessToken ||
+        !response.user
+      ) {
+        throw new Error(
+          'Invalid login response from server.',
+        );
+      }
+
+      // ========================================================
+      // SAVE AUTH SESSION
+      //
+      // Uses centralized auth.ts utility.
+      // This ensures api.ts, Sidebar, dashboard pages,
+      // and login page all use the same storage keys.
+      // ========================================================
+
+      saveAuthSession(
+        response.accessToken,
+        response.user,
+      );
 
       /*
-       * Redirect back to login.
+       * Notify components that authentication changed.
+       *
+       * Sidebar and other client components can listen
+       * for this event if needed.
        */
-      setTimeout(() => {
-        router.replace('/login');
-      }, 2500);
+      window.dispatchEvent(
+        new Event('auth-session-updated'),
+      );
+
+      // ========================================================
+      // REDIRECT
+      // ========================================================
+
+      router.replace(redirectPath);
+
+      /*
+       * Refresh route state after authentication.
+       */
+      router.refresh();
     } catch (caughtError: unknown) {
       console.error(
-        'Reset password error:',
+        'Login error:',
         caughtError,
       );
+
+      /*
+       * Failed authentication must never leave
+       * a partial session behind.
+       */
+      clearAuthSession();
 
       setError(
         getErrorMessage(caughtError),
@@ -175,56 +305,30 @@ export default function ResetPasswordPage() {
   }
 
   // ============================================================
-  // INVALID TOKEN STATE
+  // SESSION CHECK LOADING
   // ============================================================
 
-  if (!token) {
+  if (checkingSession) {
     return (
-      <main className="auth-page">
+      <main className="auth-loading">
+        <div className="auth-loading-spinner" />
 
-        <div className="login-background">
-          <div className="login-orb login-orb-one" />
-
-          <div className="login-orb login-orb-two" />
-
-          <div className="login-grid-pattern" />
-        </div>
-
-        <section className="auth-card">
-
-          <div className="auth-logo">
-
-            <div className="auth-logo-icon">
-              <Landmark size={24} />
-            </div>
-
-            <span>
-              FinFlow
-            </span>
-
-          </div>
-
-          <div className="auth-error">
-            Password reset token is missing or invalid.
-          </div>
-
-          <Link
-            href="/forgot-password"
-            className="login-submit-button"
-          >
-            Request New Reset Link
-          </Link>
-
-        </section>
-
+        <p>
+          Checking your session...
+        </p>
       </main>
     );
   }
 
-  return (
-    <main className="auth-page">
+  // ============================================================
+  // PAGE UI
+  // ============================================================
 
-      {/* BACKGROUND */}
+  return (
+    <main className="login-page">
+      {/* ======================================================
+          BACKGROUND
+      ====================================================== */}
 
       <div className="login-background">
         <div className="login-orb login-orb-one" />
@@ -234,265 +338,275 @@ export default function ResetPasswordPage() {
         <div className="login-grid-pattern" />
       </div>
 
-      <section className="auth-card">
+      {/* ======================================================
+          MAIN WRAPPER
+      ====================================================== */}
 
-        {/* LOGO */}
+      <div className="login-wrapper">
+        {/* ====================================================
+            BRAND PANEL
+        ==================================================== */}
 
-        <Link
-          href="/login"
-          className="auth-logo"
-        >
+        <section className="login-brand-panel">
+          <div className="login-brand-content">
+            <div className="login-brand-logo">
+              <Landmark size={30} />
+            </div>
 
-          <div className="auth-logo-icon">
-            <Landmark size={24} />
-          </div>
+            <div className="login-brand-name">
+              FinFlow
+            </div>
 
-          <span>
-            FinFlow
-          </span>
-
-        </Link>
-
-        {/* BACK */}
-
-        <Link
-          href="/login"
-          className="auth-back-link"
-        >
-
-          <ArrowLeft size={17} />
-
-          Back to sign in
-
-        </Link>
-
-        {/* HEADING */}
-
-        <div className="auth-heading">
-
-          <span className="auth-eyebrow">
-            CREATE NEW PASSWORD
-          </span>
-
-          <h1>
-            Reset your password
-          </h1>
-
-          <p>
-            Choose a strong password to secure your FinFlow account.
-          </p>
-
-        </div>
-
-        {/* ERROR */}
-
-        {error && (
-          <div
-            className="auth-error"
-            role="alert"
-          >
-            {error}
-          </div>
-        )}
-
-        {/* SUCCESS */}
-
-        {success ? (
-
-          <div className="reset-success-state">
-
-            <CheckCircle2 size={48} />
-
-            <h2>
-              Password reset successful
-            </h2>
+            <h1>
+              Smart financial
+              <br />
+              management made simple.
+            </h1>
 
             <p>
-              {success}
+              Manage wallets, transactions, and financial
+              records from one secure platform.
             </p>
 
-            <span>
-              Redirecting you to sign in...
-            </span>
+            {/* FEATURES */}
 
+            <div className="login-features">
+              <div className="login-feature">
+                <div className="login-feature-icon">
+                  <ShieldCheck size={18} />
+                </div>
+
+                <div>
+                  <strong>
+                    Secure Financial Platform
+                  </strong>
+
+                  <span>
+                    Built with security and accountability
+                    in mind.
+                  </span>
+                </div>
+              </div>
+
+              <div className="login-feature">
+                <div className="login-feature-icon">
+                  <Landmark size={18} />
+                </div>
+
+                <div>
+                  <strong>
+                    Multi-Currency Wallets
+                  </strong>
+
+                  <span>
+                    Manage NGN, USD, GBP and EUR balances
+                    in one place.
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
-        ) : (
+          <div className="login-brand-footer">
+            © {new Date().getFullYear()} FinFlow.
+            Financial Management Platform.
+          </div>
+        </section>
 
-          <form
-            onSubmit={handleSubmit}
-            className="auth-form"
-          >
+        {/* ====================================================
+            LOGIN PANEL
+        ==================================================== */}
 
-            {/* NEW PASSWORD */}
+        <section className="login-form-panel">
+          <div className="login-form-container">
+            {/* MOBILE BRAND */}
 
-            <div className="login-field">
-
-              <label htmlFor="newPassword">
-                New Password
-              </label>
-
-              <div className="login-input-wrapper">
-
-                <Lock
-                  size={19}
-                  className="login-input-icon"
-                />
-
-                <input
-                  id="newPassword"
-                  type={
-                    showNewPassword
-                      ? 'text'
-                      : 'password'
-                  }
-                  value={newPassword}
-                  onChange={(event) =>
-                    setNewPassword(
-                      event.target.value,
-                    )
-                  }
-                  placeholder="Enter new password"
-                  autoComplete="new-password"
-                  required
-                  disabled={loading}
-                />
-
-                <button
-                  type="button"
-                  className="password-toggle"
-                  onClick={() =>
-                    setShowNewPassword(
-                      !showNewPassword,
-                    )
-                  }
-                  disabled={loading}
-                  aria-label={
-                    showNewPassword
-                      ? 'Hide password'
-                      : 'Show password'
-                  }
-                >
-                  {showNewPassword ? (
-                    <EyeOff size={19} />
-                  ) : (
-                    <Eye size={19} />
-                  )}
-                </button>
-
+            <div className="login-mobile-brand">
+              <div className="login-mobile-logo">
+                <Landmark size={24} />
               </div>
 
-              <span className="password-helper-text">
-                Minimum of 8 characters.
+              <span>
+                FinFlow
+              </span>
+            </div>
+
+            {/* HEADING */}
+
+            <div className="login-heading">
+              <span className="login-welcome">
+                Welcome back
               </span>
 
+              <h2>
+                Sign in to your account
+              </h2>
+
+              <p>
+                Enter your credentials to access your
+                financial workspace.
+              </p>
             </div>
 
-            {/* CONFIRM PASSWORD */}
+            {/* ERROR */}
 
-            <div className="login-field">
-
-              <label htmlFor="confirmPassword">
-                Confirm New Password
-              </label>
-
-              <div className="login-input-wrapper">
-
-                <Lock
-                  size={19}
-                  className="login-input-icon"
-                />
-
-                <input
-                  id="confirmPassword"
-                  type={
-                    showConfirmPassword
-                      ? 'text'
-                      : 'password'
-                  }
-                  value={confirmPassword}
-                  onChange={(event) =>
-                    setConfirmPassword(
-                      event.target.value,
-                    )
-                  }
-                  placeholder="Confirm new password"
-                  autoComplete="new-password"
-                  required
-                  disabled={loading}
-                />
-
-                <button
-                  type="button"
-                  className="password-toggle"
-                  onClick={() =>
-                    setShowConfirmPassword(
-                      !showConfirmPassword,
-                    )
-                  }
-                  disabled={loading}
-                  aria-label={
-                    showConfirmPassword
-                      ? 'Hide password'
-                      : 'Show password'
-                  }
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff size={19} />
-                  ) : (
-                    <Eye size={19} />
-                  )}
-                </button>
-
+            {error && (
+              <div
+                className="login-error"
+                role="alert"
+                aria-live="polite"
+              >
+                {error}
               </div>
+            )}
 
-            </div>
+            {/* =================================================
+                LOGIN FORM
+            ================================================= */}
 
-            {/* SUBMIT */}
-
-            <button
-              type="submit"
-              className="login-submit-button"
-              disabled={loading}
+            <form
+              onSubmit={handleSubmit}
+              className="login-form"
             >
+              {/* EMAIL */}
 
-              {loading ? (
-                <>
-                  <Loader2
+              <div className="login-field">
+                <label htmlFor="email">
+                  Email Address
+                </label>
+
+                <div className="login-input-wrapper">
+                  <Mail
                     size={19}
-                    className="login-spinner"
+                    className="login-input-icon"
                   />
 
-                  Resetting password...
-                </>
-              ) : (
-                <>
-                  Reset Password
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(event) =>
+                      setEmail(event.target.value)
+                    }
+                    placeholder="Enter your email"
+                    required
+                    autoComplete="email"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
 
-                  <ShieldCheck size={19} />
-                </>
-              )}
+              {/* PASSWORD */}
 
-            </button>
+              <div className="login-field">
+                <div className="login-password-label-row">
+                  <label htmlFor="password">
+                    Password
+                  </label>
 
-          </form>
+                  <Link
+                    href="/forgot-password"
+                    className="forgot-password-link"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
 
-        )}
+                <div className="login-input-wrapper">
+                  <Lock
+                    size={19}
+                    className="login-input-icon"
+                  />
 
-        {/* SECURITY */}
+                  <input
+                    id="password"
+                    type={
+                      showPassword
+                        ? 'text'
+                        : 'password'
+                    }
+                    value={password}
+                    onChange={(event) =>
+                      setPassword(event.target.value)
+                    }
+                    placeholder="Enter your password"
+                    required
+                    autoComplete="current-password"
+                    disabled={loading}
+                  />
 
-        <div className="auth-security-note">
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() =>
+                      setShowPassword(
+                        (previous) => !previous,
+                      )
+                    }
+                    aria-label={
+                      showPassword
+                        ? 'Hide password'
+                        : 'Show password'
+                    }
+                    disabled={loading}
+                  >
+                    {showPassword ? (
+                      <EyeOff size={19} />
+                    ) : (
+                      <Eye size={19} />
+                    )}
+                  </button>
+                </div>
+              </div>
 
-          <ShieldCheck size={16} />
+              {/* SUBMIT */}
 
-          <span>
-            Your password reset token is valid for 15 minutes.
-          </span>
+              <button
+                type="submit"
+                className="login-submit-button"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2
+                      size={19}
+                      className="login-spinner"
+                    />
 
-        </div>
+                    Signing in...
+                  </>
+                ) : (
+                  <>
+                    Sign In
 
-      </section>
+                    <ArrowRight size={19} />
+                  </>
+                )}
+              </button>
+            </form>
 
+            {/* REGISTER */}
+
+            <div className="login-register-link">
+              <span>
+                Don&apos;t have an account?
+              </span>
+
+              <Link href="/register">
+                Create an account
+              </Link>
+            </div>
+
+            {/* SECURITY */}
+
+            <p className="login-security-text">
+              <ShieldCheck size={15} />
+
+              Your connection is secure and encrypted.
+            </p>
+          </div>
+        </section>
+      </div>
     </main>
   );
 }

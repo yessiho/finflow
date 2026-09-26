@@ -10,6 +10,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { LedgerService } from '../ledger/ledger.service.js';
 
 import { AuditService } from '../audit/audit.service.js';
+import { nowInstant } from '../prisma/temporal.js';
 
 type TransactionType = 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER';
 
@@ -59,11 +60,50 @@ export class TransactionsService {
    * ==========================================
    */
   private serialize<T>(data: T): T {
-    return JSON.parse(
+    const parsed = JSON.parse(
       JSON.stringify(data, (_, value) =>
         typeof value === 'bigint' ? value.toString() : value,
       ),
     );
+
+    const normalize = (value: unknown): unknown => {
+      if (Array.isArray(value)) {
+        return value.map(normalize);
+      }
+
+      if (typeof value !== 'object' || value === null) {
+        return value;
+      }
+
+      const result = {
+        ...(value as Record<string, unknown>),
+      };
+
+      // Prisma 8 exposes the database `type` column as `_type`.
+      // The public HTTP API should consistently expose `type`.
+      if (result._type !== undefined && result.type === undefined) {
+        result.type = result._type;
+      }
+
+      delete result._type;
+
+      for (const [key, child] of Object.entries(result)) {
+        result[key] = normalize(child);
+      }
+
+      return result;
+    };
+
+    return normalize(parsed) as T;
+  }
+
+  /*
+   * Prisma contract maps the database `type` column to `_type`.
+   * Keep a small compatibility helper so read-side code works with
+   * both the generated contract shape and older runtime objects.
+   */
+  private getTransactionType(transaction: any): TransactionType | undefined {
+    return transaction._type ?? transaction.type;
   }
 
   /*
@@ -150,7 +190,7 @@ export class TransactionsService {
 
           reference: transaction.reference,
 
-          type: transaction.type,
+          type: this.getTransactionType(transaction),
 
           currency: transaction.currency,
 
@@ -236,15 +276,15 @@ export class TransactionsService {
 
       const amount = BigInt(transaction.amount ?? 0);
 
-      if (transaction.type === 'DEPOSIT') {
+      if (this.getTransactionType(transaction) === 'DEPOSIT') {
         totalDeposits += amount;
       }
 
-      if (transaction.type === 'WITHDRAWAL') {
+      if (this.getTransactionType(transaction) === 'WITHDRAWAL') {
         totalWithdrawals += amount;
       }
 
-      if (transaction.type === 'TRANSFER') {
+      if (this.getTransactionType(transaction) === 'TRANSFER') {
         totalTransfers += amount;
       }
     }
@@ -402,7 +442,7 @@ export class TransactionsService {
     for (const transaction of transactions) {
       const amount = BigInt(transaction.amount ?? 0);
 
-      const type = transaction.type as TransactionType;
+      const type = this.getTransactionType(transaction) as TransactionType;
 
       const status = transaction.status as TransactionStatus;
 
@@ -729,15 +769,15 @@ export class TransactionsService {
       /*
        * TRANSACTION TYPE COUNTS
        */
-      if (transaction.type === 'DEPOSIT') {
+      if (this.getTransactionType(transaction) === 'DEPOSIT') {
         depositCount++;
       }
 
-      if (transaction.type === 'WITHDRAWAL') {
+      if (this.getTransactionType(transaction) === 'WITHDRAWAL') {
         withdrawalCount++;
       }
 
-      if (transaction.type === 'TRANSFER') {
+      if (this.getTransactionType(transaction) === 'TRANSFER') {
         transferCount++;
       }
 
@@ -777,7 +817,7 @@ export class TransactionsService {
       /*
        * DEPOSIT
        */
-      if (transaction.type === 'DEPOSIT') {
+      if (this.getTransactionType(transaction) === 'DEPOSIT') {
         totalDepositVolume += amount;
 
         currencyData.deposits += amount;
@@ -786,7 +826,7 @@ export class TransactionsService {
       /*
        * WITHDRAWAL
        */
-      if (transaction.type === 'WITHDRAWAL') {
+      if (this.getTransactionType(transaction) === 'WITHDRAWAL') {
         totalWithdrawalVolume += amount;
 
         currencyData.withdrawals += amount;
@@ -795,7 +835,7 @@ export class TransactionsService {
       /*
        * TRANSFER
        */
-      if (transaction.type === 'TRANSFER') {
+      if (this.getTransactionType(transaction) === 'TRANSFER') {
         totalTransferVolume += amount;
 
         currencyData.transfers += amount;
@@ -903,7 +943,7 @@ export class TransactionsService {
      */
     if (type) {
       transactions = transactions.filter(
-        (transaction: any) => transaction.type === type,
+        (transaction: any) => this.getTransactionType(transaction) === type,
       );
     }
 
@@ -1094,7 +1134,7 @@ export class TransactionsService {
      */
     if (type) {
       filteredTransactions = filteredTransactions.filter(
-        (transaction: any) => transaction.type === type,
+        (transaction: any) => this.getTransactionType(transaction) === type,
       );
     }
 
@@ -1247,7 +1287,7 @@ export class TransactionsService {
 
         lookupMethod: 'ID',
 
-        type: transaction.type,
+        type: this.getTransactionType(transaction),
 
         amount: BigInt(transaction.amount).toString(),
 
@@ -1292,7 +1332,7 @@ export class TransactionsService {
 
         lookupMethod: 'REFERENCE',
 
-        type: transaction.type,
+        type: this.getTransactionType(transaction),
 
         amount: BigInt(transaction.amount).toString(),
 
@@ -1335,6 +1375,14 @@ export class TransactionsService {
    * ==========================================
    */
   async reverse(userId: number, transactionId: number) {
+    if (!Number.isSafeInteger(userId) || userId <= 0) {
+      throw new BadRequestException('Authenticated user ID is invalid');
+    }
+
+    if (!Number.isSafeInteger(transactionId) || transactionId <= 0) {
+      throw new BadRequestException('Transaction ID is invalid');
+    }
+
     /*
      * STEP 1
      *
@@ -1356,7 +1404,7 @@ export class TransactionsService {
        * Only transfers can currently
        * be reversed.
        */
-      if (transaction.type !== 'TRANSFER') {
+      if (this.getTransactionType(transaction) !== 'TRANSFER') {
         throw new BadRequestException(
           'Only transfer transactions can be reversed',
         );
@@ -1392,18 +1440,15 @@ export class TransactionsService {
       /*
        * Find source wallet.
        */
+      // Scope the source-wallet lookup to the authenticated user.
+      // This is defense-in-depth: even if a user knows another user's
+      // wallet ID, they cannot reverse a transfer from that wallet.
       const sourceWallet = await tx.orm.public.Wallet.first({
         id: transaction.sourceWalletId,
+        userId,
       });
 
       if (!sourceWallet) {
-        throw new NotFoundException('Source wallet not found');
-      }
-
-      /*
-       * Only sender can reverse.
-       */
-      if (sourceWallet.userId !== userId) {
         throw new ForbiddenException(
           'Only the sender can reverse this transaction',
         );
@@ -1475,6 +1520,7 @@ export class TransactionsService {
         id: sourceWallet.id,
       }).update({
         balance: sourceNewBalance,
+        updatedAt: nowInstant(),
       });
 
       /*
@@ -1484,6 +1530,7 @@ export class TransactionsService {
         id: destinationWallet.id,
       }).update({
         balance: destinationNewBalance,
+        updatedAt: nowInstant(),
       });
 
       /*
@@ -1504,7 +1551,7 @@ export class TransactionsService {
       const reversalTransaction = await tx.orm.public.Transaction.create({
         reference: reversalReference,
 
-        type: 'TRANSFER',
+        _type: 'TRANSFER',
 
         status: 'COMPLETED',
 
@@ -1515,19 +1562,40 @@ export class TransactionsService {
         sourceWalletId: destinationWallet.id,
 
         destinationWalletId: sourceWallet.id,
+        updatedAt: nowInstant(),
       });
 
       /*
-       * Mark original transaction
-       * as reversed.
+       * Mark original transaction as reversed.
+       *
+       * IMPORTANT: the ledger reversal is performed with the SAME `tx`
+       * below, so wallet changes, reversal transaction, original status,
+       * and ledger entries all commit or roll back together.
        */
       const reversedOriginalTransaction = await tx.orm.public.Transaction.where(
         {
           id: transaction.id,
+          status: 'COMPLETED',
         },
       ).update({
         status: 'REVERSED',
+        updatedAt: nowInstant(),
       });
+
+      // The conditional update is also a concurrency guard. If another
+      // reversal won the race, this transaction must roll back instead of
+      // creating a second financial reversal.
+      if (!reversedOriginalTransaction) {
+        throw new BadRequestException(
+          'Transaction has already been reversed or changed',
+        );
+      }
+
+      await this.ledgerService.reverseTransactionInTx(
+        tx,
+        transaction.id,
+        reversalTransaction.id,
+      );
 
       return {
         transaction,
@@ -1543,16 +1611,6 @@ export class TransactionsService {
         amount: transactionAmount,
       };
     });
-
-    /*
-     * STEP 2
-     *
-     * Reverse accounting ledger entries.
-     */
-    await this.ledgerService.reverseTransaction(
-      result.transaction.id,
-      result.reversalTransaction.id,
-    );
 
     /*
      * ==========================================

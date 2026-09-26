@@ -12,6 +12,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateProfileDto } from './dto/update-profile.dto.js';
+import { nowInstant } from '../prisma/temporal.js';
 
 @Injectable()
 export class UsersService {
@@ -42,6 +43,7 @@ export class UsersService {
         passwordHash,
         firstName,
         lastName,
+        updatedAt: nowInstant(),
       });
 
     return this.toPublicUser(user);

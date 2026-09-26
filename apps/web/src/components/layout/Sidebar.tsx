@@ -1,8 +1,12 @@
+
 'use client';
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import {
+  usePathname,
+  useRouter,
+} from 'next/navigation';
 
 import {
   BookOpen,
@@ -15,13 +19,18 @@ import {
   WalletCards,
 } from 'lucide-react';
 
-interface User {
-  id: number;
-  email: string;
-  firstName: string;
-  lastName: string;
-  status: string;
-}
+import type { User } from '@/types';
+
+import {
+  AUTH_SESSION_UPDATED_EVENT,
+  USER_PROFILE_UPDATED_EVENT,
+  clearAuthSession,
+  getAuthUser,
+} from '@/lib/auth';
+
+// ============================================================
+// NAVIGATION ITEMS
+// ============================================================
 
 const navigation = [
   {
@@ -51,56 +60,68 @@ const navigation = [
   },
 ];
 
+// ============================================================
+// SIDEBAR COMPONENT
+// ============================================================
+
 export default function Sidebar() {
   const pathname = usePathname();
+
   const router = useRouter();
 
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] =
+    useState<User | null>(null);
 
-  /*
-   * ==========================================
-   * LOAD LOGGED-IN USER
-   *
-   * Listens for profile updates from Settings.
-   * ==========================================
-   */
+  const [loggingOut, setLoggingOut] =
+    useState(false);
+
+  // ============================================================
+  // LOAD AUTHENTICATED USER
+  //
+  // Authentication data is centrally managed through auth.ts.
+  //
+  // Sidebar reacts to:
+  //
+  // - Login
+  // - Logout
+  // - Session expiration
+  // - Profile updates
+  // - Multi-tab authentication changes
+  // ============================================================
+
   useEffect(() => {
     function loadUser() {
-      const storedUser = localStorage.getItem('user');
+      const authenticatedUser =
+        getAuthUser();
 
-      if (!storedUser) {
+      if (!authenticatedUser) {
         setUser(null);
         return;
       }
 
-      try {
-        const parsedUser = JSON.parse(storedUser);
-
-        setUser(parsedUser);
-      } catch {
-        localStorage.removeItem('user');
-
-        setUser(null);
-      }
+      setUser(authenticatedUser as User);
     }
 
-    /*
-     * Load user when Sidebar mounts.
-     */
+    // Load authenticated user immediately.
     loadUser();
 
-    /*
-     * Listen for profile updates.
-     */
+    // Listen for complete authentication session changes.
     window.addEventListener(
-      'user-profile-updated',
+      AUTH_SESSION_UPDATED_EVENT,
+      loadUser,
+    );
+
+    // Listen for profile updates.
+    window.addEventListener(
+      USER_PROFILE_UPDATED_EVENT,
       loadUser,
     );
 
     /*
-     * Listen for storage changes.
+     * Listen for authentication changes from other browser tabs.
      *
-     * Useful when multiple browser tabs are open.
+     * The storage event does not fire in the same tab that made
+     * the change, which is why custom auth events are also used.
      */
     window.addEventListener(
       'storage',
@@ -109,7 +130,12 @@ export default function Sidebar() {
 
     return () => {
       window.removeEventListener(
-        'user-profile-updated',
+        AUTH_SESSION_UPDATED_EVENT,
+        loadUser,
+      );
+
+      window.removeEventListener(
+        USER_PROFILE_UPDATED_EVENT,
         loadUser,
       );
 
@@ -120,75 +146,167 @@ export default function Sidebar() {
     };
   }, []);
 
-  /*
-   * ==========================================
-   * LOGOUT
-   * ==========================================
-   */
-  function logout() {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user');
+  // ============================================================
+  // LOGOUT
+  // ============================================================
 
+  function logout() {
+    /*
+     * Prevent duplicate logout actions.
+     */
+    if (loggingOut) {
+      return;
+    }
+
+    setLoggingOut(true);
+
+    /*
+     * Clear centralized authentication session.
+     *
+     * auth.ts removes:
+     *
+     * - finflow_access_token
+     * - finflow_user
+     *
+     * It also dispatches authentication events.
+     */
+    clearAuthSession();
+
+    /*
+     * Immediately update Sidebar UI.
+     */
     setUser(null);
 
+    /*
+     * Redirect to login.
+     *
+     * replace() prevents the user from returning to the
+     * protected dashboard using the browser Back button.
+     */
     router.replace('/login');
   }
 
-  /*
-   * ==========================================
-   * ACTIVE NAVIGATION
-   * ==========================================
-   */
+  // ============================================================
+  // CHECK ACTIVE NAVIGATION
+  // ============================================================
+
   function isActive(href: string) {
+    /*
+     * Dashboard should only match exactly.
+     */
     if (href === '/dashboard') {
       return pathname === href;
     }
 
+    /*
+     * Other routes support nested pages.
+     *
+     * Examples:
+     *
+     * /wallets
+     * /wallets/1
+     *
+     * /transactions
+     * /transactions/123
+     */
     return (
       pathname === href ||
       pathname.startsWith(`${href}/`)
     );
   }
 
-  /*
-   * ==========================================
-   * USER INITIALS
-   * ==========================================
-   */
+  // ============================================================
+  // CHECK PROFILE ACTIVE STATE
+  // ============================================================
+
+  function isProfileActive() {
+    return (
+      pathname === '/profile' ||
+      pathname.startsWith('/profile/')
+    );
+  }
+
+  // ============================================================
+  // CHECK SETTINGS ACTIVE STATE
+  // ============================================================
+
+  function isSettingsActive() {
+    return (
+      pathname === '/settings' ||
+      pathname.startsWith('/settings/')
+    );
+  }
+
+  // ============================================================
+  // GET USER INITIALS
+  // ============================================================
+
   function getInitials() {
     if (!user) {
       return 'U';
     }
 
-    const first =
+    const firstInitial =
       user.firstName?.charAt(0) || '';
 
-    const last =
+    const lastInitial =
       user.lastName?.charAt(0) || '';
 
     const initials =
-      `${first}${last}`.toUpperCase();
+      `${firstInitial}${lastInitial}`.toUpperCase();
 
     return initials || 'U';
   }
 
+  // ============================================================
+  // GET USER FULL NAME
+  // ============================================================
+
+  function getUserFullName() {
+    if (!user) {
+      return 'User';
+    }
+
+    const fullName =
+      `${user.firstName || ''} ${
+        user.lastName || ''
+      }`.trim();
+
+    return fullName || 'User';
+  }
+
+  // ============================================================
+  // RENDER
+  // ============================================================
+
   return (
     <aside className="sidebar">
-      {/* ======================================
+
+      {/* ======================================================
           BRAND
-      ====================================== */}
+      ====================================================== */}
+
       <div className="sidebar-brand">
         <div className="brand-icon">
-          <Landmark size={24} />
+          <Landmark
+            size={24}
+            strokeWidth={2.2}
+          />
         </div>
 
-        <span>FinFlow</span>
+        <span className="brand-name">
+          FinFlow
+        </span>
       </div>
 
-      {/* ======================================
+      {/* ======================================================
           MAIN NAVIGATION
-      ====================================== */}
-      <nav className="sidebar-nav">
+      ====================================================== */}
+
+      <nav
+        className="sidebar-nav"
+        aria-label="Main navigation"
+      >
         {navigation.map((item) => {
           const Icon = item.icon;
 
@@ -201,8 +319,16 @@ export default function Sidebar() {
               className={`nav-item ${
                 active ? 'active' : ''
               }`}
+              aria-current={
+                active
+                  ? 'page'
+                  : undefined
+              }
             >
-              <Icon size={20} />
+              <Icon
+                size={20}
+                strokeWidth={2}
+              />
 
               <span>{item.name}</span>
             </Link>
@@ -210,60 +336,96 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* ======================================
+      {/* ======================================================
           USER PROFILE
-      ====================================== */}
+      ====================================================== */}
+
       {user && (
-        <Link
-          href="/profile"
-          className={`sidebar-user ${
-            pathname === '/profile'
-              ? 'active'
-              : ''
-          }`}
-        >
-          <div className="sidebar-user-avatar">
-            {getInitials()}
-          </div>
+        <div className="sidebar-user-wrapper">
+          <Link
+            href="/profile"
+            className={`sidebar-user ${
+              isProfileActive()
+                ? 'active'
+                : ''
+            }`}
+            aria-current={
+              isProfileActive()
+                ? 'page'
+                : undefined
+            }
+          >
+            <div className="sidebar-user-avatar">
+              {getInitials()}
+            </div>
 
-          <div className="sidebar-user-details">
-            <strong>
-              {user.firstName} {user.lastName}
-            </strong>
+            <div className="sidebar-user-details">
+              <strong>
+                {getUserFullName()}
+              </strong>
 
-            <span>
-              {user.email}
-            </span>
-          </div>
-        </Link>
+              <span>
+                {user.email}
+              </span>
+            </div>
+          </Link>
+        </div>
       )}
 
-      {/* ======================================
+      {/* ======================================================
           BOTTOM NAVIGATION
-      ====================================== */}
+      ====================================================== */}
+
       <div className="sidebar-bottom">
+
+        {/* ====================================================
+            SETTINGS
+        ==================================================== */}
+
         <Link
           href="/settings"
           className={`nav-item ${
-            pathname === '/settings'
+            isSettingsActive()
               ? 'active'
               : ''
           }`}
+          aria-current={
+            isSettingsActive()
+              ? 'page'
+              : undefined
+          }
         >
-          <Settings size={20} />
+          <Settings
+            size={20}
+            strokeWidth={2}
+          />
 
           <span>Settings</span>
         </Link>
+
+        {/* ====================================================
+            LOGOUT
+        ==================================================== */}
 
         <button
           type="button"
           className="nav-item logout-button"
           onClick={logout}
+          disabled={loggingOut}
+          aria-label="Logout"
         >
-          <LogOut size={20} />
+          <LogOut
+            size={20}
+            strokeWidth={2}
+          />
 
-          <span>Logout</span>
+          <span>
+            {loggingOut
+              ? 'Logging out...'
+              : 'Logout'}
+          </span>
         </button>
+
       </div>
     </aside>
   );

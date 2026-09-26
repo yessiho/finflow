@@ -1,71 +1,111 @@
-// ============================================================
-// FinFlow - Financial Technology Platform
-// Database Contract
-// ============================================================
-
+// use prisma-next
+// Contract inferred from the live database schema. Edit as needed, then run `prisma contract emit`.
 
 // ============================================================
-// ENUMS
+// ADMIN
 // ============================================================
 
-enum UserStatus {
-  ACTIVE
-  SUSPENDED
-  DEACTIVATED
+model Admin {
+  id               Int                   @id(map: "admin_pkey") @default(autoincrement())
+  createdAt        Timestamptz           @default(now())
+  email            String                @unique(map: "admin_email_key")
+  firstName        String
+  lastName         String
+  passwordHash     String
+  status           String                @default("ACTIVE")
+  updatedAt        Timestamptz
+
+  // RBAC
+  roleAssignments  AdminRoleAssignment[]
+
+  // Admin audit trail
+  auditLogs        AuditLog[]
+
+  @@check(expression: "(status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'DEACTIVATED'::text]))", map: "admin_status_check_5dec1c59")
+  @@map("admin")
 }
 
-enum AdminStatus {
-  ACTIVE
-  SUSPENDED
-  DEACTIVATED
+
+// ============================================================
+// ADMIN ROLES
+// ============================================================
+
+model AdminRole {
+  id              Int                   @id(map: "adminRole_pkey") @default(autoincrement())
+  code            String                @unique(map: "adminRole_code_key")
+  name            String
+  description     String?
+  isActive        Boolean               @default(true)
+  createdAt       Timestamptz           @default(now())
+  updatedAt       Timestamptz
+
+  assignments     AdminRoleAssignment[]
+  rolePermissions RolePermission[]
+
+  @@map("adminRole")
 }
 
-enum WalletStatus {
-  ACTIVE
-  FROZEN
-  CLOSED
+
+// ============================================================
+// PERMISSIONS
+// ============================================================
+
+model Permission {
+  id              Int              @id(map: "permission_pkey") @default(autoincrement())
+  code            String           @unique(map: "permission_code_key")
+  name            String
+  description     String?
+  isActive        Boolean          @default(true)
+  createdAt       Timestamptz      @default(now())
+  updatedAt       Timestamptz
+
+  rolePermissions RolePermission[]
+
+  @@map("permission")
 }
 
-enum WalletAccountType {
-  SAVINGS
-  CURRENT
-  VIRTUAL
+
+// ============================================================
+// ADMIN ROLE ASSIGNMENTS
+// ============================================================
+
+model AdminRoleAssignment {
+  id          Int         @id(map: "adminRoleAssignment_pkey") @default(autoincrement())
+  adminId     Int
+  roleId      Int
+  isActive    Boolean     @default(true)
+  createdAt   Timestamptz @default(now())
+  updatedAt   Timestamptz
+
+  admin       Admin       @relation(fields:[adminId], references:[id], map: "adminRoleAssignment_adminId_fkey")
+  role        AdminRole   @relation(fields:[roleId], references:[id], map: "adminRoleAssignment_roleId_fkey")
+
+  @@unique([adminId, roleId], map: "adminRoleAssignment_adminId_roleId_key")
+  @@index([adminId], name: "adminRoleAssignment_adminId_idx")
+  @@index([roleId], name: "adminRoleAssignment_roleId_idx")
+  @@map("adminRoleAssignment")
 }
 
-enum WalletAccountStatus {
-  ACTIVE
-  FROZEN
-  SUSPENDED
-  CLOSED
-}
 
-enum Currency {
-  NGN
-  USD
-  EUR
-  GBP
-}
+// ============================================================
+// ROLE PERMISSIONS
+// ============================================================
 
-enum TransactionType {
-  DEPOSIT
-  WITHDRAWAL
-  TRANSFER
-}
+model RolePermission {
+  id           Int         @id(map: "rolePermission_pkey") @default(autoincrement())
+  roleId       Int
+  permissionId Int
+  isActive     Boolean     @default(true)
+  createdAt    Timestamptz @default(now())
+  updatedAt   Timestamptz
 
-enum TransactionStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
-  REVERSED
-}
+  role         AdminRole   @relation(fields:[roleId], references:[id], map: "rolePermission_roleId_fkey")
+  permission   Permission  @relation(fields:[permissionId], references:[id], map: "rolePermission_permissionId_fkey")
 
-enum AccountType {
-  ASSET
-  LIABILITY
-  REVENUE
-  EXPENSE
-  EQUITY
+  @@unique([roleId, permissionId], map: "rolePermission_roleId_permissionId_key")
+  @@index([roleId], name: "rolePermission_roleId_idx")
+  @@index([permissionId], name: "rolePermission_permissionId_idx")
+  @@map("rolePermission")
 }
 
 
@@ -74,223 +114,21 @@ enum AccountType {
 // ============================================================
 
 model User {
-  id           Int        @id @default(autoincrement())
-
-  email        String     @unique
-  passwordHash String
-
-  firstName    String
-  lastName     String
-
-  status       UserStatus @default(ACTIVE)
-
-  // ============================================================
-  // PASSWORD RESET
-  // ============================================================
-
+  id                   Int          @id(map: "user_pkey") @default(autoincrement())
+  createdAt            Timestamptz  @default(now())
+  email                String       @unique(map: "user_email_key")
+  firstName            String
+  lastName             String
+  passwordHash         String
+  status               String       @default("ACTIVE")
+  updatedAt            Timestamptz
+  passwordResetExpires Timestamptz?
   passwordResetToken   String?
-  passwordResetExpires TimestamptzString?
+  auditLogs            AuditLog[]
+  wallets              Wallet[]
 
-  // ============================================================
-  // RELATIONSHIPS
-  // ============================================================
-
-  wallets      Wallet[]
-  auditLogs    AuditLog[]
-
-  // ============================================================
-  // TIMESTAMPS
-  // ============================================================
-
-  createdAt    TimestamptzString @default(now())
-  updatedAt    temporal.updatedAtString()
-}
-
-
-// ============================================================
-// ADMIN
-// ============================================================
-
-model Admin {
-  id           Int         @id @default(autoincrement())
-  email        String      @unique
-  passwordHash String
-  firstName    String
-  lastName     String
-  status       AdminStatus @default(ACTIVE)
-
-  createdAt    TimestamptzString @default(now())
-  updatedAt    temporal.updatedAtString()
-}
-
-
-// ============================================================
-// WALLET
-// ============================================================
-
-model Wallet {
-  id                      Int          @id @default(autoincrement())
-  userId                  Int
-  currency                Currency
-  balance                 BigInt       @default(0)
-  status                  WalletStatus @default(ACTIVE)
-
-  // Wallet owner
-  user                    User         @relation(
-    fields: [userId],
-    references: [id]
-  )
-
-  // Banking / virtual account details
-  account                 WalletAccount?
-
-  // Transactions
-  sourceTransactions      Transaction[] @relation("SourceWallet")
-  destinationTransactions Transaction[] @relation("DestinationWallet")
-
-  createdAt               TimestamptzString @default(now())
-  updatedAt               temporal.updatedAtString()
-
-  @@unique([userId, currency])
-  @@index([userId])
-}
-
-
-// ============================================================
-// WALLET ACCOUNT
-//
-// Banking-style account attached to a wallet.
-// Each wallet can have one account.
-// ============================================================
-
-model WalletAccount {
-  id              Int                 @id @default(autoincrement())
-
-  // One account belongs to one wallet
-  walletId        Int                 @unique
-
-  // Account details
-  accountNumber   String              @unique
-  accountName     String
-
-  // Financial institution
-  bankName        String
-  bankCode        String?
-
-  // Account classification
-  accountType     WalletAccountType   @default(VIRTUAL)
-  status          WalletAccountStatus @default(ACTIVE)
-
-  // Wallet relationship
-  wallet          Wallet              @relation(
-    fields: [walletId],
-    references: [id]
-  )
-
-  createdAt       TimestamptzString   @default(now())
-  updatedAt       temporal.updatedAtString()
-
-  @@index([accountNumber])
-}
-
-
-// ============================================================
-// TRANSACTION
-// ============================================================
-
-model Transaction {
-  id                  Int               @id @default(autoincrement())
-
-  reference           String            @unique
-
-  type                TransactionType
-
-  amount              BigInt
-  currency            Currency
-
-  status              TransactionStatus @default(PENDING)
-
-  // Source wallet
-  sourceWalletId      Int?
-
-  // Destination wallet
-  destinationWalletId Int?
-
-  sourceWallet        Wallet?
-    @relation(
-      "SourceWallet",
-      fields: [sourceWalletId],
-      references: [id]
-    )
-
-  destinationWallet   Wallet?
-    @relation(
-      "DestinationWallet",
-      fields: [destinationWalletId],
-      references: [id]
-    )
-
-  ledgerEntries       LedgerEntry[]
-
-  createdAt           TimestamptzString @default(now())
-  updatedAt           temporal.updatedAtString()
-
-  @@index([sourceWalletId])
-  @@index([destinationWalletId])
-}
-
-
-// ============================================================
-// LEDGER ACCOUNT
-// ============================================================
-
-model LedgerAccount {
-  id          Int         @id @default(autoincrement())
-
-  code        String      @unique
-  name        String
-
-  type        AccountType
-  currency    Currency
-
-  active      Boolean     @default(true)
-
-  entries     LedgerEntry[]
-
-  createdAt   TimestamptzString @default(now())
-  updatedAt   temporal.updatedAtString()
-}
-
-
-// ============================================================
-// LEDGER ENTRY
-// ============================================================
-
-model LedgerEntry {
-  id            Int      @id @default(autoincrement())
-
-  transactionId Int
-  accountId     Int
-
-  debit         BigInt   @default(0)
-  credit        BigInt   @default(0)
-
-  transaction   Transaction
-    @relation(
-      fields: [transactionId],
-      references: [id]
-    )
-
-  account       LedgerAccount
-    @relation(
-      fields: [accountId],
-      references: [id]
-    )
-
-  createdAt     TimestamptzString @default(now())
-
-  @@index([transactionId])
-  @@index([accountId])
+  @@check(expression: "(status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'DEACTIVATED'::text]))", map: "user_status_check_5dec1c59")
+  @@map("user")
 }
 
 
@@ -299,24 +137,138 @@ model LedgerEntry {
 // ============================================================
 
 model AuditLog {
-  id          Int      @id @default(autoincrement())
+  id        Int         @id(map: "auditLog_pkey") @default(autoincrement())
+  action    String
+  createdAt Timestamptz @default(now())
+  entity    String
+  entityId  String?
+  metadata  String?
+  userId    Int?
+  adminId   Int?
 
-  userId      Int?
+  user      User?       @relation(fields:[userId], references:[id], map: "auditLog_userId_fkey")
+  admin     Admin?      @relation(fields:[adminId], references:[id], map: "auditLog_adminId_fkey")
 
-  action      String
-  entity      String
-  entityId    String?
+  @@index([entity, entityId], name: "auditLog_entity_entityId_idx")
+  @@index([userId], name: "auditLog_userId_idx")
+  @@index([adminId], name: "auditLog_adminId_idx")
+  @@map("auditLog")
+}
 
-  metadata    String?
 
-  user        User?
-    @relation(
-      fields: [userId],
-      references: [id]
-    )
+// ============================================================
+// LEDGER ACCOUNT
+// ============================================================
 
-  createdAt   TimestamptzString @default(now())
+model LedgerAccount {
+  id            Int           @id(map: "ledgerAccount_pkey") @default(autoincrement())
+  active        Boolean       @default(true)
+  code          String        @unique(map: "ledgerAccount_code_key")
+  createdAt     Timestamptz   @default(now())
+  currency      String
+  name          String
+  _type         String        @map("type")
+  updatedAt     Timestamptz
+  ledgerEntries LedgerEntry[]
 
-  @@index([userId])
-  @@index([entity, entityId])
+  @@check(expression: "(currency = ANY (ARRAY['NGN'::text, 'USD'::text, 'EUR'::text, 'GBP'::text]))", map: "ledgerAccount_currency_check_4538a556")
+  @@check(expression: "(type = ANY (ARRAY['ASSET'::text, 'LIABILITY'::text, 'REVENUE'::text, 'EXPENSE'::text, 'EQUITY'::text]))", map: "ledgerAccount_type_check_e2bdb04f")
+  @@map("ledgerAccount")
+}
+
+
+// ============================================================
+// WALLET
+// ============================================================
+
+model Wallet {
+  id                      Int            @id(map: "wallet_pkey") @default(autoincrement())
+  balance                 BigInt         @default(0)
+  createdAt               Timestamptz    @default(now())
+  currency                String
+  status                  String         @default("ACTIVE")
+  updatedAt               Timestamptz
+  userId                  Int
+  walletAccount           WalletAccount?
+  transactions            Transaction[]  @relation(name: "transaction_destinationWalletId_fkey")
+  transactionsTransaction Transaction[]  @relation(name: "transaction_sourceWalletId_fkey")
+  user                    User           @relation(fields:[userId], references:[id], map: "wallet_userId_fkey")
+
+  @@unique([userId, currency], map: "wallet_userId_currency_key")
+  @@index([userId], name: "wallet_userId_idx")
+  @@check(expression: "(currency = ANY (ARRAY['NGN'::text, 'USD'::text, 'EUR'::text, 'GBP'::text]))", map: "wallet_currency_check_4538a556")
+  @@check(expression: "(status = ANY (ARRAY['ACTIVE'::text, 'FROZEN'::text, 'CLOSED'::text]))", map: "wallet_status_check_166abea7")
+  @@map("wallet")
+}
+
+
+// ============================================================
+// TRANSACTION
+// ============================================================
+
+model Transaction {
+  id                  Int           @id(map: "transaction_pkey") @default(autoincrement())
+  amount              BigInt
+  createdAt           Timestamptz   @default(now())
+  currency            String
+  destinationWalletId Int?
+  reference           String        @unique(map: "transaction_reference_key")
+  sourceWalletId      Int?
+  status              String        @default("PENDING")
+  _type               String        @map("type")
+  updatedAt           Timestamptz
+  ledgerEntries       LedgerEntry[]
+  destinationWallet   Wallet?       @relation(name: "transaction_destinationWalletId_fkey", fields:[destinationWalletId], references:[id], map: "transaction_destinationWalletId_fkey")
+  sourceWallet        Wallet?       @relation(name: "transaction_sourceWalletId_fkey", fields:[sourceWalletId], references:[id], map: "transaction_sourceWalletId_fkey")
+
+  @@index([destinationWalletId], name: "transaction_destinationWalletId_idx")
+  @@index([sourceWalletId], name: "transaction_sourceWalletId_idx")
+  @@check(expression: "(currency = ANY (ARRAY['NGN'::text, 'USD'::text, 'EUR'::text, 'GBP'::text]))", map: "transaction_currency_check_4538a556")
+  @@check(expression: "(status = ANY (ARRAY['PENDING'::text, 'PROCESSING'::text, 'COMPLETED'::text, 'FAILED'::text, 'REVERSED'::text]))", map: "transaction_status_check_bc4cb609")
+  @@check(expression: "(type = ANY (ARRAY['DEPOSIT'::text, 'WITHDRAWAL'::text, 'TRANSFER'::text]))", map: "transaction_type_check_3c3bc052")
+  @@map("transaction")
+}
+
+
+// ============================================================
+// LEDGER ENTRY
+// ============================================================
+
+model LedgerEntry {
+  id            Int           @id(map: "ledgerEntry_pkey") @default(autoincrement())
+  accountId     Int
+  createdAt     Timestamptz   @default(now())
+  credit        BigInt        @default(0)
+  debit         BigInt        @default(0)
+  transactionId Int
+  account       LedgerAccount @relation(fields:[accountId], references:[id], map: "ledgerEntry_accountId_fkey")
+  transaction   Transaction   @relation(fields:[transactionId], references:[id], map: "ledgerEntry_transactionId_fkey")
+
+  @@index([accountId], name: "ledgerEntry_accountId_idx")
+  @@index([transactionId], name: "ledgerEntry_transactionId_idx")
+  @@map("ledgerEntry")
+}
+
+
+// ============================================================
+// WALLET ACCOUNT
+// ============================================================
+
+model WalletAccount {
+  id            Int         @id(map: "walletAccount_pkey") @default(autoincrement())
+  accountName   String
+  accountNumber String      @unique(map: "walletAccount_accountNumber_key")
+  accountType   String      @default("VIRTUAL")
+  bankCode      String?
+  bankName      String
+  createdAt     Timestamptz @default(now())
+  status        String      @default("ACTIVE")
+  updatedAt     Timestamptz
+  walletId      Int         @unique(map: "walletAccount_walletId_key")
+  wallet        Wallet      @relation(fields:[walletId], references:[id], map: "walletAccount_walletId_fkey")
+
+  @@index([accountNumber], name: "walletAccount_accountNumber_idx")
+  @@check(expression: "(\"accountType\" = ANY (ARRAY['SAVINGS'::text, 'CURRENT'::text, 'VIRTUAL'::text]))", map: "walletAccount_accountType_check_d5cd5637")
+  @@check(expression: "(status = ANY (ARRAY['ACTIVE'::text, 'FROZEN'::text, 'SUSPENDED'::text, 'CLOSED'::text]))", map: "walletAccount_status_check_a25ed46d")
+  @@map("walletAccount")
 }

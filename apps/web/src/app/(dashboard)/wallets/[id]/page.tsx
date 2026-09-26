@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -9,13 +10,13 @@ import {
 } from 'react';
 
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
 import {
   ArrowDownToLine,
   ArrowLeft,
   ArrowLeftRight,
   ArrowUpFromLine,
-  Building2,
   Calendar,
   CheckCircle2,
   Copy,
@@ -28,8 +29,6 @@ import {
   Wallet as WalletIcon,
   X,
 } from 'lucide-react';
-
-import { useParams } from 'next/navigation';
 
 import { apiFetch } from '@/lib/api';
 
@@ -49,9 +48,24 @@ type ModalType =
   | 'transfer'
   | null;
 
+type TransactionDirection =
+  | 'credit'
+  | 'debit';
+
 type ApiError = {
   message?: string | string[];
 };
+
+type TransactionResponse = {
+  data?: Transaction[];
+  transactions?: Transaction[];
+};
+
+type WalletAction =
+  | 'deposit'
+  | 'withdraw'
+  | 'transfer'
+  | null;
 
 /* ============================================================
    COMPONENT
@@ -67,6 +81,10 @@ export default function WalletDetailsPage() {
       ? rawWalletId[0]
       : rawWalletId,
   );
+
+  /* ==========================================================
+     STATE
+  ========================================================== */
 
   const [wallet, setWallet] =
     useState<Wallet | null>(null);
@@ -106,15 +124,18 @@ export default function WalletDetailsPage() {
   const [copied, setCopied] =
     useState(false);
 
-  /* ============================================================
-     ERROR MESSAGE HELPER
-  ============================================================ */
+  const [activeAction, setActiveAction] =
+    useState<WalletAction>(null);
+
+  /* ==========================================================
+     ERROR HELPER
+  ========================================================== */
 
   const getErrorMessage = useCallback(
     (
       error: unknown,
       fallback: string,
-    ) => {
+    ): string => {
       if (
         error &&
         typeof error === 'object' &&
@@ -132,14 +153,86 @@ export default function WalletDetailsPage() {
         }
       }
 
+      if (error instanceof Error) {
+        return error.message || fallback;
+      }
+
       return fallback;
     },
     [],
   );
 
-  /* ============================================================
+  /* ==========================================================
+     FINANCIAL HELPERS
+  ========================================================== */
+
+  const getNumericBalance = useCallback(
+    (value: string | number | undefined) => {
+      const parsed = Number(value);
+
+      if (!Number.isFinite(parsed)) {
+        return 0;
+      }
+
+      return parsed;
+    },
+    [],
+  );
+
+  const parseAmount = useCallback(
+    (value: string) => {
+      const trimmed = value.trim();
+
+      if (!trimmed) {
+        throw new Error(
+          'Please enter an amount.',
+        );
+      }
+
+      const numericAmount = Number(trimmed);
+
+      if (
+        !Number.isFinite(numericAmount) ||
+        numericAmount <= 0
+      ) {
+        throw new Error(
+          'Please enter a valid amount greater than zero.',
+        );
+      }
+
+      /*
+       * Money values should normally be limited
+       * to two decimal places.
+       */
+      if (
+        !/^\d+(\.\d{1,2})?$/.test(trimmed)
+      ) {
+        throw new Error(
+          'Please enter an amount with no more than two decimal places.',
+        );
+      }
+
+      return numericAmount;
+    },
+    [],
+  );
+
+  const hasSufficientBalance = useCallback(
+    (
+      requestedAmount: number,
+      balance: string | number,
+    ) => {
+      const availableBalance =
+        getNumericBalance(balance);
+
+      return requestedAmount <= availableBalance;
+    },
+    [getNumericBalance],
+  );
+
+  /* ==========================================================
      LOAD WALLET DATA
-  ============================================================ */
+  ========================================================== */
 
   const fetchWalletData = useCallback(
     async (showRefresh = false) => {
@@ -149,7 +242,6 @@ export default function WalletDetailsPage() {
       ) {
         setError('Invalid wallet ID.');
         setLoading(false);
-
         return;
       }
 
@@ -163,10 +255,9 @@ export default function WalletDetailsPage() {
         setError('');
 
         /*
-         * Fetch all wallets.
+         * Load the user's wallets.
          *
-         * We use this because the transfer modal
-         * also needs the user's other wallets.
+         * This is also needed by the transfer modal.
          */
         const walletResponse: unknown =
           await apiFetch('/wallets');
@@ -178,9 +269,6 @@ export default function WalletDetailsPage() {
 
         setWallets(allWallets);
 
-        /*
-         * Find current wallet.
-         */
         const currentWallet =
           allWallets.find(
             (item) =>
@@ -196,7 +284,10 @@ export default function WalletDetailsPage() {
         setWallet(currentWallet);
 
         /*
-         * Fetch transactions.
+         * Load transactions.
+         *
+         * The current backend contract returns
+         * transactions from this endpoint.
          */
         const transactionResponse: unknown =
           await apiFetch(
@@ -216,69 +307,48 @@ export default function WalletDetailsPage() {
         } else if (
           transactionResponse &&
           typeof transactionResponse ===
-            'object' &&
-          'data' in transactionResponse &&
-          Array.isArray(
-            (
-              transactionResponse as {
-                data?: unknown;
-              }
-            ).data,
-          )
+            'object'
         ) {
-          allTransactions =
-            (
-              transactionResponse as {
-                data: Transaction[];
-              }
-            ).data;
-        } else if (
-          transactionResponse &&
-          typeof transactionResponse ===
-            'object' &&
-          'transactions' in
-            transactionResponse &&
-          Array.isArray(
-            (
-              transactionResponse as {
-                transactions?: unknown;
-              }
-            ).transactions,
-          )
-        ) {
-          allTransactions =
-            (
-              transactionResponse as {
-                transactions: Transaction[];
-              }
-            ).transactions;
+          const response =
+            transactionResponse as TransactionResponse;
+
+          if (
+            Array.isArray(response.data)
+          ) {
+            allTransactions =
+              response.data;
+          } else if (
+            Array.isArray(
+              response.transactions,
+            )
+          ) {
+            allTransactions =
+              response.transactions;
+          }
         }
 
         /*
-         * Filter transactions related
+         * Only show transactions belonging
          * to this wallet.
          */
         const walletTransactions =
-          allTransactions.filter(
-            (transaction) =>
-              transaction.sourceWalletId ===
-                walletId ||
-              transaction.destinationWalletId ===
-                walletId,
-          );
-
-        /*
-         * Most recent first.
-         */
-        walletTransactions.sort(
-          (a, b) =>
-            new Date(
-              b.createdAt,
-            ).getTime() -
-            new Date(
-              a.createdAt,
-            ).getTime(),
-        );
+          allTransactions
+            .filter(
+              (transaction) =>
+                transaction.sourceWalletId ===
+                  walletId ||
+                transaction.destinationWalletId ===
+                  walletId,
+            )
+            .sort(
+              (a, b) =>
+                new Date(
+                  b.createdAt,
+                ).getTime() -
+                new Date(
+                  a.createdAt,
+                ).getTime(),
+            );
 
         setTransactions(
           walletTransactions,
@@ -306,27 +376,61 @@ export default function WalletDetailsPage() {
     ],
   );
 
-  /* ============================================================
+  /* ==========================================================
      INITIAL LOAD
-  ============================================================ */
+  ========================================================== */
 
   useEffect(() => {
     void fetchWalletData();
   }, [fetchWalletData]);
 
-  /* ============================================================
+  /* ==========================================================
+     WALLET STATUS
+  ========================================================== */
+
+  const walletIsActive =
+    wallet?.status === 'ACTIVE';
+
+  const canPerformFinancialActions =
+    walletIsActive;
+
+  /* ==========================================================
+     DESTINATION WALLETS
+  ========================================================== */
+
+  const destinationWallets = useMemo(() => {
+    if (!wallet) {
+      return [];
+    }
+
+    return wallets.filter(
+      (item) =>
+        item.id !== wallet.id &&
+        item.currency === wallet.currency &&
+        item.status === 'ACTIVE',
+    );
+  }, [wallet, wallets]);
+
+  /* ==========================================================
      WALLET STATISTICS
-  ============================================================ */
+  ========================================================== */
 
   const walletStats = useMemo(() => {
     let credits = 0;
-
     let debits = 0;
 
     transactions.forEach(
       (transaction) => {
         const transactionAmount =
-          Number(transaction.amount) || 0;
+          Number(transaction.amount);
+
+        if (
+          !Number.isFinite(
+            transactionAmount,
+          )
+        ) {
+          return;
+        }
 
         const direction =
           getTransactionDirection(
@@ -348,18 +452,26 @@ export default function WalletDetailsPage() {
       transactionCount:
         transactions.length,
     };
-  }, [transactions, walletId]);
+  }, [
+    transactions,
+    walletId,
+  ]);
 
-  /* ============================================================
-     FORMAT CURRENCY
-  ============================================================ */
+  /* ==========================================================
+     CURRENCY FORMATTER
+  ========================================================== */
 
   function formatCurrency(
     value: string | number,
     currency: Currency,
   ) {
     const numericValue =
-      Number(value) || 0;
+      Number(value);
+
+    const safeValue =
+      Number.isFinite(numericValue)
+        ? numericValue
+        : 0;
 
     return new Intl.NumberFormat(
       'en-NG',
@@ -369,12 +481,12 @@ export default function WalletDetailsPage() {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       },
-    ).format(numericValue);
+    ).format(safeValue);
   }
 
-  /* ============================================================
+  /* ==========================================================
      CURRENCY FLAG
-  ============================================================ */
+  ========================================================== */
 
   function getCurrencyFlag(
     currency: Currency,
@@ -392,9 +504,9 @@ export default function WalletDetailsPage() {
     return flags[currency];
   }
 
-  /* ============================================================
-     FORMAT DATE
-  ============================================================ */
+  /* ==========================================================
+     DATE FORMATTERS
+  ========================================================== */
 
   function formatDate(
     date: string,
@@ -446,20 +558,21 @@ export default function WalletDetailsPage() {
     ).format(parsedDate);
   }
 
-  /* ============================================================
+  /* ==========================================================
      COPY ACCOUNT NUMBER
-  ============================================================ */
+  ========================================================== */
 
   async function copyAccountNumber() {
-    if (
-      !wallet?.account?.accountNumber
-    ) {
+    const accountNumber =
+      wallet?.account?.accountNumber;
+
+    if (!accountNumber) {
       return;
     }
 
     try {
       await navigator.clipboard.writeText(
-        wallet.account.accountNumber,
+        accountNumber,
       );
 
       setCopied(true);
@@ -475,13 +588,20 @@ export default function WalletDetailsPage() {
     }
   }
 
-  /* ============================================================
+  /* ==========================================================
      MODAL MANAGEMENT
-  ============================================================ */
+  ========================================================== */
 
   function openModal(
     type: ModalType,
   ) {
+    if (
+      !wallet ||
+      !canPerformFinancialActions
+    ) {
+      return;
+    }
+
     setModalError('');
     setAmount('');
     setDestinationWalletId('');
@@ -497,33 +617,12 @@ export default function WalletDetailsPage() {
     setAmount('');
     setDestinationWalletId('');
     setModalError('');
+    setActiveAction(null);
   }
 
-  /* ============================================================
-     VALIDATE AMOUNT
-  ============================================================ */
-
-  function validateAmount() {
-    const numericAmount =
-      Number(amount);
-
-    if (
-      !Number.isFinite(
-        numericAmount,
-      ) ||
-      numericAmount <= 0
-    ) {
-      throw new Error(
-        'Please enter a valid amount greater than zero.',
-      );
-    }
-
-    return numericAmount;
-  }
-
-  /* ============================================================
+  /* ==========================================================
      DEPOSIT
-  ============================================================ */
+  ========================================================== */
 
   async function handleDeposit(
     event: FormEvent<HTMLFormElement>,
@@ -536,17 +635,22 @@ export default function WalletDetailsPage() {
 
     try {
       setSubmitting(true);
-
+      setActiveAction('deposit');
       setModalError('');
 
+      if (!walletIsActive) {
+        throw new Error(
+          'This wallet is not active and cannot receive deposits.',
+        );
+      }
+
       const numericAmount =
-        validateAmount();
+        parseAmount(amount);
 
       await apiFetch(
         `/wallets/${wallet.id}/deposit`,
         {
           method: 'POST',
-
           body: JSON.stringify({
             amount: numericAmount,
           }),
@@ -566,12 +670,13 @@ export default function WalletDetailsPage() {
       );
     } finally {
       setSubmitting(false);
+      setActiveAction(null);
     }
   }
 
-  /* ============================================================
+  /* ==========================================================
      WITHDRAW
-  ============================================================ */
+  ========================================================== */
 
   async function handleWithdraw(
     event: FormEvent<HTMLFormElement>,
@@ -584,18 +689,23 @@ export default function WalletDetailsPage() {
 
     try {
       setSubmitting(true);
-
+      setActiveAction('withdraw');
       setModalError('');
 
-      const numericAmount =
-        validateAmount();
+      if (!walletIsActive) {
+        throw new Error(
+          'This wallet is not active and cannot be used for withdrawals.',
+        );
+      }
 
-      const availableBalance =
-        Number(wallet.balance);
+      const numericAmount =
+        parseAmount(amount);
 
       if (
-        numericAmount >
-        availableBalance
+        !hasSufficientBalance(
+          numericAmount,
+          wallet.balance,
+        )
       ) {
         throw new Error(
           'Withdrawal amount cannot exceed your available balance.',
@@ -606,7 +716,6 @@ export default function WalletDetailsPage() {
         `/wallets/${wallet.id}/withdraw`,
         {
           method: 'POST',
-
           body: JSON.stringify({
             amount: numericAmount,
           }),
@@ -626,12 +735,13 @@ export default function WalletDetailsPage() {
       );
     } finally {
       setSubmitting(false);
+      setActiveAction(null);
     }
   }
 
-  /* ============================================================
+  /* ==========================================================
      TRANSFER
-  ============================================================ */
+  ========================================================== */
 
   async function handleTransfer(
     event: FormEvent<HTMLFormElement>,
@@ -644,11 +754,17 @@ export default function WalletDetailsPage() {
 
     try {
       setSubmitting(true);
-
+      setActiveAction('transfer');
       setModalError('');
 
+      if (!walletIsActive) {
+        throw new Error(
+          'This wallet is not active and cannot send transfers.',
+        );
+      }
+
       const numericAmount =
-        validateAmount();
+        parseAmount(amount);
 
       const targetWalletId =
         Number(destinationWalletId);
@@ -672,12 +788,41 @@ export default function WalletDetailsPage() {
         );
       }
 
-      const availableBalance =
-        Number(wallet.balance);
+      const destinationWallet =
+        wallets.find(
+          (item) =>
+            item.id === targetWalletId,
+        );
+
+      if (!destinationWallet) {
+        throw new Error(
+          'The selected destination wallet could not be found.',
+        );
+      }
 
       if (
-        numericAmount >
-        availableBalance
+        destinationWallet.status !==
+        'ACTIVE'
+      ) {
+        throw new Error(
+          'The destination wallet is not active.',
+        );
+      }
+
+      if (
+        destinationWallet.currency !==
+        wallet.currency
+      ) {
+        throw new Error(
+          'Transfers are only allowed between wallets with the same currency.',
+        );
+      }
+
+      if (
+        !hasSufficientBalance(
+          numericAmount,
+          wallet.balance,
+        )
       ) {
         throw new Error(
           'Transfer amount cannot exceed your available balance.',
@@ -688,13 +833,10 @@ export default function WalletDetailsPage() {
         `/wallets/${wallet.id}/transfer`,
         {
           method: 'POST',
-
           body: JSON.stringify({
             destinationWalletId:
               targetWalletId,
-
-            amount:
-              numericAmount,
+            amount: numericAmount,
           }),
         },
       );
@@ -713,12 +855,13 @@ export default function WalletDetailsPage() {
       );
     } finally {
       setSubmitting(false);
+      setActiveAction(null);
     }
   }
 
-  /* ============================================================
+  /* ==========================================================
      LOADING
-  ============================================================ */
+  ========================================================== */
 
   if (loading) {
     return (
@@ -740,9 +883,9 @@ export default function WalletDetailsPage() {
     );
   }
 
-  /* ============================================================
-     ERROR
-  ============================================================ */
+  /* ==========================================================
+     ERROR PAGE
+  ========================================================== */
 
   if (error && !wallet) {
     return (
@@ -759,14 +902,33 @@ export default function WalletDetailsPage() {
           {error}
         </p>
 
-        <Link
-          href="/wallets"
-          className="wallet-detail-primary-button"
+        <div
+          style={{
+            display: 'flex',
+            gap: '10px',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+          }}
         >
-          <ArrowLeft size={18} />
+          <button
+            type="button"
+            className="wallet-detail-primary-button"
+            onClick={() =>
+              void fetchWalletData()
+            }
+          >
+            <RefreshCw size={18} />
+            Try Again
+          </button>
 
-          Back to Wallets
-        </Link>
+          <Link
+            href="/wallets"
+            className="wallet-detail-primary-button"
+          >
+            <ArrowLeft size={18} />
+            Back to Wallets
+          </Link>
+        </div>
       </div>
     );
   }
@@ -774,6 +936,10 @@ export default function WalletDetailsPage() {
   if (!wallet) {
     return null;
   }
+
+  /* ==========================================================
+     RENDER
+  ========================================================== */
 
   return (
     <div className="wallet-detail-page">
@@ -856,11 +1022,28 @@ export default function WalletDetailsPage() {
 
       </div>
 
-      {/* ERROR ALERT */}
+      {/* ======================================================
+          ERROR ALERT
+      ====================================================== */}
 
       {error && (
         <div className="wallet-detail-alert">
           {error}
+        </div>
+      )}
+
+      {/* ======================================================
+          INACTIVE WALLET NOTICE
+      ====================================================== */}
+
+      {!walletIsActive && (
+        <div className="wallet-detail-alert">
+          This wallet is currently{' '}
+          <strong>
+            {wallet.status.toLowerCase()}
+          </strong>
+          . Financial actions are disabled
+          until the wallet becomes active.
         </div>
       )}
 
@@ -897,7 +1080,6 @@ export default function WalletDetailsPage() {
         <div className="wallet-detail-balance-meta">
 
           <div>
-
             <span>
               Wallet ID
             </span>
@@ -905,11 +1087,9 @@ export default function WalletDetailsPage() {
             <strong>
               #{wallet.id}
             </strong>
-
           </div>
 
           <div>
-
             <span>
               Currency
             </span>
@@ -917,11 +1097,9 @@ export default function WalletDetailsPage() {
             <strong>
               {wallet.currency}
             </strong>
-
           </div>
 
           <div>
-
             <span>
               Created
             </span>
@@ -931,7 +1109,6 @@ export default function WalletDetailsPage() {
                 wallet.createdAt,
               )}
             </strong>
-
           </div>
 
         </div>
@@ -942,17 +1119,20 @@ export default function WalletDetailsPage() {
           VIRTUAL ACCOUNT DETAILS
       ====================================================== */}
 
-      <section className="wallet-detail-history">
+      <section className="wallet-detail-account-section">
 
-        <div className="wallet-detail-history-header">
+        <div className="wallet-detail-section-header">
 
-          <div>
+          <div className="wallet-detail-section-heading">
 
-            <div className="wallet-detail-section-icon">
+            <div className="wallet-detail-section-icon account">
               <CreditCard size={20} />
             </div>
 
             <div>
+              <span className="wallet-detail-section-eyebrow">
+                VIRTUAL BANKING
+              </span>
 
               <h2>
                 Account Details
@@ -962,7 +1142,6 @@ export default function WalletDetailsPage() {
                 Your virtual account information
                 for receiving funds.
               </p>
-
             </div>
 
           </div>
@@ -973,111 +1152,156 @@ export default function WalletDetailsPage() {
 
           <div className="wallet-detail-account-card">
 
-            <div className="wallet-detail-account-main">
+            <div className="wallet-detail-account-primary">
 
-              <div className="wallet-detail-account-icon">
-                <Landmark size={24} />
-              </div>
-
-              <div>
-
-                <span>
-                  Account Number
-                </span>
-
-                <div className="wallet-detail-account-number">
-
-                  <strong>
-                    {wallet.account.accountNumber}
-                  </strong>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void copyAccountNumber()
-                    }
-                    title="Copy account number"
-                    className="wallet-detail-copy-button"
-                  >
-                    {copied ? (
-                      <CheckCircle2 size={17} />
-                    ) : (
-                      <Copy size={17} />
-                    )}
-                  </button>
-
+              <div className="wallet-detail-account-brand">
+                <div className="wallet-detail-account-icon">
+                  <Landmark size={23} />
                 </div>
 
+                <div className="wallet-detail-account-primary-copy">
+                  <span className="wallet-detail-field-label">
+                    Account Number
+                  </span>
+
+                  <div className="wallet-detail-account-number">
+                    <strong>
+                      {wallet.account.accountNumber}
+                    </strong>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void copyAccountNumber()
+                      }
+                      title={
+                        copied
+                          ? 'Account number copied'
+                          : 'Copy account number'
+                      }
+                      aria-label={
+                        copied
+                          ? 'Account number copied'
+                          : 'Copy account number'
+                      }
+                      className={`wallet-detail-copy-button ${
+                        copied ? 'copied' : ''
+                      }`}
+                    >
+                      {copied ? (
+                        <CheckCircle2 size={17} />
+                      ) : (
+                        <Copy size={17} />
+                      )}
+
+                      <span>
+                        {copied ? 'Copied' : 'Copy'}
+                      </span>
+                    </button>
+                  </div>
+
+                  <span className="wallet-detail-account-hint">
+                    Use this account number to receive
+                    funds into your {wallet.currency} wallet.
+                  </span>
+                </div>
+              </div>
+
+              <div className="wallet-detail-account-status">
+                <span className="wallet-detail-field-label">
+                  Account Status
+                </span>
+
+                <span
+                  className={`wallet-detail-account-status-badge ${
+                    wallet.account.status.toLowerCase()
+                  }`}
+                >
+                  <span className="wallet-detail-status-dot" />
+                  {wallet.account.status}
+                </span>
               </div>
 
             </div>
 
             <div className="wallet-detail-account-grid">
 
-              <div>
-
-                <span>
+              <div className="wallet-detail-account-field">
+                <span className="wallet-detail-field-label">
                   Account Name
                 </span>
 
                 <strong>
                   {wallet.account.accountName}
                 </strong>
-
               </div>
 
-              <div>
-
-                <span>
+              <div className="wallet-detail-account-field">
+                <span className="wallet-detail-field-label">
                   Bank Name
                 </span>
 
                 <strong>
                   {wallet.account.bankName}
                 </strong>
-
               </div>
 
-              <div>
-
-                <span>
+              <div className="wallet-detail-account-field">
+                <span className="wallet-detail-field-label">
                   Account Type
                 </span>
 
                 <strong>
                   {wallet.account.accountType}
                 </strong>
-
               </div>
 
-              <div>
-
-                <span>
-                  Account Status
+              <div className="wallet-detail-account-field">
+                <span className="wallet-detail-field-label">
+                  Currency
                 </span>
 
                 <strong>
-                  {wallet.account.status}
+                  <span className="wallet-detail-inline-currency">
+                    {getCurrencyFlag(wallet.currency)}
+                  </span>
+                  {wallet.currency}
                 </strong>
-
               </div>
 
               {wallet.account.bankCode && (
-
-                <div>
-
-                  <span>
+                <div className="wallet-detail-account-field">
+                  <span className="wallet-detail-field-label">
                     Bank Code
                   </span>
 
-                  <strong>
+                  <strong className="wallet-detail-mono">
                     {wallet.account.bankCode}
                   </strong>
-
                 </div>
-
               )}
 
+              <div className="wallet-detail-account-field">
+                <span className="wallet-detail-field-label">
+                  Wallet ID
+                </span>
+
+                <strong className="wallet-detail-mono">
+                  #{wallet.id}
+                </strong>
+              </div>
+
+            </div>
+
+            <div className="wallet-detail-account-footer">
+              <div className="wallet-detail-account-footer-icon">
+                <CheckCircle2 size={16} />
+              </div>
+
+              <span>
+                This virtual account is linked directly to
+                your {wallet.currency} wallet.
+              </span>
             </div>
 
           </div>
@@ -1095,10 +1319,10 @@ export default function WalletDetailsPage() {
             </h3>
 
             <p>
-              A virtual account has not yet been
-              assigned to this wallet. Refresh the
-              page or contact support if the issue
-              continues.
+              A virtual account has not yet
+              been assigned to this wallet.
+              Refresh the page or contact
+              support if the issue continues.
             </p>
 
           </div>
@@ -1122,7 +1346,7 @@ export default function WalletDetailsPage() {
           <div>
 
             <span>
-              Total Credits
+              Loaded Credits
             </span>
 
             <strong>
@@ -1145,7 +1369,7 @@ export default function WalletDetailsPage() {
           <div>
 
             <span>
-              Total Debits
+              Loaded Debits
             </span>
 
             <strong>
@@ -1206,20 +1430,24 @@ export default function WalletDetailsPage() {
 
         <div className="wallet-detail-actions-grid">
 
+          {/* DEPOSIT */}
+
           <button
             type="button"
             onClick={() =>
               openModal('deposit')
             }
             className="wallet-detail-action-card"
+            disabled={
+              !canPerformFinancialActions ||
+              submitting
+            }
           >
-
             <div className="wallet-detail-action-icon deposit">
               <ArrowDownToLine size={22} />
             </div>
 
             <div>
-
               <strong>
                 Deposit Money
               </strong>
@@ -1227,10 +1455,10 @@ export default function WalletDetailsPage() {
               <span>
                 Add funds to this wallet
               </span>
-
             </div>
-
           </button>
+
+          {/* WITHDRAW */}
 
           <button
             type="button"
@@ -1238,14 +1466,19 @@ export default function WalletDetailsPage() {
               openModal('withdraw')
             }
             className="wallet-detail-action-card"
+            disabled={
+              !canPerformFinancialActions ||
+              submitting ||
+              getNumericBalance(
+                wallet.balance,
+              ) <= 0
+            }
           >
-
             <div className="wallet-detail-action-icon withdraw">
               <ArrowUpFromLine size={22} />
             </div>
 
             <div>
-
               <strong>
                 Withdraw Money
               </strong>
@@ -1253,10 +1486,10 @@ export default function WalletDetailsPage() {
               <span>
                 Withdraw available funds
               </span>
-
             </div>
-
           </button>
+
+          {/* TRANSFER */}
 
           <button
             type="button"
@@ -1264,24 +1497,30 @@ export default function WalletDetailsPage() {
               openModal('transfer')
             }
             className="wallet-detail-action-card"
+            disabled={
+              !canPerformFinancialActions ||
+              submitting ||
+              destinationWallets.length === 0 ||
+              getNumericBalance(
+                wallet.balance,
+              ) <= 0
+            }
           >
-
             <div className="wallet-detail-action-icon transfer">
               <ArrowLeftRight size={22} />
             </div>
 
             <div>
-
               <strong>
                 Transfer Money
               </strong>
 
               <span>
-                Send funds to another wallet
+                {destinationWallets.length === 0
+                  ? 'No compatible wallet available'
+                  : 'Send funds to another wallet'}
               </span>
-
             </div>
-
           </button>
 
         </div>
@@ -1322,7 +1561,6 @@ export default function WalletDetailsPage() {
             className="wallet-detail-view-all"
           >
             View All
-
             <Eye size={17} />
           </Link>
 
@@ -1359,8 +1597,11 @@ export default function WalletDetailsPage() {
                     wallet.id,
                   );
 
-                return (
+                const transactionCurrency =
+                  transaction.currency ||
+                  wallet.currency;
 
+                return (
                   <Link
                     key={transaction.id}
                     href={`/transactions/${transaction.id}`}
@@ -1370,7 +1611,6 @@ export default function WalletDetailsPage() {
                     <div
                       className={`wallet-detail-transaction-icon ${direction}`}
                     >
-
                       {direction ===
                       'credit' ? (
                         <ArrowDownToLine
@@ -1381,27 +1621,25 @@ export default function WalletDetailsPage() {
                           size={19}
                         />
                       )}
-
                     </div>
 
                     <div className="wallet-detail-transaction-info">
 
                       <strong>
-                        {transaction.type}
+                        {transaction.type || 'TRANSACTION'}
                       </strong>
 
                       <span>
-                        {transaction.reference}
+                        {transaction.reference ||
+                          `Transaction #${transaction.id}`}
                       </span>
 
                       <small>
-
                         <Calendar size={13} />
 
                         {formatDateTime(
                           transaction.createdAt,
                         )}
-
                       </small>
 
                     </div>
@@ -1416,7 +1654,6 @@ export default function WalletDetailsPage() {
                             : 'wallet-detail-debit'
                         }
                       >
-
                         {direction ===
                         'credit'
                           ? '+'
@@ -1424,21 +1661,23 @@ export default function WalletDetailsPage() {
 
                         {formatCurrency(
                           transaction.amount,
-                          transaction.currency,
+                          transactionCurrency,
                         )}
-
                       </strong>
 
                       <span
-                        className={`wallet-detail-transaction-status ${transaction.status.toLowerCase()}`}
+                        className={`wallet-detail-transaction-status ${
+                          transaction.status?.toLowerCase() ||
+                          'unknown'
+                        }`}
                       >
-                        {transaction.status}
+                        {transaction.status ||
+                          'UNKNOWN'}
                       </span>
 
                     </div>
 
                   </Link>
-
                 );
               },
             )}
@@ -1455,7 +1694,12 @@ export default function WalletDetailsPage() {
 
       {modal === 'deposit' && (
 
-        <div className="wallet-detail-modal-overlay">
+        <div
+          className="wallet-detail-modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="deposit-modal-title"
+        >
 
           <div className="wallet-detail-modal">
 
@@ -1469,7 +1713,7 @@ export default function WalletDetailsPage() {
 
                 <div>
 
-                  <h2>
+                  <h2 id="deposit-modal-title">
                     Deposit Money
                   </h2>
 
@@ -1487,6 +1731,7 @@ export default function WalletDetailsPage() {
                 className="wallet-detail-modal-close"
                 onClick={closeModal}
                 disabled={submitting}
+                aria-label="Close deposit modal"
               >
                 <X size={20} />
               </button>
@@ -1498,14 +1743,17 @@ export default function WalletDetailsPage() {
             >
 
               {modalError && (
-                <div className="wallet-detail-modal-error">
+                <div
+                  className="wallet-detail-modal-error"
+                  role="alert"
+                >
                   {modalError}
                 </div>
               )}
 
               <div className="wallet-detail-form-field">
 
-                <label>
+                <label htmlFor="deposit-amount">
                   Deposit Amount
                 </label>
 
@@ -1516,9 +1764,11 @@ export default function WalletDetailsPage() {
                   </span>
 
                   <input
+                    id="deposit-amount"
                     type="number"
-                    min="1"
+                    min="0.01"
                     step="0.01"
+                    inputMode="decimal"
                     placeholder="0.00"
                     value={amount}
                     onChange={(event) =>
@@ -1527,6 +1777,7 @@ export default function WalletDetailsPage() {
                       )
                     }
                     required
+                    disabled={submitting}
                   />
 
                 </div>
@@ -1549,18 +1800,18 @@ export default function WalletDetailsPage() {
                   className="wallet-detail-primary-button"
                   disabled={submitting}
                 >
-
-                  {submitting && (
-                    <Loader2
-                      size={17}
-                      className="wallet-detail-spinning"
-                    />
-                  )}
+                  {submitting &&
+                    activeAction ===
+                      'deposit' && (
+                      <Loader2
+                        size={17}
+                        className="wallet-detail-spinning"
+                      />
+                    )}
 
                   {submitting
                     ? 'Processing...'
                     : 'Deposit Money'}
-
                 </button>
 
               </div>
@@ -1579,7 +1830,12 @@ export default function WalletDetailsPage() {
 
       {modal === 'withdraw' && (
 
-        <div className="wallet-detail-modal-overlay">
+        <div
+          className="wallet-detail-modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="withdraw-modal-title"
+        >
 
           <div className="wallet-detail-modal">
 
@@ -1593,7 +1849,7 @@ export default function WalletDetailsPage() {
 
                 <div>
 
-                  <h2>
+                  <h2 id="withdraw-modal-title">
                     Withdraw Money
                   </h2>
 
@@ -1611,6 +1867,7 @@ export default function WalletDetailsPage() {
                 className="wallet-detail-modal-close"
                 onClick={closeModal}
                 disabled={submitting}
+                aria-label="Close withdrawal modal"
               >
                 <X size={20} />
               </button>
@@ -1622,7 +1879,10 @@ export default function WalletDetailsPage() {
             >
 
               {modalError && (
-                <div className="wallet-detail-modal-error">
+                <div
+                  className="wallet-detail-modal-error"
+                  role="alert"
+                >
                   {modalError}
                 </div>
               )}
@@ -1644,7 +1904,7 @@ export default function WalletDetailsPage() {
 
               <div className="wallet-detail-form-field">
 
-                <label>
+                <label htmlFor="withdraw-amount">
                   Withdrawal Amount
                 </label>
 
@@ -1655,9 +1915,14 @@ export default function WalletDetailsPage() {
                   </span>
 
                   <input
+                    id="withdraw-amount"
                     type="number"
-                    min="1"
+                    min="0.01"
                     step="0.01"
+                    inputMode="decimal"
+                    max={getNumericBalance(
+                      wallet.balance,
+                    )}
                     placeholder="0.00"
                     value={amount}
                     onChange={(event) =>
@@ -1666,6 +1931,7 @@ export default function WalletDetailsPage() {
                       )
                     }
                     required
+                    disabled={submitting}
                   />
 
                 </div>
@@ -1688,18 +1954,18 @@ export default function WalletDetailsPage() {
                   className="wallet-detail-danger-button"
                   disabled={submitting}
                 >
-
-                  {submitting && (
-                    <Loader2
-                      size={17}
-                      className="wallet-detail-spinning"
-                    />
-                  )}
+                  {submitting &&
+                    activeAction ===
+                      'withdraw' && (
+                      <Loader2
+                        size={17}
+                        className="wallet-detail-spinning"
+                      />
+                    )}
 
                   {submitting
                     ? 'Processing...'
                     : 'Withdraw Money'}
-
                 </button>
 
               </div>
@@ -1718,7 +1984,12 @@ export default function WalletDetailsPage() {
 
       {modal === 'transfer' && (
 
-        <div className="wallet-detail-modal-overlay">
+        <div
+          className="wallet-detail-modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="transfer-modal-title"
+        >
 
           <div className="wallet-detail-modal">
 
@@ -1732,7 +2003,7 @@ export default function WalletDetailsPage() {
 
                 <div>
 
-                  <h2>
+                  <h2 id="transfer-modal-title">
                     Transfer Money
                   </h2>
 
@@ -1750,6 +2021,7 @@ export default function WalletDetailsPage() {
                 className="wallet-detail-modal-close"
                 onClick={closeModal}
                 disabled={submitting}
+                aria-label="Close transfer modal"
               >
                 <X size={20} />
               </button>
@@ -1761,7 +2033,10 @@ export default function WalletDetailsPage() {
             >
 
               {modalError && (
-                <div className="wallet-detail-modal-error">
+                <div
+                  className="wallet-detail-modal-error"
+                  role="alert"
+                >
                   {modalError}
                 </div>
               )}
@@ -1793,11 +2068,12 @@ export default function WalletDetailsPage() {
 
               <div className="wallet-detail-form-field">
 
-                <label>
+                <label htmlFor="destination-wallet">
                   Destination Wallet
                 </label>
 
                 <select
+                  id="destination-wallet"
                   value={
                     destinationWalletId
                   }
@@ -1807,24 +2083,15 @@ export default function WalletDetailsPage() {
                     )
                   }
                   required
+                  disabled={submitting}
                 >
 
                   <option value="">
                     Select destination wallet
                   </option>
 
-                  {wallets
-                    .filter(
-                      (item) =>
-                        item.id !==
-                          wallet.id &&
-                        item.currency ===
-                          wallet.currency &&
-                        item.status ===
-                          'ACTIVE',
-                    )
-                    .map((item) => (
-
+                  {destinationWallets.map(
+                    (item) => (
                       <option
                         key={item.id}
                         value={item.id}
@@ -1837,16 +2104,25 @@ export default function WalletDetailsPage() {
                               .accountNumber
                           : `Wallet #${item.id}`}
                       </option>
-
-                    ))}
+                    ),
+                  )}
 
                 </select>
 
               </div>
 
+              {destinationWallets.length ===
+                0 && (
+                <div className="wallet-detail-modal-error">
+                  No active wallet with the
+                  same currency is available
+                  for transfer.
+                </div>
+              )}
+
               <div className="wallet-detail-form-field">
 
-                <label>
+                <label htmlFor="transfer-amount">
                   Transfer Amount
                 </label>
 
@@ -1857,9 +2133,14 @@ export default function WalletDetailsPage() {
                   </span>
 
                   <input
+                    id="transfer-amount"
                     type="number"
-                    min="1"
+                    min="0.01"
                     step="0.01"
+                    inputMode="decimal"
+                    max={getNumericBalance(
+                      wallet.balance,
+                    )}
                     placeholder="0.00"
                     value={amount}
                     onChange={(event) =>
@@ -1868,6 +2149,7 @@ export default function WalletDetailsPage() {
                       )
                     }
                     required
+                    disabled={submitting}
                   />
 
                 </div>
@@ -1888,20 +2170,24 @@ export default function WalletDetailsPage() {
                 <button
                   type="submit"
                   className="wallet-detail-primary-button"
-                  disabled={submitting}
+                  disabled={
+                    submitting ||
+                    destinationWallets.length ===
+                      0
+                  }
                 >
-
-                  {submitting && (
-                    <Loader2
-                      size={17}
-                      className="wallet-detail-spinning"
-                    />
-                  )}
+                  {submitting &&
+                    activeAction ===
+                      'transfer' && (
+                      <Loader2
+                        size={17}
+                        className="wallet-detail-spinning"
+                      />
+                    )}
 
                   {submitting
                     ? 'Processing...'
                     : 'Transfer Money'}
-
                 </button>
 
               </div>
@@ -1925,7 +2211,10 @@ export default function WalletDetailsPage() {
 function getTransactionDirection(
   transaction: Transaction,
   walletId: number,
-) {
+): TransactionDirection {
+  /*
+   * Deposits are always credits to the wallet.
+   */
   if (
     transaction.type ===
     'DEPOSIT'
@@ -1933,6 +2222,10 @@ function getTransactionDirection(
     return 'credit';
   }
 
+  /*
+   * Withdrawals are always debits from
+   * the wallet.
+   */
   if (
     transaction.type ===
     'WITHDRAWAL'
@@ -1940,6 +2233,10 @@ function getTransactionDirection(
     return 'debit';
   }
 
+  /*
+   * If this wallet is the destination,
+   * money is coming in.
+   */
   if (
     transaction.destinationWalletId ===
     walletId
@@ -1947,5 +2244,9 @@ function getTransactionDirection(
     return 'credit';
   }
 
+  /*
+   * Otherwise, if this wallet is involved
+   * as the source, money is going out.
+   */
   return 'debit';
 }

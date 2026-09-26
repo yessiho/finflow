@@ -2,41 +2,19 @@ import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service.js';
 
-/*
- * ==========================================
- * CREATE AUDIT LOG INPUT
- * ==========================================
- */
 interface CreateAuditLogInput {
   userId?: number;
-
   action: string;
-
   entity: string;
-
   entityId?: string;
-
   metadata?: string;
 }
 
-/*
- * ==========================================
- * FIND AUDIT LOG OPTIONS
- * ==========================================
- */
 interface FindAuditLogsOptions {
   page?: number;
-
   limit?: number;
-
   action?: string;
-
   entity?: string;
-
-  /*
-   * Used internally to scope audit logs
-   * to a specific authenticated user.
-   */
   userId?: number;
 }
 
@@ -44,115 +22,77 @@ interface FindAuditLogsOptions {
 export class AuditService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /*
-   * ==========================================
-   * CREATE AUDIT LOG
+  /**
+   * Convert a database timestamp into milliseconds without
+   * calling valueOf() on Temporal.Instant.
    *
-   * Used internally by:
-   *
-   * - WalletsService
-   * - TransactionsService
-   * - LedgerService
-   * - Future authenticated operations
-   *
-   * Audit logs are immutable records.
-   * ==========================================
+   * Prisma 8's PostgreSQL runtime returns Timestamptz values
+   * as Temporal.Instant. Temporal.Instant.valueOf() is
+   * intentionally forbidden, so Date/Temporal conversion
+   * must be explicit.
+   */
+  private getTimestampMilliseconds(value: any): number {
+    if (value == null) {
+      return 0;
+    }
+
+    if (
+      typeof value === 'object' &&
+      'epochMilliseconds' in value
+    ) {
+      return Number(value.epochMilliseconds);
+    }
+
+    if (value instanceof Date) {
+      return value.getTime();
+    }
+
+    const parsed = new Date(String(value)).getTime();
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+
+  /**
+   * Create an immutable audit record.
    */
   async create(input: CreateAuditLogInput) {
-    const auditLog = await this.prisma.client.orm.public.AuditLog.create({
-      /*
-       * Associate the audit log with the user
-       * performing the action.
-       */
-      userId: input.userId ?? null,
-
-      action: input.action,
-
-      entity: input.entity,
-
-      entityId: input.entityId ?? null,
-
-      metadata: input.metadata ?? null,
-    });
+    const auditLog =
+      await this.prisma.client.orm.public.AuditLog.create({
+        userId: input.userId ?? null,
+        action: input.action,
+        entity: input.entity,
+        entityId: input.entityId ?? null,
+        metadata: input.metadata ?? null,
+      });
 
     return this.formatAuditLog(auditLog);
   }
 
-  /*
-   * ==========================================
-   * FIND AUDIT LOGS
-   *
-   * Supports:
-   *
-   * - Pagination
-   * - Action filtering
-   * - Entity filtering
-   * - User filtering
-   *
-   * IMPORTANT:
-   *
-   * For user-facing endpoints, use findByUser()
-   * so records are always scoped to the
-   * authenticated user.
-   * ==========================================
+  /**
+   * Get audit logs with pagination and optional filters.
    */
-  async findAll(
-    options: FindAuditLogsOptions = {},
-  ): Promise<any> {
+  async findAll(options: FindAuditLogsOptions = {}): Promise<any> {
     const page =
       options.page && options.page > 0
-        ? options.page
+        ? Math.floor(options.page)
         : 1;
 
     const limit =
       options.limit && options.limit > 0
-        ? Math.min(options.limit, 100)
+        ? Math.min(Math.floor(options.limit), 100)
         : 20;
 
-    /*
-     * ==========================================
-     * GET AUDIT LOGS
-     *
-     * Current Prisma ORM runtime uses .all(),
-     * therefore filtering and pagination are
-     * handled below.
-     * ==========================================
-     */
     const auditLogs =
       await this.prisma.client.orm.public.AuditLog.all();
 
-    /*
-     * ==========================================
-     * APPLY FILTERS
-     * ==========================================
-     */
     let filteredLogs = auditLogs.filter((log: any) => {
-      /*
-       * ACTION FILTER
-       */
-      if (
-        options.action &&
-        log.action !== options.action
-      ) {
+      if (options.action && log.action !== options.action) {
         return false;
       }
 
-      /*
-       * ENTITY FILTER
-       */
-      if (
-        options.entity &&
-        log.entity !== options.entity
-      ) {
+      if (options.entity && log.entity !== options.entity) {
         return false;
       }
 
-      /*
-       * USER SECURITY FILTER
-       *
-       * When userId is provided, only return
-       * records belonging to that user.
-       */
       if (
         options.userId !== undefined &&
         log.userId !== options.userId
@@ -163,67 +103,37 @@ export class AuditService {
       return true;
     });
 
-    /*
-     * ==========================================
-     * SORT NEWEST FIRST
-     * ==========================================
-     */
     filteredLogs = filteredLogs.sort(
       (a: any, b: any) =>
-        new Date(b.createdAt).getTime() -
-        new Date(a.createdAt).getTime(),
+        this.getTimestampMilliseconds(b.createdAt) -
+        this.getTimestampMilliseconds(a.createdAt),
     );
 
-    /*
-     * ==========================================
-     * PAGINATION
-     * ==========================================
-     */
     const total = filteredLogs.length;
-
     const totalPages =
-      total === 0
-        ? 0
-        : Math.ceil(total / limit);
+      total === 0 ? 0 : Math.ceil(total / limit);
 
-    const startIndex =
-      (page - 1) * limit;
+    const startIndex = (page - 1) * limit;
+    const paginatedLogs = filteredLogs.slice(
+      startIndex,
+      startIndex + limit,
+    );
 
-    const paginatedLogs =
-      filteredLogs.slice(
-        startIndex,
-        startIndex + limit,
-      );
-
-    /*
-     * ==========================================
-     * RESPONSE
-     * ==========================================
-     */
     return {
       data: paginatedLogs.map((log: any) =>
         this.formatAuditLog(log),
       ),
-
       pagination: {
         page,
-
         limit,
-
         total,
-
         totalPages,
       },
     };
   }
 
-  /*
-   * ==========================================
-   * GET AUDIT LOGS FOR A SPECIFIC USER
-   *
-   * This is the primary method for
-   * authenticated user audit history.
-   * ==========================================
+  /**
+   * Get audit logs for one user.
    */
   async findByUser(
     userId: number,
@@ -236,77 +146,35 @@ export class AuditService {
   ): Promise<any> {
     return this.findAll({
       page: options.page,
-
       limit: options.limit,
-
       action: options.action,
-
       entity: options.entity,
-
-      /*
-       * Always scope records to this user.
-       */
       userId,
     });
   }
 
-  /*
-   * ==========================================
-   * GET AUDIT LOGS BY ENTITY
-   *
-   * Optionally scoped to a user.
-   *
-   * Examples:
-   *
-   * TRANSACTION
-   * WALLET
-   * USER
-   * LEDGER_ACCOUNT
-   * ==========================================
+  /**
+   * Get audit logs by entity and optionally entity ID.
    */
   async findByEntity(
     entity: string,
     entityId?: string,
-    userId?: number,
   ): Promise<any[]> {
     const auditLogs =
       await this.prisma.client.orm.public.AuditLog.all();
 
     const logs = auditLogs
       .filter((log: any) => {
-        /*
-         * ENTITY FILTER
-         */
-        if (log.entity !== entity) {
-          return false;
-        }
+        const entityMatches = log.entity === entity;
+        const entityIdMatches =
+          entityId === undefined || log.entityId === entityId;
 
-        /*
-         * ENTITY ID FILTER
-         */
-        if (
-          entityId !== undefined &&
-          log.entityId !== entityId
-        ) {
-          return false;
-        }
-
-        /*
-         * USER FILTER
-         */
-        if (
-          userId !== undefined &&
-          log.userId !== userId
-        ) {
-          return false;
-        }
-
-        return true;
+        return entityMatches && entityIdMatches;
       })
       .sort(
         (a: any, b: any) =>
-          new Date(b.createdAt).getTime() -
-          new Date(a.createdAt).getTime(),
+          this.getTimestampMilliseconds(b.createdAt) -
+          this.getTimestampMilliseconds(a.createdAt),
       );
 
     return logs.map((log: any) =>
@@ -314,52 +182,19 @@ export class AuditService {
     );
   }
 
-  /*
-   * ==========================================
-   * GET AUDIT LOGS BY ACTION
-   *
-   * Optionally scoped to a user.
-   *
-   * Examples:
-   *
-   * DEPOSIT_COMPLETED
-   * WITHDRAWAL_COMPLETED
-   * TRANSFER_COMPLETED
-   * TRANSACTION_REVERSED
-   * ==========================================
+  /**
+   * Get audit logs by action.
    */
-  async findByAction(
-    action: string,
-    userId?: number,
-  ): Promise<any[]> {
+  async findByAction(action: string): Promise<any[]> {
     const auditLogs =
       await this.prisma.client.orm.public.AuditLog.all();
 
     const logs = auditLogs
-      .filter((log: any) => {
-        /*
-         * ACTION FILTER
-         */
-        if (log.action !== action) {
-          return false;
-        }
-
-        /*
-         * USER FILTER
-         */
-        if (
-          userId !== undefined &&
-          log.userId !== userId
-        ) {
-          return false;
-        }
-
-        return true;
-      })
+      .filter((log: any) => log.action === action)
       .sort(
         (a: any, b: any) =>
-          new Date(b.createdAt).getTime() -
-          new Date(a.createdAt).getTime(),
+          this.getTimestampMilliseconds(b.createdAt) -
+          this.getTimestampMilliseconds(a.createdAt),
       );
 
     return logs.map((log: any) =>
@@ -367,37 +202,33 @@ export class AuditService {
     );
   }
 
-  /*
-   * ==========================================
-   * FORMAT AUDIT LOG
-   *
-   * Converts metadata JSON strings into
-   * JavaScript objects where possible.
-   * ==========================================
+  /**
+   * Convert metadata JSON strings into objects where possible.
+   * BigInt values are converted to strings so the API response
+   * remains JSON-safe.
    */
   private formatAuditLog(auditLog: any) {
     let metadata = auditLog.metadata;
 
-    /*
-     * ==========================================
-     * PARSE JSON METADATA SAFELY
-     * ==========================================
-     */
     if (typeof metadata === 'string') {
       try {
         metadata = JSON.parse(metadata);
       } catch {
-        /*
-         * Keep the original metadata value when
-         * it is not valid JSON.
-         */
+        // Keep invalid/non-JSON metadata unchanged.
       }
     }
 
-    return {
-      ...auditLog,
-
-      metadata,
-    };
+    return JSON.parse(
+      JSON.stringify(
+        {
+          ...auditLog,
+          metadata,
+        },
+        (_, value) =>
+          typeof value === 'bigint'
+            ? value.toString()
+            : value,
+      ),
+    );
   }
 }
