@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 
 interface CreateAuditLogInput {
   userId?: number;
+  adminId?: number;
   action: string;
   entity: string;
   entityId?: string;
@@ -16,6 +17,7 @@ interface FindAuditLogsOptions {
   action?: string;
   entity?: string;
   userId?: number;
+  adminId?: number;
 }
 
 @Injectable()
@@ -48,16 +50,21 @@ export class AuditService {
     }
 
     const parsed = new Date(String(value)).getTime();
+
     return Number.isNaN(parsed) ? 0 : parsed;
   }
 
   /**
    * Create an immutable audit record.
+   *
+   * userId is used for customer/user actions.
+   * adminId is used for administrator actions.
    */
   async create(input: CreateAuditLogInput) {
     const auditLog =
       await this.prisma.client.orm.public.AuditLog.create({
         userId: input.userId ?? null,
+        adminId: input.adminId ?? null,
         action: input.action,
         entity: input.entity,
         entityId: input.entityId ?? null,
@@ -70,7 +77,9 @@ export class AuditService {
   /**
    * Get audit logs with pagination and optional filters.
    */
-  async findAll(options: FindAuditLogsOptions = {}): Promise<any> {
+  async findAll(
+    options: FindAuditLogsOptions = {},
+  ): Promise<any> {
     const page =
       options.page && options.page > 0
         ? Math.floor(options.page)
@@ -85,17 +94,30 @@ export class AuditService {
       await this.prisma.client.orm.public.AuditLog.all();
 
     let filteredLogs = auditLogs.filter((log: any) => {
-      if (options.action && log.action !== options.action) {
+      if (
+        options.action &&
+        log.action !== options.action
+      ) {
         return false;
       }
 
-      if (options.entity && log.entity !== options.entity) {
+      if (
+        options.entity &&
+        log.entity !== options.entity
+      ) {
         return false;
       }
 
       if (
         options.userId !== undefined &&
         log.userId !== options.userId
+      ) {
+        return false;
+      }
+
+      if (
+        options.adminId !== undefined &&
+        log.adminId !== options.adminId
       ) {
         return false;
       }
@@ -110,10 +132,14 @@ export class AuditService {
     );
 
     const total = filteredLogs.length;
+
     const totalPages =
-      total === 0 ? 0 : Math.ceil(total / limit);
+      total === 0
+        ? 0
+        : Math.ceil(total / limit);
 
     const startIndex = (page - 1) * limit;
+
     const paginatedLogs = filteredLogs.slice(
       startIndex,
       startIndex + limit,
@@ -154,6 +180,27 @@ export class AuditService {
   }
 
   /**
+   * Get audit logs for one administrator.
+   */
+  async findByAdmin(
+    adminId: number,
+    options: {
+      page?: number;
+      limit?: number;
+      action?: string;
+      entity?: string;
+    } = {},
+  ): Promise<any> {
+    return this.findAll({
+      page: options.page,
+      limit: options.limit,
+      action: options.action,
+      entity: options.entity,
+      adminId,
+    });
+  }
+
+  /**
    * Get audit logs by entity and optionally entity ID.
    */
   async findByEntity(
@@ -165,16 +212,26 @@ export class AuditService {
 
     const logs = auditLogs
       .filter((log: any) => {
-        const entityMatches = log.entity === entity;
-        const entityIdMatches =
-          entityId === undefined || log.entityId === entityId;
+        const entityMatches =
+          log.entity === entity;
 
-        return entityMatches && entityIdMatches;
+        const entityIdMatches =
+          entityId === undefined ||
+          log.entityId === entityId;
+
+        return (
+          entityMatches &&
+          entityIdMatches
+        );
       })
       .sort(
         (a: any, b: any) =>
-          this.getTimestampMilliseconds(b.createdAt) -
-          this.getTimestampMilliseconds(a.createdAt),
+          this.getTimestampMilliseconds(
+            b.createdAt,
+          ) -
+          this.getTimestampMilliseconds(
+            a.createdAt,
+          ),
       );
 
     return logs.map((log: any) =>
@@ -185,16 +242,25 @@ export class AuditService {
   /**
    * Get audit logs by action.
    */
-  async findByAction(action: string): Promise<any[]> {
+  async findByAction(
+    action: string,
+  ): Promise<any[]> {
     const auditLogs =
       await this.prisma.client.orm.public.AuditLog.all();
 
     const logs = auditLogs
-      .filter((log: any) => log.action === action)
+      .filter(
+        (log: any) =>
+          log.action === action,
+      )
       .sort(
         (a: any, b: any) =>
-          this.getTimestampMilliseconds(b.createdAt) -
-          this.getTimestampMilliseconds(a.createdAt),
+          this.getTimestampMilliseconds(
+            b.createdAt,
+          ) -
+          this.getTimestampMilliseconds(
+            a.createdAt,
+          ),
       );
 
     return logs.map((log: any) =>
@@ -204,6 +270,7 @@ export class AuditService {
 
   /**
    * Convert metadata JSON strings into objects where possible.
+   *
    * BigInt values are converted to strings so the API response
    * remains JSON-safe.
    */

@@ -14,6 +14,9 @@ import { WalletsModule } from './wallets/wallets.module.js';
 import { LedgerModule } from './ledger/ledger.module.js';
 import { AuditModule } from './audit/audit.module.js';
 import { TransactionsModule } from './transactions/transactions.module.js';
+import { AdminCustomersModule } from './admin-customers/admin-customers.module.js';
+import { AdminAccountsModule } from './admin-accounts/admin-accounts.module.js';
+import { AdminTransactionsModule } from './admin-transactions/admin-transactions.module.js';
 
 @Module({
   imports: [
@@ -34,7 +37,9 @@ import { TransactionsModule } from './transactions/transactions.module.js';
     WalletsModule,
     LedgerModule,
     TransactionsModule,
-
+    AdminCustomersModule,
+    AdminAccountsModule,
+    AdminTransactionsModule,
     // Audit
     AuditModule,
   ],

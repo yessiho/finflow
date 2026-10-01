@@ -3,11 +3,20 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 
+import type { Request } from 'express';
+
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { LedgerService } from './ledger.service.js';
+
+interface AuthenticatedUser {
+  id: number;
+  email: string;
+  type?: string;
+}
 
 @Controller('ledger')
 @UseGuards(JwtAuthGuard)
@@ -17,51 +26,85 @@ export class LedgerController {
   ) {}
 
   /*
-   * ==========================================
-   * GET LEDGER ACCOUNTS
+   * ========================================================
+   * USER LEDGER ACCOUNTS
    *
    * GET /ledger/accounts
    *
-   * Ledger accounts are global system accounts,
-   * not accounts owned by an individual user.
-   * ==========================================
+   * IMPORTANT:
+   * This endpoint is user-scoped.
+   *
+   * It must NEVER return the global general ledger to a
+   * normal authenticated customer.
+   * ========================================================
    */
   @Get('accounts')
-  async getAllAccounts() {
-    return this.ledgerService.getAllAccounts();
-  }
-
-  /*
-   * ==========================================
-   * GET LEDGER ENTRIES FOR A TRANSACTION
-   *
-   * GET /ledger/transactions/:transactionId
-   * ==========================================
-   */
-  @Get('transactions/:transactionId')
-  async getTransactionEntries(
-    @Param('transactionId', ParseIntPipe)
-    transactionId: number,
+  async getAllAccounts(
+    @Req()
+    request: Request & {
+      user: AuthenticatedUser;
+    },
   ) {
-    return this.ledgerService.getTransactionEntries(
-      transactionId,
+    return this.ledgerService.getUserAccounts(
+      request.user.id,
     );
   }
 
   /*
-   * ==========================================
-   * GET LEDGER ACCOUNT BALANCE
+   * ========================================================
+   * USER TRANSACTION LEDGER ENTRIES
+   *
+   * GET /ledger/transactions/:transactionId
+   *
+   * The service verifies that the transaction belongs to
+   * one of the authenticated user's wallets.
+   * ========================================================
+   */
+  @Get('transactions/:transactionId')
+  async getTransactionEntries(
+    @Req()
+    request: Request & {
+      user: AuthenticatedUser;
+    },
+
+    @Param(
+      'transactionId',
+      ParseIntPipe,
+    )
+    transactionId: number,
+  ) {
+    return this.ledgerService.getUserTransactionEntries(
+      transactionId,
+      request.user.id,
+    );
+  }
+
+  /*
+   * ========================================================
+   * USER LEDGER ACCOUNT BALANCE
    *
    * GET /ledger/accounts/:accountId/balance
-   * ==========================================
+   *
+   * The returned balance is calculated only from the
+   * authenticated user's own ledger entries.
+   * ========================================================
    */
   @Get('accounts/:accountId/balance')
   async getAccountBalance(
-    @Param('accountId', ParseIntPipe)
+    @Req()
+    request: Request & {
+      user: AuthenticatedUser;
+    },
+
+    @Param(
+      'accountId',
+      ParseIntPipe,
+    )
     accountId: number,
   ) {
-    return this.ledgerService.getAccountBalance(
+    return this.ledgerService.getUserAccountBalance(
       accountId,
+      request.user.id,
     );
   }
 }
